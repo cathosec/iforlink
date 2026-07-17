@@ -45,6 +45,19 @@ function normalizeUsername(v: string) {
     .slice(0, 30);
 }
 
+function AdPlaceholder({ position }: { position: string }) {
+  return (
+    <div className="my-4 rounded-md border border-dashed bg-muted/30 px-4 py-3 text-[11px] text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-medium uppercase tracking-widest">Espaço para anúncios · {position}</span>
+        <span className="rounded-full border bg-background px-2 py-0.5 text-[10px] font-medium text-brand">
+          Plano Pro não exibe anúncios
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function Home() {
   const [q, setQ] = useState("");
   const [uname, setUname] = useState("");
@@ -242,10 +255,13 @@ function Home() {
                 <span className="text-xs text-muted-foreground">via PIX</span>
               </div>
               <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                {["Links e categorias ilimitados", "Verificação com selo", "Estatísticas detalhadas de cliques", "Suporte prioritário"].map((f) => (
+                {["Sem anúncios em todo o site", "Links e categorias ilimitados", "Verificação com selo", "Estatísticas detalhadas de cliques", "Suporte prioritário"].map((f) => (
                   <li key={f} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {f}</li>
                 ))}
               </ul>
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                O plano Free exibe anúncios discretos no topo do diretório, entre os perfis e uma faixa fixa no mobile. Ao assinar o Pro, todos os espaços são removidos automaticamente.
+              </p>
             </div>
           </div>
         </div>
@@ -253,7 +269,10 @@ function Home() {
 
 
       {/* Top ad slot */}
-      <div className="mx-auto max-w-6xl px-4"><AdSlot slot="top" label="Publicidade" /></div>
+      <div className="mx-auto max-w-6xl px-4">
+        <AdPlaceholder position="Topo do diretório" />
+        <AdSlot slot="top" label="Publicidade" />
+      </div>
 
       {/* Search + Directory */}
       <section id="diretorio" className="mx-auto max-w-6xl px-4 py-20">
@@ -316,6 +335,7 @@ function Home() {
           </div>
         )}
 
+        <AdPlaceholder position="Entre os perfis do diretório" />
         <AdSlot slot="feed" label="Publicidade" />
       </section>
 
