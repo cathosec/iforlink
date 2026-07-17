@@ -257,89 +257,43 @@ function Dashboard() {
             </p>
           </Card>
         ) : (
-          <div className="mt-4 space-y-4">
-            {cats.map((cat, i) => {
-              const catLinks = links.filter((l) => l.category_id === cat.id).sort((a, b) => a.display_order - b.display_order);
-              return (
-                <Card key={cat.id} className="overflow-hidden">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/30 px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex flex-col">
-                        <button disabled={i === 0} onClick={() => moveCategory(cat.id, -1)} className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30">
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        </button>
-                        <button disabled={i === cats.length - 1} onClick={() => moveCategory(cat.id, 1)} className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30">
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      <RenameableTitle name={cat.name} onSave={(n) => renameCategory(cat.id, n)} />
-                      {!cat.is_visible && <Badge variant="outline" className="text-[10px]"><EyeOff className="mr-1 h-3 w-3" /> Rascunho</Badge>}
-                      {cat.is_visible && !cat.is_public && <Badge variant="secondary" className="text-[10px]"><Lock className="mr-1 h-3 w-3" /> Privada</Badge>}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Publicar (visível no perfil) ou manter como rascunho">
-                        <span>Publicar</span>
-                        <Switch checked={cat.is_visible} onCheckedChange={(v) => toggleCategoryVisible(cat.id, v)} />
-                      </label>
-                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Público: todos veem. Privado: só você (logado) vê no seu perfil.">
-                        <span>Pública</span>
-                        <Switch checked={cat.is_public} onCheckedChange={(v) => toggleCategoryPublic(cat.id, v)} disabled={!cat.is_visible} />
-                      </label>
-                      <NewLinkDialog categories={cats} defaultCategoryId={cat.id} onSave={saveLink} disabled={isFree && links.length >= FREE_MAX_LINKS} />
-                      <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)}>
-                        <Trash2 className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="divide-y">
-                    {catLinks.length === 0 ? (
-                      <div className="px-5 py-8 text-center text-sm text-muted-foreground">
-                        Nenhum link ainda. Clique em <strong>+ Link</strong> para adicionar.
-                      </div>
-                    ) : catLinks.map((l, j) => (
-                      <div key={l.id} className="flex items-center gap-3 px-5 py-3">
-                        <div className="flex flex-col">
-                          <button disabled={j === 0} onClick={() => moveLink(l.id, -1)} className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30">
-                            <ChevronUp className="h-3.5 w-3.5" />
-                          </button>
-                          <button disabled={j === catLinks.length - 1} onClick={() => moveLink(l.id, 1)} className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30">
-                            <ChevronDown className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                        <img
-                          src={l.favicon_url ?? getFaviconUrl(l.url) ?? ""}
-                          alt=""
-                          className="h-9 w-9 shrink-0 rounded-md border bg-white object-contain p-1.5"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate text-sm font-medium">{l.title}</span>
-                            {!l.is_visible && <Badge variant="outline" className="text-[10px]">Rascunho</Badge>}
-                          </div>
-                          <div className="truncate text-xs text-muted-foreground">{l.url}</div>
-                        </div>
-                        <div className="hidden text-right text-xs text-muted-foreground sm:block">
-                          <div>{l.clicks_count}</div>
-                          <div>cliques</div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" title={l.is_visible ? "Ocultar" : "Publicar"} onClick={() => toggleLinkVisible(l.id, !l.is_visible)}>
-                            {l.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                          </Button>
-                          <NewLinkDialog categories={cats} defaultCategoryId={cat.id} editing={l} onSave={saveLink} triggerAsIcon />
-                          <Button variant="ghost" size="icon" onClick={() => deleteLink(l.id)}>
-                            <Trash2 className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
+          <>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Dica: arraste pelo ícone <GripVertical className="inline h-3 w-3 align-[-2px]" /> para reordenar categorias e links.
+            </p>
+            <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+              <SortableContext items={cats.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                <div className="mt-4 space-y-4">
+                  {cats.map((cat, i) => {
+                    const catLinks = links.filter((l) => l.category_id === cat.id).sort((a, b) => a.display_order - b.display_order);
+                    return (
+                      <SortableCategoryCard
+                        key={cat.id}
+                        cat={cat}
+                        index={i}
+                        total={cats.length}
+                        catLinks={catLinks}
+                        cats={cats}
+                        isFree={isFree}
+                        totalLinks={links.length}
+                        sensors={dndSensors}
+                        onMoveCategory={moveCategory}
+                        onRenameCategory={renameCategory}
+                        onToggleCategoryVisible={toggleCategoryVisible}
+                        onToggleCategoryPublic={toggleCategoryPublic}
+                        onDeleteCategory={deleteCategory}
+                        onSaveLink={saveLink}
+                        onMoveLink={moveLink}
+                        onDeleteLink={deleteLink}
+                        onToggleLinkVisible={toggleLinkVisible}
+                        onPersistLinkOrder={persistLinkOrder}
+                      />
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </>
         )}
       </main>
     </div>
