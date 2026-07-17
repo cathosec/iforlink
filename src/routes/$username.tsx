@@ -236,17 +236,17 @@ function PublicProfile() {
         {!hideAds && <AdSlot slot="profile" label="Publicidade" />}
 
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <Link to="/" className="text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground">
-            criado com <span className="font-semibold text-foreground">ForLink</span>
+          <Link to="/" className="group flex flex-col items-center gap-2">
+            <span className="text-[11px] uppercase tracking-widest text-muted-foreground group-hover:text-foreground">
+              Criado com
+            </span>
+            <LogoWordmark className="h-5 w-auto opacity-70 transition-opacity group-hover:opacity-100" />
           </Link>
           <div className="flex justify-center gap-3 text-[11px] text-muted-foreground">
             <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
             <span>·</span>
             <Link to="/termos" className="hover:text-foreground">Termos</Link>
           </div>
-          <Link to="/" aria-label="ForLink" className="mt-2 opacity-70 transition-opacity hover:opacity-100">
-            <LogoWordmark className="h-5 w-auto" />
-          </Link>
         </div>
       </main>
       {hideAds && <style>{`[data-ad-slot="mobile_sticky"]{display:none !important;}`}</style>}
