@@ -138,6 +138,7 @@ interface CatRow { id: string; name: string; display_order: number; is_public: b
 function PublicProfile() {
   const { username } = Route.useParams();
   const { user } = useAuth();
+  const [query, setQuery] = useState("");
 
   const profileQ = useQuery({
     queryKey: ["profile", username],
