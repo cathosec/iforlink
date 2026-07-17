@@ -377,6 +377,10 @@ export type Database = {
         Returns: boolean
       }
       increment_link_click: { Args: { _link_id: string }; Returns: undefined }
+      increment_profile_view: {
+        Args: { _username: string }
+        Returns: undefined
+      }
       increment_short_click: { Args: { _code: string }; Returns: undefined }
     }
     Enums: {

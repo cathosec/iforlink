@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { BadgeCheck, Copy, Link2, ExternalLink, Lock, Search, Share2, Eye, MousePointerClick, Folder } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
 import { LogoWordmark } from "@/components/logo";
@@ -154,6 +154,22 @@ function PublicProfile() {
   });
 
   const isOwner = !!user && !!profileQ.data && user.id === profileQ.data.id;
+
+  // Incrementa a contagem de visualizações uma única vez por sessão/perfil,
+  // ignorando visitas do próprio dono do perfil.
+  const viewedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!profileQ.data || isOwner) return;
+    if (viewedRef.current === profileQ.data.id) return;
+    viewedRef.current = profileQ.data.id;
+    const key = `forlink:viewed:${profileQ.data.username}`;
+    try {
+      const last = sessionStorage.getItem(key);
+      if (last) return;
+      sessionStorage.setItem(key, "1");
+    } catch { /* storage indisponível — segue registrando */ }
+    void supabase.rpc("increment_profile_view", { _username: profileQ.data.username });
+  }, [profileQ.data, isOwner]);
 
   const catsQ = useQuery({
     queryKey: ["cats", profileQ.data?.id, isOwner],
