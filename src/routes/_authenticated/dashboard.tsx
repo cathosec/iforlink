@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { getFaviconUrl, normalizeUrl } from "@/lib/favicon";
 import {
-  Plus, Pencil, Trash2, ChevronUp, ChevronDown, ExternalLink, FolderPlus, Sparkles, Eye, EyeOff, Link2,
+  Plus, Pencil, Trash2, ChevronUp, ChevronDown, ExternalLink, FolderPlus, Sparkles, Eye, EyeOff, Link2, Lock,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
