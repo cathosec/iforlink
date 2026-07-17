@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { BadgeCheck, Copy, Link2, ExternalLink, Lock, Search, Share2, Eye, MousePointerClick, Folder } from "lucide-react";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
 import { LogoWordmark } from "@/components/logo";
