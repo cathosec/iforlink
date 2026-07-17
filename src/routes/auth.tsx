@@ -42,6 +42,7 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const navigate = useNavigate();
   const { session } = useAuth();
 
@@ -79,6 +80,7 @@ function AuthPage() {
       if (mode === "signup") {
         if (!unameValid) throw new Error("Escolha um usuário com pelo menos 3 caracteres.");
         if (available === false) throw new Error("Este usuário já está em uso. Tente outro.");
+        if (!acceptedTerms) throw new Error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
 
         const { data, error } = await supabase.auth.signUp({
           email,
