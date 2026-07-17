@@ -660,16 +660,61 @@ function MercadoPagoCard({ logAction }: { logAction: (a: string, t?: string, id?
         </p>
       </div>
 
-      <div className="mt-5">
-        <div className="text-xs font-medium text-muted-foreground">Credenciais</div>
-        <div className="mt-2 rounded-md border bg-muted/40 p-3 text-xs">
-          As chaves ficam armazenadas como <strong>segredos do servidor</strong> (nunca expostas ao navegador):
-          <ul className="mt-2 list-inside list-disc space-y-0.5">
-            <li><code>MERCADOPAGO_ACCESS_TOKEN</code> — Access Token (obrigatório)</li>
-            <li><code>MERCADOPAGO_WEBHOOK_SECRET</code> — Segredo do webhook (opcional, valida assinatura)</li>
-          </ul>
-          <p className="mt-2">Para alterar, atualize os segredos do projeto na área de configurações.</p>
+      <div className="mt-6">
+        <div className="mb-2 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">Credenciais do Mercado Pago</div>
+            <p className="text-xs text-muted-foreground">Salvas com segurança no banco (acesso restrito a admins via RLS). O modo acima define qual chave é usada.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={runTest} disabled={testing}>
+            {testing ? "Testando…" : "Testar integração"}
+          </Button>
         </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <Label className="text-xs">Access Token · Teste <span className="text-muted-foreground">(TEST-…)</span></Label>
+            <Input
+              type="password"
+              autoComplete="off"
+              placeholder="TEST-0000000000000000-000000-…"
+              defaultValue={cfg.access_token_test ?? ""}
+              onBlur={(e) => e.target.value !== (cfg.access_token_test ?? "") && save({ access_token_test: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Access Token · Produção <span className="text-muted-foreground">(APP_USR-…)</span></Label>
+            <Input
+              type="password"
+              autoComplete="off"
+              placeholder="APP_USR-0000000000000000-000000-…"
+              defaultValue={cfg.access_token_live ?? ""}
+              onBlur={(e) => e.target.value !== (cfg.access_token_live ?? "") && save({ access_token_live: e.target.value })}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label className="text-xs">Segredo do webhook <span className="text-muted-foreground">(opcional — valida assinatura)</span></Label>
+            <Input
+              type="password"
+              autoComplete="off"
+              placeholder="whsec_… ou string gerada pelo painel do Mercado Pago"
+              defaultValue={cfg.webhook_secret ?? ""}
+              onBlur={(e) => e.target.value !== (cfg.webhook_secret ?? "") && save({ webhook_secret: e.target.value })}
+            />
+          </div>
+        </div>
+
+        {testResult && (
+          <div className={`mt-3 rounded-md border p-3 text-xs ${testResult.ok ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400" : "border-destructive/40 bg-destructive/5 text-destructive"}`}>
+            {testResult.ok ? (
+              <>
+                ✓ Conectado como <strong>{testResult.account?.nickname ?? testResult.account?.email}</strong> · site {testResult.account?.site_id} · modo <strong>{testResult.mode}</strong>
+                {testResult.prefixOk === false && <div className="mt-1">⚠ O token não tem o prefixo esperado para o modo selecionado.</div>}
+              </>
+            ) : (
+              <>✗ {testResult.message}</>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mt-5">
