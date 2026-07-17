@@ -438,3 +438,42 @@ function NewLinkDialog({
     </Dialog>
   );
 }
+
+function SubscriptionCard({ userId }: { userId: string }) {
+  const q = useQuery({
+    queryKey: ["my-sub", userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+  const sub = q.data;
+  if (!sub) return null;
+  const end = sub.current_period_end ? new Date(sub.current_period_end) : null;
+  const daysLeft = end ? Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400_000)) : null;
+  const intervalLabel = sub.interval === "month" ? "Mensal" : sub.interval === "quarter" ? "Trimestral" : sub.interval === "year" ? "Anual" : sub.interval;
+  const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100);
+  return (
+    <Card className="mt-4 flex flex-wrap items-center justify-between gap-4 border-brand/30 bg-brand-soft/40 p-5">
+      <div>
+        <div className="flex items-center gap-2">
+          <Badge className="bg-brand text-brand-foreground">Pro {intervalLabel}</Badge>
+          <span className="text-sm text-muted-foreground">via {sub.gateway}</span>
+        </div>
+        <div className="mt-1 text-sm">
+          {brl(sub.amount_cents)} · Vence em{" "}
+          <strong>{end ? end.toLocaleDateString("pt-BR") : "—"}</strong>
+          {daysLeft !== null && <span className="ml-1 text-muted-foreground">({daysLeft} dias)</span>}
+        </div>
+      </div>
+      <Link to="/assinar"><Button size="sm" variant="outline">Renovar</Button></Link>
+    </Card>
+  );
+}
