@@ -300,6 +300,188 @@ function Dashboard() {
   );
 }
 
+type SortableCategoryCardProps = {
+  cat: Category;
+  index: number;
+  total: number;
+  catLinks: LinkRow[];
+  cats: Category[];
+  isFree: boolean;
+  totalLinks: number;
+  sensors: ReturnType<typeof useSensors>;
+  onMoveCategory: (id: string, dir: -1 | 1) => void;
+  onRenameCategory: (id: string, name: string) => void;
+  onToggleCategoryVisible: (id: string, v: boolean) => void;
+  onToggleCategoryPublic: (id: string, v: boolean) => void;
+  onDeleteCategory: (id: string) => void;
+  onSaveLink: (d: Partial<LinkRow> & { category_id: string; title: string; url: string }) => Promise<boolean>;
+  onMoveLink: (id: string, dir: -1 | 1) => void;
+  onDeleteLink: (id: string) => void;
+  onToggleLinkVisible: (id: string, v: boolean) => void;
+  onPersistLinkOrder: (categoryId: string, ordered: LinkRow[]) => Promise<void>;
+};
+
+function SortableCategoryCard(props: SortableCategoryCardProps) {
+  const {
+    cat, index, total, catLinks, cats, isFree, totalLinks, sensors,
+    onMoveCategory, onRenameCategory, onToggleCategoryVisible, onToggleCategoryPublic,
+    onDeleteCategory, onSaveLink, onMoveLink, onDeleteLink, onToggleLinkVisible, onPersistLinkOrder,
+  } = props;
+  const sortable = useSortable({ id: cat.id });
+  const style = {
+    transform: CSS.Transform.toString(sortable.transform),
+    transition: sortable.transition,
+    opacity: sortable.isDragging ? 0.6 : 1,
+  };
+
+  const handleLinkDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = catLinks.findIndex((l) => l.id === active.id);
+    const newIdx = catLinks.findIndex((l) => l.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    void onPersistLinkOrder(cat.id, arrayMove(catLinks, oldIdx, newIdx));
+  };
+
+  return (
+    <div ref={sortable.setNodeRef} style={style}>
+      <Card className="overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/30 px-5 py-3">
+          <div className="flex items-center gap-2">
+            <button
+              {...sortable.attributes}
+              {...sortable.listeners}
+              className="cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing"
+              title="Arraste para reordenar categoria"
+              aria-label="Arraste para reordenar categoria"
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
+            <div className="flex flex-col">
+              <button disabled={index === 0} onClick={() => onMoveCategory(cat.id, -1)} className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30">
+                <ChevronUp className="h-3.5 w-3.5" />
+              </button>
+              <button disabled={index === total - 1} onClick={() => onMoveCategory(cat.id, 1)} className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30">
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <RenameableTitle name={cat.name} onSave={(n) => onRenameCategory(cat.id, n)} />
+            {!cat.is_visible && <Badge variant="outline" className="text-[10px]"><EyeOff className="mr-1 h-3 w-3" /> Rascunho</Badge>}
+            {cat.is_visible && !cat.is_public && <Badge variant="secondary" className="text-[10px]"><Lock className="mr-1 h-3 w-3" /> Privada</Badge>}
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Publicar (visível no perfil) ou manter como rascunho">
+              <span>Publicar</span>
+              <Switch checked={cat.is_visible} onCheckedChange={(v) => onToggleCategoryVisible(cat.id, v)} />
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Público: todos veem. Privado: só você (logado) vê no seu perfil.">
+              <span>Pública</span>
+              <Switch checked={cat.is_public} onCheckedChange={(v) => onToggleCategoryPublic(cat.id, v)} disabled={!cat.is_visible} />
+            </label>
+            <NewLinkDialog categories={cats} defaultCategoryId={cat.id} onSave={onSaveLink} disabled={isFree && totalLinks >= FREE_MAX_LINKS} />
+            <Button variant="ghost" size="icon" onClick={() => onDeleteCategory(cat.id)}>
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="divide-y">
+          {catLinks.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-muted-foreground">
+              Nenhum link ainda. Clique em <strong>+ Link</strong> para adicionar.
+            </div>
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleLinkDragEnd}>
+              <SortableContext items={catLinks.map((l) => l.id)} strategy={verticalListSortingStrategy}>
+                {catLinks.map((l, j) => (
+                  <SortableLinkRow
+                    key={l.id}
+                    link={l}
+                    index={j}
+                    total={catLinks.length}
+                    cats={cats}
+                    catId={cat.id}
+                    onMoveLink={onMoveLink}
+                    onSaveLink={onSaveLink}
+                    onDeleteLink={onDeleteLink}
+                    onToggleLinkVisible={onToggleLinkVisible}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SortableLinkRow({
+  link: l, index: j, total, cats, catId, onMoveLink, onSaveLink, onDeleteLink, onToggleLinkVisible,
+}: {
+  link: LinkRow; index: number; total: number; cats: Category[]; catId: string;
+  onMoveLink: (id: string, dir: -1 | 1) => void;
+  onSaveLink: (d: Partial<LinkRow> & { category_id: string; title: string; url: string }) => Promise<boolean>;
+  onDeleteLink: (id: string) => void;
+  onToggleLinkVisible: (id: string, v: boolean) => void;
+}) {
+  const sortable = useSortable({ id: l.id });
+  const style = {
+    transform: CSS.Transform.toString(sortable.transform),
+    transition: sortable.transition,
+    opacity: sortable.isDragging ? 0.5 : 1,
+    background: sortable.isDragging ? "var(--muted)" : undefined,
+  };
+  return (
+    <div ref={sortable.setNodeRef} style={style} className="flex items-center gap-3 px-5 py-3">
+      <button
+        {...sortable.attributes}
+        {...sortable.listeners}
+        className="cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing"
+        title="Arraste para reordenar link"
+        aria-label="Arraste para reordenar link"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="flex flex-col">
+        <button disabled={j === 0} onClick={() => onMoveLink(l.id, -1)} className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30">
+          <ChevronUp className="h-3.5 w-3.5" />
+        </button>
+        <button disabled={j === total - 1} onClick={() => onMoveLink(l.id, 1)} className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30">
+          <ChevronDown className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <img
+        src={l.favicon_url ?? getFaviconUrl(l.url) ?? ""}
+        alt=""
+        className="h-9 w-9 shrink-0 rounded-md border bg-white object-contain p-1.5"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }}
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm font-medium">{l.title}</span>
+          {!l.is_visible && <Badge variant="outline" className="text-[10px]">Rascunho</Badge>}
+        </div>
+        <div className="truncate text-xs text-muted-foreground">{l.url}</div>
+      </div>
+      <div className="hidden text-right text-xs text-muted-foreground sm:block">
+        <div>{l.clicks_count}</div>
+        <div>cliques</div>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" title={l.is_visible ? "Ocultar" : "Publicar"} onClick={() => onToggleLinkVisible(l.id, !l.is_visible)}>
+          {l.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+        </Button>
+        <NewLinkDialog categories={cats} defaultCategoryId={catId} editing={l} onSave={onSaveLink} triggerAsIcon />
+        <Button variant="ghost" size="icon" onClick={() => onDeleteLink(l.id)}>
+          <Trash2 className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+
 function RenameableTitle({ name, onSave }: { name: string; onSave: (n: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(name);
