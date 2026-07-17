@@ -7,5 +7,7 @@ Disallow: /assinar
 Disallow: /obrigado
 Disallow: /auth
 Disallow: /api/
+Disallow: /encurtar
+Disallow: /s/
 
 Sitemap: https://forlink.app/sitemap.xml
