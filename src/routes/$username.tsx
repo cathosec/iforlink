@@ -95,73 +95,98 @@ function PublicProfile() {
   const cats = catsQ.data ?? [];
   const defaultOpen = cats.map((c) => c.id);
 
+  const hostOf = (u: string) => {
+    try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; }
+  };
+  const totalLinks = cats.reduce((n, c) => n + c.links.length, 0);
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
-      <div className="pointer-events-none absolute inset-x-0 top-16 -z-10 h-64 bg-gradient-to-b from-brand-soft/50 to-transparent" />
-
-      <main className="mx-auto max-w-2xl px-4 pb-24 pt-12">
-        <div className="flex flex-col items-center text-center">
-          <Avatar className="h-24 w-24 border-4 border-background shadow-sm">
+      <main className="mx-auto max-w-xl px-4 pb-20 pt-10">
+        {/* Header */}
+        <header className="flex items-center gap-4">
+          <Avatar className="h-16 w-16 shrink-0 border">
             <AvatarImage src={p.avatar_url ?? undefined} alt={p.display_name} />
-            <AvatarFallback className="text-2xl">{p.display_name.slice(0, 1)}</AvatarFallback>
+            <AvatarFallback className="text-base font-medium">{p.display_name.slice(0, 1)}</AvatarFallback>
           </Avatar>
-          <div className="mt-4 flex items-center gap-1.5">
-            <h1 className="font-display text-3xl tracking-tight">{p.display_name}</h1>
-            {p.is_verified && (
-              <span title="Verificado"><BadgeCheck className="h-6 w-6 text-brand" /></span>
-            )}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <h1 className="truncate font-display text-xl font-semibold tracking-tight">{p.display_name}</h1>
+              {p.is_verified && <BadgeCheck className="h-4 w-4 shrink-0 text-brand" aria-label="Verificado" />}
+            </div>
+            <p className="truncate text-xs text-muted-foreground">@{p.username}</p>
           </div>
-          <p className="text-sm font-medium text-muted-foreground">@{p.username}</p>
-          {p.bio && <p className="mt-4 max-w-lg text-pretty text-muted-foreground">{p.bio}</p>}
-          <Button variant="outline" size="sm" onClick={copyProfile} className="mt-5 rounded-full">
-            <Copy className="mr-2 h-3.5 w-3.5" /> Copiar link do perfil
+          <Button variant="outline" size="sm" onClick={copyProfile} className="shrink-0">
+            <Copy className="h-3.5 w-3.5 sm:mr-2" />
+            <span className="hidden sm:inline">Copiar</span>
           </Button>
+        </header>
+
+        {p.bio && (
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{p.bio}</p>
+        )}
+
+        {/* Stats bar */}
+        <div className="mt-5 flex items-center gap-4 border-y py-2.5 text-xs text-muted-foreground">
+          <span><span className="font-semibold text-foreground">{totalLinks}</span> links</span>
+          <span className="h-3 w-px bg-border" />
+          <span><span className="font-semibold text-foreground">{cats.length}</span> categorias</span>
+          <span className="h-3 w-px bg-border" />
+          <span><span className="font-semibold text-foreground">{p.views_count.toLocaleString("pt-BR")}</span> views</span>
         </div>
 
-        <div className="mt-12">
+        {/* Links */}
+        <div className="mt-6">
           {cats.length === 0 ? (
-            <div className="rounded-2xl border border-dashed p-12 text-center">
-              <Link2 className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-3 text-sm text-muted-foreground">Este perfil ainda não publicou links.</p>
+            <div className="rounded-lg border border-dashed p-10 text-center">
+              <Link2 className="mx-auto h-6 w-6 text-muted-foreground" />
+              <p className="mt-2 text-sm text-muted-foreground">Este perfil ainda não publicou links.</p>
             </div>
           ) : (
-            <Accordion type="multiple" defaultValue={defaultOpen} className="space-y-3">
+            <Accordion type="multiple" defaultValue={defaultOpen} className="space-y-2">
               {cats.map((cat) => (
                 <AccordionItem
                   key={cat.id}
                   value={cat.id}
-                  className="overflow-hidden rounded-2xl border bg-card px-1 shadow-sm"
+                  className="overflow-hidden rounded-lg border bg-card"
                 >
-                  <AccordionTrigger className="px-4 py-4 text-left hover:no-underline">
-                    <span className="text-base font-semibold">{cat.name}</span>
+                  <AccordionTrigger className="px-3.5 py-2.5 text-left hover:no-underline">
+                    <div className="flex w-full items-center justify-between gap-3">
+                      <span className="text-[13px] font-semibold uppercase tracking-wide text-foreground/80">
+                        {cat.name}
+                      </span>
+                      <span className="text-[11px] font-medium text-muted-foreground">
+                        {cat.links.length}
+                      </span>
+                    </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-2 pb-2">
+                  <AccordionContent className="border-t px-0 pb-0">
                     {cat.links.length === 0 ? (
-                      <p className="px-3 pb-3 text-sm text-muted-foreground">Nenhum link nesta categoria.</p>
+                      <p className="px-3.5 py-3 text-xs text-muted-foreground">Nenhum link.</p>
                     ) : (
-                      <ul className="space-y-1.5">
+                      <ul className="divide-y">
                         {cat.links.map((l) => (
                           <li key={l.id}>
                             <button
                               onClick={() => handleClick(l.id, l.url)}
-                              className="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-accent"
+                              className="group flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-accent/60"
                             >
                               <img
                                 src={l.favicon_url ?? getFaviconUrl(l.url) ?? ""}
                                 alt=""
-                                className="h-10 w-10 shrink-0 rounded-lg border bg-white object-contain p-1.5"
+                                className="h-6 w-6 shrink-0 rounded-sm border bg-white object-contain p-0.5"
                                 loading="lazy"
                                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }}
                               />
                               <div className="min-w-0 flex-1">
-                                <div className="truncate text-sm font-medium">{l.title}</div>
-                                {l.description && (
-                                  <div className="truncate text-xs text-muted-foreground">{l.description}</div>
-                                )}
+                                <div className="truncate text-[13px] font-medium leading-tight">{l.title}</div>
+                                <div className="truncate text-[11px] leading-tight text-muted-foreground">
+                                  {l.description || hostOf(l.url)}
+                                </div>
                               </div>
-                              <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
+                              <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                             </button>
                           </li>
                         ))}
@@ -174,9 +199,9 @@ function PublicProfile() {
           )}
         </div>
 
-        <div className="mt-16 text-center">
-          <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">
-            criado com <span className="font-semibold">ForLink</span>
+        <div className="mt-12 text-center">
+          <Link to="/" className="text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground">
+            criado com <span className="font-semibold text-foreground">ForLink</span>
           </Link>
         </div>
       </main>
