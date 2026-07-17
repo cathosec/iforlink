@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedObrigadoRouteImport } from './routes/_authenticated/obrigado'
+import { Route as AuthenticatedEncurtarRouteImport } from './routes/_authenticated/encurtar'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -74,6 +75,11 @@ const AuthenticatedObrigadoRoute = AuthenticatedObrigadoRouteImport.update({
   path: '/obrigado',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEncurtarRoute = AuthenticatedEncurtarRouteImport.update({
+  id: '/encurtar',
+  path: '/encurtar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/s/$code': typeof SCodeRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/s/$code': typeof SCodeRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/encurtar': typeof AuthenticatedEncurtarRoute
   '/_authenticated/obrigado': typeof AuthenticatedObrigadoRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/s/$code': typeof SCodeRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assinar'
     | '/dashboard'
+    | '/encurtar'
     | '/obrigado'
     | '/settings'
     | '/s/$code'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assinar'
     | '/dashboard'
+    | '/encurtar'
     | '/obrigado'
     | '/settings'
     | '/s/$code'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/assinar'
     | '/_authenticated/dashboard'
+    | '/_authenticated/encurtar'
     | '/_authenticated/obrigado'
     | '/_authenticated/settings'
     | '/s/$code'
@@ -288,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObrigadoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/encurtar': {
+      id: '/_authenticated/encurtar'
+      path: '/encurtar'
+      fullPath: '/encurtar'
+      preLoaderRoute: typeof AuthenticatedEncurtarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -330,6 +349,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAssinarRoute: typeof AuthenticatedAssinarRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEncurtarRoute: typeof AuthenticatedEncurtarRoute
   AuthenticatedObrigadoRoute: typeof AuthenticatedObrigadoRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
@@ -338,6 +358,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAssinarRoute: AuthenticatedAssinarRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEncurtarRoute: AuthenticatedEncurtarRoute,
   AuthenticatedObrigadoRoute: AuthenticatedObrigadoRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, LogOut, User as UserIcon, Shield } from "lucide-react";
+import { LayoutDashboard, LogOut, User as UserIcon, Shield, Scissors } from "lucide-react";
 import { LogoWordmark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
