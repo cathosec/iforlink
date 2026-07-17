@@ -81,26 +81,42 @@ function Admin() {
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="mt-8">
-          <TabsList className="flex w-full flex-wrap">
-            <TabsTrigger value="overview"><TrendingUp className="mr-1.5 h-4 w-4" />Visão geral</TabsTrigger>
-            <TabsTrigger value="users"><Users className="mr-1.5 h-4 w-4" />Usuários</TabsTrigger>
-            <TabsTrigger value="content"><FolderTree className="mr-1.5 h-4 w-4" />Conteúdo</TabsTrigger>
-            <TabsTrigger value="security"><ShieldCheck className="mr-1.5 h-4 w-4" />Segurança</TabsTrigger>
-            <TabsTrigger value="subscriptions"><CreditCard className="mr-1.5 h-4 w-4" />Assinaturas</TabsTrigger>
-            <TabsTrigger value="gateways"><DollarSign className="mr-1.5 h-4 w-4" />Gateways</TabsTrigger>
-            <TabsTrigger value="settings"><Settings2 className="mr-1.5 h-4 w-4" />Plataforma</TabsTrigger>
-            <TabsTrigger value="audit"><Activity className="mr-1.5 h-4 w-4" />Auditoria</TabsTrigger>
+        <Tabs defaultValue="overview" orientation="vertical" className="mt-8 flex flex-col gap-6 md:flex-row md:items-start">
+          <TabsList className="flex h-auto w-full flex-row flex-wrap justify-start gap-1 rounded-lg border bg-card p-2 md:w-56 md:shrink-0 md:flex-col md:flex-nowrap">
+            {[
+              ["overview", TrendingUp, "Visão geral"],
+              ["users", Users, "Usuários"],
+              ["content", FolderTree, "Conteúdo"],
+              ["security", ShieldCheck, "Segurança"],
+              ["subscriptions", CreditCard, "Assinaturas"],
+              ["gateways", DollarSign, "Pagamentos"],
+              ["settings", Settings2, "Plataforma"],
+              ["audit", Activity, "Auditoria"],
+            ].map(([v, Icon, label]) => {
+              const I = Icon as React.ComponentType<{ className?: string }>;
+              return (
+                <TabsTrigger
+                  key={v as string}
+                  value={v as string}
+                  className="w-full justify-start gap-2 px-3 py-2 text-sm data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none"
+                >
+                  <I className="h-4 w-4" />
+                  <span>{label as string}</span>
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
 
-          <TabsContent value="overview" className="mt-6"><OverviewTab /></TabsContent>
-          <TabsContent value="users" className="mt-6"><UsersTab logAction={logAction} /></TabsContent>
-          <TabsContent value="content" className="mt-6"><ContentTab logAction={logAction} /></TabsContent>
-          <TabsContent value="security" className="mt-6"><SecurityTab logAction={logAction} /></TabsContent>
-          <TabsContent value="subscriptions" className="mt-6"><SubscriptionsTab logAction={logAction} /></TabsContent>
-          <TabsContent value="gateways" className="mt-6"><GatewaysTab logAction={logAction} /></TabsContent>
-          <TabsContent value="settings" className="mt-6"><SettingsTab logAction={logAction} /></TabsContent>
-          <TabsContent value="audit" className="mt-6"><AuditTab /></TabsContent>
+          <div className="min-w-0 flex-1">
+            <TabsContent value="overview" className="mt-0"><OverviewTab /></TabsContent>
+            <TabsContent value="users" className="mt-0"><UsersTab logAction={logAction} /></TabsContent>
+            <TabsContent value="content" className="mt-0"><ContentTab logAction={logAction} /></TabsContent>
+            <TabsContent value="security" className="mt-0"><SecurityTab logAction={logAction} /></TabsContent>
+            <TabsContent value="subscriptions" className="mt-0"><SubscriptionsTab logAction={logAction} /></TabsContent>
+            <TabsContent value="gateways" className="mt-0"><GatewaysTab logAction={logAction} /></TabsContent>
+            <TabsContent value="settings" className="mt-0"><SettingsTab logAction={logAction} /></TabsContent>
+            <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
+          </div>
         </Tabs>
       </main>
     </div>
