@@ -239,9 +239,27 @@ function AuthPage() {
                   />
                 </div>
 
+                {mode === "signup" && (
+                  <label className="flex cursor-pointer items-start gap-2 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[hsl(var(--brand))]"
+                    />
+                    <span>
+                      Li e concordo com os{" "}
+                      <Link to="/termos" className="text-brand underline hover:no-underline">Termos de Uso</Link>{" "}
+                      e a{" "}
+                      <Link to="/privacidade" className="text-brand underline hover:no-underline">Política de Privacidade</Link>{" "}
+                      da ForLink (LGPD).
+                    </span>
+                  </label>
+                )}
+
                 <Button
                   type="submit"
-                  disabled={loading || (mode === "signup" && (!unameValid || available === false))}
+                  disabled={loading || (mode === "signup" && (!unameValid || available === false || !acceptedTerms))}
                   className="w-full bg-brand text-brand-foreground hover:bg-brand/90"
                 >
                   {loading ? (
@@ -254,7 +272,7 @@ function AuthPage() {
                 </Button>
 
                 <p className="pt-1 text-center text-xs text-muted-foreground">
-                  Ao continuar você concorda com os termos de uso do ForLink.
+                  Protegido pela LGPD · Lei nº 13.709/2018
                 </p>
               </form>
             </Card>
