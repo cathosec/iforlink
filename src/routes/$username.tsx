@@ -155,6 +155,22 @@ function PublicProfile() {
 
   const isOwner = !!user && !!profileQ.data && user.id === profileQ.data.id;
 
+  // Incrementa a contagem de visualizações uma única vez por sessão/perfil,
+  // ignorando visitas do próprio dono do perfil.
+  const viewedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!profileQ.data || isOwner) return;
+    if (viewedRef.current === profileQ.data.id) return;
+    viewedRef.current = profileQ.data.id;
+    const key = `forlink:viewed:${profileQ.data.username}`;
+    try {
+      const last = sessionStorage.getItem(key);
+      if (last) return;
+      sessionStorage.setItem(key, "1");
+    } catch { /* storage indisponível — segue registrando */ }
+    void supabase.rpc("increment_profile_view", { _username: profileQ.data.username });
+  }, [profileQ.data, isOwner]);
+
   const catsQ = useQuery({
     queryKey: ["cats", profileQ.data?.id, isOwner],
     enabled: !!profileQ.data?.id,
