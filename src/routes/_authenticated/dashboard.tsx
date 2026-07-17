@@ -163,15 +163,39 @@ function Dashboard() {
     if (error) return toast.error(error.message);
     refresh();
   };
+  const persistLinkOrder = async (categoryId: string, ordered: LinkRow[]) => {
+    await Promise.all(
+      ordered.map((l, idx) =>
+        l.display_order === idx
+          ? Promise.resolve()
+          : supabase.from("links").update({ display_order: idx }).eq("id", l.id),
+      ),
+    );
+    refresh();
+  };
   const moveLink = async (id: string, dir: -1 | 1) => {
     const link = links.find((l) => l.id === id)!;
-    const siblings = links.filter((l) => l.category_id === link.category_id).sort((a, b) => a.display_order - b.display_order);
+    const siblings = links
+      .filter((l) => l.category_id === link.category_id)
+      .sort((a, b) => a.display_order - b.display_order);
     const idx = siblings.findIndex((l) => l.id === id);
-    const swap = siblings[idx + dir];
-    if (!swap) return;
-    await supabase.from("links").update({ display_order: swap.display_order }).eq("id", id);
-    await supabase.from("links").update({ display_order: link.display_order }).eq("id", swap.id);
-    refresh();
+    if (idx < 0 || idx + dir < 0 || idx + dir >= siblings.length) return;
+    await persistLinkOrder(link.category_id, arrayMove(siblings, idx, idx + dir));
+  };
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleCategoryDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = cats.findIndex((c) => c.id === active.id);
+    const newIdx = cats.findIndex((c) => c.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    void persistCategoryOrder(arrayMove(cats, oldIdx, newIdx));
   };
 
   return (
