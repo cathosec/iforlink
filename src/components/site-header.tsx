@@ -53,7 +53,12 @@ export function SiteHeader() {
                     <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Painel</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/encurtar"><Scissors className="mr-2 h-4 w-4" /> Encurtador</Link>
+                    <Link to="/encurtar" className="flex w-full items-center">
+                      <Scissors className="mr-2 h-4 w-4" /> Encurtador
+                      {role !== "pro" && role !== "admin" && (
+                        <Badge variant="outline" className="ml-auto text-[9px] uppercase">Pro</Badge>
+                      )}
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings"><UserIcon className="mr-2 h-4 w-4" /> Perfil</Link>
