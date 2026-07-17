@@ -17,7 +17,9 @@ export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Perfil · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
-async function fileToSquareDataUrl(file: File, size = 320): Promise<string> {
+const PUBLIC_ORIGIN = "https://forlink.app";
+
+async function fileToSquareBlob(file: File, size = 512): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const s = Math.min(bitmap.width, bitmap.height);
   const sx = (bitmap.width - s) / 2;
@@ -27,7 +29,13 @@ async function fileToSquareDataUrl(file: File, size = 320): Promise<string> {
   canvas.height = size;
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(bitmap, sx, sy, s, s, 0, 0, size, size);
-  return canvas.toDataURL("image/jpeg", 0.86);
+  return await new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("toBlob failed"))),
+      "image/jpeg",
+      0.88,
+    ),
+  );
 }
 
 function Settings() {
@@ -53,15 +61,27 @@ function Settings() {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    if (!user) return;
     if (!file.type.startsWith("image/")) return toast.error("Envie uma imagem.");
     if (file.size > 5 * 1024 * 1024) return toast.error("Imagem muito grande (máx. 5 MB).");
     setUploading(true);
     try {
-      const dataUrl = await fileToSquareDataUrl(file, 320);
-      setAvatarUrl(dataUrl);
-      toast.success("Foto pronta — clique em Salvar.");
-    } catch {
-      toast.error("Não foi possível processar a imagem.");
+      const blob = await fileToSquareBlob(file, 512);
+      const path = `${user.id}.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, blob, {
+          upsert: true,
+          contentType: "image/jpeg",
+          cacheControl: "3600",
+        });
+      if (upErr) throw upErr;
+      const publicUrl = `${PUBLIC_ORIGIN}/api/public/avatar/${user.id}.jpg?v=${Date.now()}`;
+      setAvatarUrl(publicUrl);
+      toast.success("Foto enviada — clique em Salvar.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Não foi possível enviar a imagem.");
     } finally {
       setUploading(false);
     }

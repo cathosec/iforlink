@@ -63,7 +63,14 @@ export const Route = createFileRoute("/$username")({
       ? p.bio.trim()
       : `Confira os links favoritos de ${p.display_name} no ForLink.`
     ).slice(0, 300);
-    const image = p.avatar_url || "https://forlink.app/brand/mark-color.svg";
+    // og:image must be an absolute http(s) URL. Legacy avatars were stored as
+    // data: URLs; crawlers can't fetch those, so we fall back to the brand mark.
+    const rawAvatar = p.avatar_url ?? "";
+    const isAbsoluteHttp = /^https?:\/\//i.test(rawAvatar);
+    const image = isAbsoluteHttp
+      ? rawAvatar
+      : "https://forlink.app/brand/mark-color.svg";
+    const imageAlt = `Foto de perfil de ${p.display_name}`;
     return {
       meta: [
         { title },
@@ -73,10 +80,14 @@ export const Route = createFileRoute("/$username")({
         { property: "og:description", content: description },
         { property: "og:url", content: url },
         { property: "og:image", content: image },
+        { property: "og:image:alt", content: imageAlt },
+        { property: "og:image:width", content: "512" },
+        { property: "og:image:height", content: "512" },
         { property: "profile:username", content: p.username },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
         { name: "twitter:image", content: image },
+        { name: "twitter:image:alt", content: imageAlt },
       ],
       links: [{ rel: "canonical", href: url }],
       scripts: [
