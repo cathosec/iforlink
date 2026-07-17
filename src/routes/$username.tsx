@@ -27,10 +27,11 @@ interface ProfileRow {
   id: string; username: string; display_name: string; bio: string | null;
   avatar_url: string | null; is_verified: boolean; views_count: number;
 }
-interface CatRow {
-  id: string; name: string; display_order: number;
-  links: { id: string; title: string; description: string | null; url: string; favicon_url: string | null; clicks_count: number; display_order: number }[];
+interface LinkItem {
+  id: string; title: string; description: string | null; url: string;
+  favicon_url: string | null; clicks_count: number; display_order: number; is_visible: boolean;
 }
+interface CatRow { id: string; name: string; display_order: number; links: LinkItem[] }
 
 function PublicProfile() {
   const { username } = Route.useParams();
