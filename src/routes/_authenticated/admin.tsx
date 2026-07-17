@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Users, Link2, BadgeCheck, ExternalLink, DollarSign, CreditCard,
   Settings2, ShieldAlert, ShieldCheck, TrendingUp, Trash2, Search, Activity,
-  FolderTree, AlertTriangle, EyeOff, Plus, X,
+  FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -90,6 +90,7 @@ function Admin() {
               ["security", ShieldCheck, "Segurança"],
               ["subscriptions", CreditCard, "Assinaturas"],
               ["gateways", DollarSign, "Pagamentos"],
+              ["ads", Megaphone, "Anúncios"],
               ["settings", Settings2, "Plataforma"],
               ["audit", Activity, "Auditoria"],
             ].map(([v, Icon, label]) => {
@@ -114,6 +115,7 @@ function Admin() {
             <TabsContent value="security" className="mt-0"><SecurityTab logAction={logAction} /></TabsContent>
             <TabsContent value="subscriptions" className="mt-0"><SubscriptionsTab logAction={logAction} /></TabsContent>
             <TabsContent value="gateways" className="mt-0"><GatewaysTab logAction={logAction} /></TabsContent>
+            <TabsContent value="ads" className="mt-0"><AdsTab logAction={logAction} /></TabsContent>
             <TabsContent value="settings" className="mt-0"><SettingsTab logAction={logAction} /></TabsContent>
             <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
           </div>
