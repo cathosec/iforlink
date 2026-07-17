@@ -566,20 +566,22 @@ function NewLinkDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-lg overflow-hidden">
         <DialogHeader><DialogTitle>{editing ? "Editar link" : "Adicionar link"}</DialogTitle></DialogHeader>
         <div className="space-y-4">
-          <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+          <div className="flex items-start gap-3 overflow-hidden rounded-lg border bg-muted/30 p-3">
             {preview ? (
-              <img src={preview} alt="" className="h-10 w-10 rounded-md border bg-white object-contain p-1.5" />
+              <img src={preview} alt="" className="h-10 w-10 shrink-0 rounded-md border bg-white object-contain p-1.5" />
             ) : (
-              <div className="grid h-10 w-10 place-items-center rounded-md border bg-white text-muted-foreground">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md border bg-white text-muted-foreground">
                 <Link2 className="h-4 w-4" />
               </div>
             )}
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 overflow-hidden">
               <div className="truncate text-sm font-medium">{title || "Título do link"}</div>
-              <div className="truncate text-xs text-muted-foreground">{url || "https://..."}</div>
+              <div className="truncate text-xs text-muted-foreground" title={url || undefined}>
+                {url || "https://..."}
+              </div>
             </div>
           </div>
           <div>

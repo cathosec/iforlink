@@ -228,6 +228,33 @@ export type Database = {
         }
         Relationships: []
       }
+      short_links: {
+        Row: {
+          clicks_count: number
+          code: string
+          created_at: string
+          id: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          clicks_count?: number
+          code: string
+          created_at?: string
+          id?: string
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          clicks_count?: number
+          code?: string
+          created_at?: string
+          id?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount_cents: number
@@ -350,6 +377,7 @@ export type Database = {
         Returns: boolean
       }
       increment_link_click: { Args: { _link_id: string }; Returns: undefined }
+      increment_short_click: { Args: { _code: string }; Returns: undefined }
     }
     Enums: {
       app_role: "free" | "pro" | "admin"
