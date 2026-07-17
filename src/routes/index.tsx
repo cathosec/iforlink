@@ -252,6 +252,9 @@ function Home() {
       </section>
 
 
+      {/* Top ad slot */}
+      <div className="mx-auto max-w-6xl px-4"><AdSlot slot="top" label="Publicidade" /></div>
+
       {/* Search + Directory */}
       <section id="diretorio" className="mx-auto max-w-6xl px-4 py-20">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
