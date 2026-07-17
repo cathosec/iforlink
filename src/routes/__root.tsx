@@ -145,8 +145,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "ForLink — Seus links favoritos, organizados e acessíveis de qualquer lugar" },
       { name: "twitter:description", content: "Salve, organize e acesse seus links favoritos em um só lugar. Categorias, links privados, perfil público compartilhável e sincronização entre dispositivos." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/715d280f-db7b-4839-8002-d67b71a993ab" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/715d280f-db7b-4839-8002-d67b71a993ab" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/ddaefda3-6d84-474f-845b-ee04b0d25383" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/ddaefda3-6d84-474f-845b-ee04b0d25383" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
