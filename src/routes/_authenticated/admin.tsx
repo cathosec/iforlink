@@ -460,7 +460,7 @@ function SubscriptionsTab({ logAction }: { logAction: (a: string, t?: string, id
               <div key={s.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">@{s.profiles?.username ?? "—"}</span>
+                    <span className="font-medium">@{s.profile?.username ?? "—"}</span>
                     <Badge variant="outline" className="text-[10px] uppercase">{s.plan}</Badge>
                     <Badge variant={s.status === "active" ? "default" : "secondary"} className="text-[10px] uppercase">{s.status}</Badge>
                   </div>
