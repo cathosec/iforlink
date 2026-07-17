@@ -17,7 +17,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import {
   Users, Link2, BadgeCheck, ExternalLink, DollarSign, CreditCard,
-  Settings2, ShieldAlert, TrendingUp, Trash2, Search, Activity, FolderTree,
+  Settings2, ShieldAlert, ShieldCheck, TrendingUp, Trash2, Search, Activity,
+  FolderTree, AlertTriangle, EyeOff, Plus, X,
 } from "lucide-react";
 import { toast } from "sonner";
 
