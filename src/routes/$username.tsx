@@ -235,8 +235,6 @@ function PublicProfile() {
 
         {!hideAds && <AdSlot slot="profile" label="Publicidade" />}
 
-        {!hideAds && <AdSlot slot="profile" label="Publicidade" />}
-
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
           <Link to="/" className="group flex flex-col items-center gap-2">
             <span className="text-[11px] uppercase tracking-widest text-muted-foreground group-hover:text-foreground">
