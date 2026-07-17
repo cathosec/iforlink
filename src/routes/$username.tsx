@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { BadgeCheck, Copy, Link2, ExternalLink, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { getFaviconUrl } from "@/lib/favicon";
+import { AdSlot } from "@/components/ad-slot";
 
 export const Route = createFileRoute("/$username")({
   component: PublicProfile,
@@ -215,10 +216,18 @@ function PublicProfile() {
           )}
         </div>
 
+
+        <AdSlot slot="profile" label="Publicidade" />
+
         <div className="mt-12 text-center">
           <Link to="/" className="text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground">
             criado com <span className="font-semibold text-foreground">ForLink</span>
           </Link>
+          <div className="mt-3 flex justify-center gap-3 text-[11px] text-muted-foreground">
+            <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
+            <span>·</span>
+            <Link to="/termos" className="hover:text-foreground">Termos</Link>
+          </div>
         </div>
       </main>
     </div>
