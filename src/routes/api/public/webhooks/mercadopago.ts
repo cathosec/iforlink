@@ -10,7 +10,12 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
         const signature = request.headers.get("x-signature") ?? "";
         const requestId = request.headers.get("x-request-id") ?? "";
         const dataId = url.searchParams.get("data.id") ?? "";
-        const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
+
+        // Load settings (token + webhook_secret can be stored in DB by admin).
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: setting } = await supabaseAdmin.from("platform_settings").select("value").eq("key", "mercadopago").maybeSingle();
+        const cfg = (setting?.value ?? {}) as { mode?: string; access_token_test?: string; access_token_live?: string; webhook_secret?: string };
+        const secret = (cfg.webhook_secret && cfg.webhook_secret.trim()) || process.env.MERCADOPAGO_WEBHOOK_SECRET || "";
 
         // Signature verification (if secret configured)
         if (secret) {
@@ -40,7 +45,8 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
           return new Response("ignored", { status: 200 });
         }
 
-        const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+        const modeToken = cfg.mode === "live" ? cfg.access_token_live : cfg.access_token_test;
+        const token = (modeToken && modeToken.trim()) || process.env.MERCADOPAGO_ACCESS_TOKEN || "";
         if (!token) return new Response("mp token missing", { status: 500 });
 
         // Fetch full payment

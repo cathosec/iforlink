@@ -1,6 +1,22 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type MpCfg = {
+  enabled?: boolean;
+  mode?: string;
+  pix_expiration_minutes?: number;
+  access_token_test?: string;
+  access_token_live?: string;
+  webhook_secret?: string;
+  prices?: { month_cents?: number; quarter_cents?: number; year_cents?: number };
+};
+
+/** Resolve MP access token: settings (by mode) → env fallback. */
+function resolveToken(cfg: MpCfg): string {
+  const fromCfg = cfg.mode === "live" ? cfg.access_token_live : cfg.access_token_test;
+  const token = (fromCfg && fromCfg.trim()) || process.env.MERCADOPAGO_ACCESS_TOKEN || "";
+  return token.trim();
+}
 
 type Interval = "month" | "quarter" | "year";
 
@@ -28,9 +44,6 @@ export const createPixSubscription = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
-    if (!token) throw new Error("Mercado Pago não configurado (MERCADOPAGO_ACCESS_TOKEN ausente).");
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Fetch config
@@ -39,12 +52,11 @@ export const createPixSubscription = createServerFn({ method: "POST" })
       .select("value")
       .eq("key", "mercadopago")
       .maybeSingle();
-    const cfg = (setting?.value ?? {}) as {
-      enabled?: boolean;
-      pix_expiration_minutes?: number;
-      prices?: { month_cents?: number; quarter_cents?: number; year_cents?: number };
-    };
+    const cfg = (setting?.value ?? {}) as MpCfg;
     if (!cfg.enabled) throw new Error("Pagamentos Mercado Pago desativados pelo administrador.");
+
+    const token = resolveToken(cfg);
+    if (!token) throw new Error("Mercado Pago não configurado (nenhum access token definido).");
 
     const priceKey = data.interval === "month" ? "month_cents" : data.interval === "quarter" ? "quarter_cents" : "year_cents";
     const amountCents = cfg.prices?.[priceKey] ?? 0;
@@ -153,7 +165,8 @@ export const getPixStatus = createServerFn({ method: "POST" })
 
     // Se ainda pendente, consulta Mercado Pago
     if (row.status === "pending" && row.mp_payment_id) {
-      const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+      const { data: setting } = await supabaseAdmin.from("platform_settings").select("value").eq("key", "mercadopago").maybeSingle();
+      const token = resolveToken((setting?.value ?? {}) as MpCfg);
       if (token) {
         const resp = await fetch(`https://api.mercadopago.com/v1/payments/${row.mp_payment_id}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -219,3 +232,33 @@ export async function applyPaymentUpdate(pixId: string, mpPayment: Record<string
   }
   await supabaseAdmin.from("pix_payments").update(patch as never).eq("id", pixId);
 }
+
+/** Admin: test connection using the token stored in platform_settings (by current mode). */
+export const testMercadoPago = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Ensure caller is admin
+    const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+    if (!roles?.some((r) => r.role === "admin")) throw new Error("Acesso restrito a admins.");
+
+    const { data: setting } = await supabaseAdmin.from("platform_settings").select("value").eq("key", "mercadopago").maybeSingle();
+    const cfg = (setting?.value ?? {}) as MpCfg;
+    const token = resolveToken(cfg);
+    if (!token) return { ok: false, message: "Nenhum access token configurado (test/live)." };
+
+    const expectedPrefix = cfg.mode === "live" ? "APP_USR-" : "TEST-";
+    const prefixOk = token.startsWith(expectedPrefix);
+
+    const r = await fetch("https://api.mercadopago.com/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const json = (await r.json().catch(() => ({}))) as { id?: number; nickname?: string; email?: string; site_id?: string; message?: string };
+    if (!r.ok) return { ok: false, message: json?.message ?? `Falha (${r.status})`, prefixOk };
+    return {
+      ok: true,
+      prefixOk,
+      mode: cfg.mode ?? "test",
+      account: { id: json.id, nickname: json.nickname, email: json.email, site_id: json.site_id },
+    };
+  });

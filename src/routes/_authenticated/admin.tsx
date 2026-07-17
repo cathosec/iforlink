@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -81,26 +81,42 @@ function Admin() {
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="mt-8">
-          <TabsList className="flex w-full flex-wrap">
-            <TabsTrigger value="overview"><TrendingUp className="mr-1.5 h-4 w-4" />Visão geral</TabsTrigger>
-            <TabsTrigger value="users"><Users className="mr-1.5 h-4 w-4" />Usuários</TabsTrigger>
-            <TabsTrigger value="content"><FolderTree className="mr-1.5 h-4 w-4" />Conteúdo</TabsTrigger>
-            <TabsTrigger value="security"><ShieldCheck className="mr-1.5 h-4 w-4" />Segurança</TabsTrigger>
-            <TabsTrigger value="subscriptions"><CreditCard className="mr-1.5 h-4 w-4" />Assinaturas</TabsTrigger>
-            <TabsTrigger value="gateways"><DollarSign className="mr-1.5 h-4 w-4" />Gateways</TabsTrigger>
-            <TabsTrigger value="settings"><Settings2 className="mr-1.5 h-4 w-4" />Plataforma</TabsTrigger>
-            <TabsTrigger value="audit"><Activity className="mr-1.5 h-4 w-4" />Auditoria</TabsTrigger>
+        <Tabs defaultValue="overview" orientation="vertical" className="mt-8 flex flex-col gap-6 md:flex-row md:items-start">
+          <TabsList className="flex h-auto w-full flex-row flex-wrap justify-start gap-1 rounded-lg border bg-card p-2 md:w-56 md:shrink-0 md:flex-col md:flex-nowrap">
+            {[
+              ["overview", TrendingUp, "Visão geral"],
+              ["users", Users, "Usuários"],
+              ["content", FolderTree, "Conteúdo"],
+              ["security", ShieldCheck, "Segurança"],
+              ["subscriptions", CreditCard, "Assinaturas"],
+              ["gateways", DollarSign, "Pagamentos"],
+              ["settings", Settings2, "Plataforma"],
+              ["audit", Activity, "Auditoria"],
+            ].map(([v, Icon, label]) => {
+              const I = Icon as React.ComponentType<{ className?: string }>;
+              return (
+                <TabsTrigger
+                  key={v as string}
+                  value={v as string}
+                  className="w-full justify-start gap-2 px-3 py-2 text-sm data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none"
+                >
+                  <I className="h-4 w-4" />
+                  <span>{label as string}</span>
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
 
-          <TabsContent value="overview" className="mt-6"><OverviewTab /></TabsContent>
-          <TabsContent value="users" className="mt-6"><UsersTab logAction={logAction} /></TabsContent>
-          <TabsContent value="content" className="mt-6"><ContentTab logAction={logAction} /></TabsContent>
-          <TabsContent value="security" className="mt-6"><SecurityTab logAction={logAction} /></TabsContent>
-          <TabsContent value="subscriptions" className="mt-6"><SubscriptionsTab logAction={logAction} /></TabsContent>
-          <TabsContent value="gateways" className="mt-6"><GatewaysTab logAction={logAction} /></TabsContent>
-          <TabsContent value="settings" className="mt-6"><SettingsTab logAction={logAction} /></TabsContent>
-          <TabsContent value="audit" className="mt-6"><AuditTab /></TabsContent>
+          <div className="min-w-0 flex-1">
+            <TabsContent value="overview" className="mt-0"><OverviewTab /></TabsContent>
+            <TabsContent value="users" className="mt-0"><UsersTab logAction={logAction} /></TabsContent>
+            <TabsContent value="content" className="mt-0"><ContentTab logAction={logAction} /></TabsContent>
+            <TabsContent value="security" className="mt-0"><SecurityTab logAction={logAction} /></TabsContent>
+            <TabsContent value="subscriptions" className="mt-0"><SubscriptionsTab logAction={logAction} /></TabsContent>
+            <TabsContent value="gateways" className="mt-0"><GatewaysTab logAction={logAction} /></TabsContent>
+            <TabsContent value="settings" className="mt-0"><SettingsTab logAction={logAction} /></TabsContent>
+            <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
+          </div>
         </Tabs>
       </main>
     </div>
@@ -490,13 +506,6 @@ function SubscriptionsTab({ logAction }: { logAction: (a: string, t?: string, id
 /* ─────────── Gateways ─────────── */
 function GatewaysTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
   const qc = useQueryClient();
-  const setQ = useQuery({
-    queryKey: ["setting", "gateways"],
-    queryFn: async () => {
-      const { data } = await supabase.from("platform_settings").select("*").eq("key", "gateways").maybeSingle();
-      return data as SettingRow | null;
-    },
-  });
   const pricingQ = useQuery({
     queryKey: ["setting", "pricing"],
     queryFn: async () => {
@@ -505,16 +514,7 @@ function GatewaysTab({ logAction }: { logAction: (a: string, t?: string, id?: st
     },
   });
 
-  const gateways = (setQ.data?.value ?? {}) as Record<string, { enabled: boolean; mode: string }>;
   const pricing = (pricingQ.data?.value ?? {}) as { pro_month_brl: number; pro_year_brl: number };
-
-  const saveGateway = async (name: string, patch: Partial<{ enabled: boolean; mode: string }>) => {
-    const next = { ...gateways, [name]: { ...(gateways[name] ?? { enabled: false, mode: "test" }), ...patch } };
-    const { error } = await supabase.from("platform_settings").update({ value: next }).eq("key", "gateways");
-    if (error) return toast.error(error.message);
-    await logAction("gateway.update", "setting", name, patch);
-    qc.invalidateQueries({ queryKey: ["setting", "gateways"] });
-  };
 
   const savePricing = async (patch: Partial<{ pro_month_brl: number; pro_year_brl: number }>) => {
     const next = { ...pricing, ...patch };
@@ -550,36 +550,6 @@ function GatewaysTab({ logAction }: { logAction: (a: string, t?: string, id?: st
         </div>
       </Card>
 
-      <Card className="p-6">
-        <h3 className="font-semibold">Gateways de pagamento</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Ative gateways para começar a processar pagamentos automaticamente.</p>
-        <div className="mt-4 space-y-3">
-          {(["stripe", "paddle", "pix"] as const).map((g) => {
-            const gw = gateways[g] ?? { enabled: false, mode: "test" };
-            return (
-              <div key={g} className="flex items-center gap-3 rounded-md border p-3">
-                <div className="flex-1">
-                  <div className="font-medium capitalize">{g}</div>
-                  <div className="text-xs text-muted-foreground">Modo: {gw.mode}</div>
-                </div>
-                <Select value={gw.mode} onValueChange={(v) => saveGateway(g, { mode: v })}>
-                  <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="test">Teste</SelectItem>
-                    <SelectItem value="sandbox">Sandbox</SelectItem>
-                    <SelectItem value="live">Produção</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Switch checked={gw.enabled} onCheckedChange={(v) => saveGateway(g, { enabled: v })} />
-              </div>
-            );
-          })}
-        </div>
-        <p className="mt-4 text-xs text-muted-foreground">
-          💡 Para ativar cobrança real, integre Stripe ou Paddle pelo Lovable Payments — as assinaturas serão registradas automaticamente aqui via webhook.
-        </p>
-      </Card>
-
       <MercadoPagoCard logAction={logAction} />
     </div>
   );
@@ -599,10 +569,33 @@ function MercadoPagoCard({ logAction }: { logAction: (a: string, t?: string, id?
     enabled?: boolean;
     mode?: string;
     pix_expiration_minutes?: number;
+    access_token_test?: string;
+    access_token_live?: string;
+    webhook_secret?: string;
     prices?: { month_cents?: number; quarter_cents?: number; year_cents?: number };
   };
   const cfg: MPCfg = (q.data?.value ?? {}) as MPCfg;
   const prices = cfg.prices ?? {};
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; message?: string; prefixOk?: boolean; mode?: string; account?: { nickname?: string; email?: string; site_id?: string; id?: number } } | null>(null);
+
+  const runTest = async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const { testMercadoPago } = await import("@/lib/mercadopago.functions");
+      const res = await testMercadoPago();
+      setTestResult(res);
+      if (res.ok) toast.success("Conexão OK com Mercado Pago");
+      else toast.error(res.message ?? "Falha ao conectar");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      setTestResult({ ok: false, message: msg });
+      toast.error(msg);
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const save = async (patch: Partial<MPCfg>) => {
     const next = { ...cfg, ...patch };
@@ -667,16 +660,61 @@ function MercadoPagoCard({ logAction }: { logAction: (a: string, t?: string, id?
         </p>
       </div>
 
-      <div className="mt-5">
-        <div className="text-xs font-medium text-muted-foreground">Credenciais</div>
-        <div className="mt-2 rounded-md border bg-muted/40 p-3 text-xs">
-          As chaves ficam armazenadas como <strong>segredos do servidor</strong> (nunca expostas ao navegador):
-          <ul className="mt-2 list-inside list-disc space-y-0.5">
-            <li><code>MERCADOPAGO_ACCESS_TOKEN</code> — Access Token (obrigatório)</li>
-            <li><code>MERCADOPAGO_WEBHOOK_SECRET</code> — Segredo do webhook (opcional, valida assinatura)</li>
-          </ul>
-          <p className="mt-2">Para alterar, atualize os segredos do projeto na área de configurações.</p>
+      <div className="mt-6">
+        <div className="mb-2 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">Credenciais do Mercado Pago</div>
+            <p className="text-xs text-muted-foreground">Salvas com segurança no banco (acesso restrito a admins via RLS). O modo acima define qual chave é usada.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={runTest} disabled={testing}>
+            {testing ? "Testando…" : "Testar integração"}
+          </Button>
         </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <Label className="text-xs">Access Token · Teste <span className="text-muted-foreground">(TEST-…)</span></Label>
+            <Input
+              type="password"
+              autoComplete="off"
+              placeholder="TEST-0000000000000000-000000-…"
+              defaultValue={cfg.access_token_test ?? ""}
+              onBlur={(e) => e.target.value !== (cfg.access_token_test ?? "") && save({ access_token_test: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Access Token · Produção <span className="text-muted-foreground">(APP_USR-…)</span></Label>
+            <Input
+              type="password"
+              autoComplete="off"
+              placeholder="APP_USR-0000000000000000-000000-…"
+              defaultValue={cfg.access_token_live ?? ""}
+              onBlur={(e) => e.target.value !== (cfg.access_token_live ?? "") && save({ access_token_live: e.target.value })}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label className="text-xs">Segredo do webhook <span className="text-muted-foreground">(opcional — valida assinatura)</span></Label>
+            <Input
+              type="password"
+              autoComplete="off"
+              placeholder="whsec_… ou string gerada pelo painel do Mercado Pago"
+              defaultValue={cfg.webhook_secret ?? ""}
+              onBlur={(e) => e.target.value !== (cfg.webhook_secret ?? "") && save({ webhook_secret: e.target.value })}
+            />
+          </div>
+        </div>
+
+        {testResult && (
+          <div className={`mt-3 rounded-md border p-3 text-xs ${testResult.ok ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400" : "border-destructive/40 bg-destructive/5 text-destructive"}`}>
+            {testResult.ok ? (
+              <>
+                ✓ Conectado como <strong>{testResult.account?.nickname ?? testResult.account?.email}</strong> · site {testResult.account?.site_id} · modo <strong>{testResult.mode}</strong>
+                {testResult.prefixOk === false && <div className="mt-1">⚠ O token não tem o prefixo esperado para o modo selecionado.</div>}
+              </>
+            ) : (
+              <>✗ {testResult.message}</>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mt-5">

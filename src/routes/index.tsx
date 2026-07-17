@@ -120,9 +120,14 @@ function Home() {
                     <div className="space-y-1.5">
                       {g.items.map(([title, host]) => (
                         <div key={host} className="flex items-center gap-2.5 rounded-md border bg-card px-2.5 py-1.5">
-                          <span className="grid h-6 w-6 place-items-center rounded bg-brand-soft text-[10px] font-bold text-brand">
-                            {title.slice(0, 1)}
-                          </span>
+                          <img
+                            src={`https://www.google.com/s2/favicons?sz=64&domain=${host}`}
+                            alt=""
+                            width={16}
+                            height={16}
+                            loading="lazy"
+                            className="h-4 w-4 shrink-0 rounded-sm"
+                          />
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-xs font-medium">{title}</div>
                             <div className="truncate text-[10px] text-muted-foreground">{host}</div>
