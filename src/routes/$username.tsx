@@ -1,11 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { SiteHeader } from "@/components/site-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BadgeCheck, Copy, Link2, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { BadgeCheck, Copy, Link2, ExternalLink, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { getFaviconUrl } from "@/lib/favicon";
 
