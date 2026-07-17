@@ -665,12 +665,17 @@ function AuditTab() {
   const q = useQuery({
     queryKey: ["admin-audit"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data: rows } = await supabase
         .from("admin_audit_log")
-        .select("*, profiles:admin_id(username,display_name)")
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(200);
-      return (data ?? []) as Array<AuditEntry & { profiles: { username: string; display_name: string } | null }>;
+      const ids = Array.from(new Set((rows ?? []).map(r => r.admin_id)));
+      const { data: profs } = ids.length
+        ? await supabase.from("profiles").select("id,username,display_name").in("id", ids)
+        : { data: [] as { id: string; username: string; display_name: string }[] };
+      const map = new Map((profs ?? []).map(p => [p.id, p]));
+      return (rows ?? []).map(r => ({ ...r, profile: map.get(r.admin_id) ?? null })) as Array<AuditEntry & { profile: { username: string; display_name: string } | null }>;
     },
   });
   return (
@@ -686,7 +691,7 @@ function AuditTab() {
                 <Badge variant="outline" className="font-mono text-[10px]">{e.action}</Badge>
                 {e.target_type && <span className="text-xs text-muted-foreground">{e.target_type}:{e.target_id?.slice(0, 8)}</span>}
                 <span className="ml-auto text-xs text-muted-foreground">
-                  {new Date(e.created_at).toLocaleString("pt-BR")} · por @{e.profiles?.username ?? "—"}
+                  {new Date(e.created_at).toLocaleString("pt-BR")} · por @{e.profile?.username ?? "—"}
                 </span>
               </div>
               {Object.keys(e.metadata ?? {}).length > 0 && (
