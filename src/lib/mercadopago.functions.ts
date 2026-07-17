@@ -214,5 +214,5 @@ export async function applyPaymentUpdate(pixId: string, mpPayment: Record<string
     await supabaseAdmin.from("user_roles").delete().eq("user_id", pix.user_id);
     await supabaseAdmin.from("user_roles").insert({ user_id: pix.user_id, role: "pro" });
   }
-  await supabaseAdmin.from("pix_payments").update(patch).eq("id", pixId);
+  await supabaseAdmin.from("pix_payments").update(patch as never).eq("id", pixId);
 }
