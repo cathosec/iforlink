@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader } from "@/components/site-header";
@@ -8,12 +8,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: Settings,
   head: () => ({ meta: [{ title: "Perfil · ForLink" }] }),
 });
+
+async function fileToSquareDataUrl(file: File, size = 320): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const s = Math.min(bitmap.width, bitmap.height);
+  const sx = (bitmap.width - s) / 2;
+  const sy = (bitmap.height - s) / 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, sx, sy, s, s, 0, 0, size, size);
+  return canvas.toDataURL("image/jpeg", 0.86);
+}
 
 function Settings() {
   const { user, profile, refresh } = useAuth();
@@ -22,6 +37,8 @@ function Settings() {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
@@ -32,23 +49,52 @@ function Settings() {
     }
   }, [profile]);
 
+  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast.error("Envie uma imagem.");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Imagem muito grande (máx. 5 MB).");
+    setUploading(true);
+    try {
+      const dataUrl = await fileToSquareDataUrl(file, 320);
+      setAvatarUrl(dataUrl);
+      toast.success("Foto pronta — clique em Salvar.");
+    } catch {
+      toast.error("Não foi possível processar a imagem.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({
-      username: username.toLowerCase().trim(),
-      display_name: displayName.trim(),
-      bio: bio.trim() || null,
-      avatar_url: avatarUrl.trim() || null,
-    }).eq("id", user!.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        username: username.toLowerCase().trim(),
+        display_name: displayName.trim(),
+        bio: bio.trim() || null,
+        avatar_url: avatarUrl.trim() || null,
+      })
+      .eq("id", user!.id);
     setSaving(false);
     if (error) {
-      toast.error(error.message.includes("username_format") ? "Nome de usuário inválido (3-32 caracteres: letras, números, hífens)." : error.message.includes("duplicate") ? "Este @usuario já está em uso." : error.message);
+      toast.error(
+        error.message.includes("username_format")
+          ? "Nome de usuário inválido (3-32 caracteres: letras, números, hífens)."
+          : error.message.includes("duplicate")
+            ? "Este @usuario já está em uso."
+            : error.message,
+      );
       return;
     }
     toast.success("Perfil atualizado");
     await refresh();
   };
+
+  const initials = (displayName || username || "U").slice(0, 2).toUpperCase();
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,7 +104,27 @@ function Settings() {
         <p className="mt-1 text-sm text-muted-foreground">Como você aparece publicamente.</p>
 
         <Card className="mt-8 p-6">
-          <form onSubmit={save} className="space-y-5">
+          <form onSubmit={save} className="space-y-6">
+            <div className="flex items-center gap-5">
+              <Avatar className="h-20 w-20 border">
+                <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+                <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-wrap items-center gap-2">
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
+                <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+                  <Upload className="mr-2 h-3.5 w-3.5" />
+                  {uploading ? "Processando…" : avatarUrl ? "Trocar foto" : "Enviar foto"}
+                </Button>
+                {avatarUrl && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setAvatarUrl("")}>
+                    <Trash2 className="mr-2 h-3.5 w-3.5" /> Remover
+                  </Button>
+                )}
+                <p className="w-full text-xs text-muted-foreground">JPG ou PNG, quadrado. Máx. 5 MB.</p>
+              </div>
+            </div>
+
             <div>
               <Label>Nome de usuário</Label>
               <div className="mt-1.5 flex items-center rounded-md border bg-background focus-within:ring-1 focus-within:ring-ring">
@@ -74,10 +140,6 @@ function Settings() {
             <div>
               <Label>Bio</Label>
               <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className="mt-1.5" placeholder="Uma linha rápida sobre você." />
-            </div>
-            <div>
-              <Label>URL do avatar</Label>
-              <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} className="mt-1.5" placeholder="https://…" />
             </div>
             <Button type="submit" disabled={saving} className="bg-brand text-brand-foreground hover:bg-brand/90">
               {saving ? "Salvando…" : "Salvar alterações"}
