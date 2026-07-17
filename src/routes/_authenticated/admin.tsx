@@ -566,36 +566,6 @@ function GatewaysTab({ logAction }: { logAction: (a: string, t?: string, id?: st
         </div>
       </Card>
 
-      <Card className="p-6">
-        <h3 className="font-semibold">Gateways de pagamento</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Ative gateways para começar a processar pagamentos automaticamente.</p>
-        <div className="mt-4 space-y-3">
-          {(["stripe", "paddle", "pix"] as const).map((g) => {
-            const gw = gateways[g] ?? { enabled: false, mode: "test" };
-            return (
-              <div key={g} className="flex items-center gap-3 rounded-md border p-3">
-                <div className="flex-1">
-                  <div className="font-medium capitalize">{g}</div>
-                  <div className="text-xs text-muted-foreground">Modo: {gw.mode}</div>
-                </div>
-                <Select value={gw.mode} onValueChange={(v) => saveGateway(g, { mode: v })}>
-                  <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="test">Teste</SelectItem>
-                    <SelectItem value="sandbox">Sandbox</SelectItem>
-                    <SelectItem value="live">Produção</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Switch checked={gw.enabled} onCheckedChange={(v) => saveGateway(g, { enabled: v })} />
-              </div>
-            );
-          })}
-        </div>
-        <p className="mt-4 text-xs text-muted-foreground">
-          💡 Para ativar cobrança real, integre Stripe ou Paddle pelo Lovable Payments — as assinaturas serão registradas automaticamente aqui via webhook.
-        </p>
-      </Card>
-
       <MercadoPagoCard logAction={logAction} />
     </div>
   );
