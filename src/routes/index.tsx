@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Search, BadgeCheck, ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check } from "lucide-react";
+import { AdSlot } from "@/components/ad-slot";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -251,6 +252,9 @@ function Home() {
       </section>
 
 
+      {/* Top ad slot */}
+      <div className="mx-auto max-w-6xl px-4"><AdSlot slot="top" label="Publicidade" /></div>
+
       {/* Search + Directory */}
       <section id="diretorio" className="mx-auto max-w-6xl px-4 py-20">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -311,12 +315,18 @@ function Home() {
             ))}
           </div>
         )}
+
+        <AdSlot slot="feed" label="Publicidade" />
       </section>
 
       <footer className="border-t bg-secondary/30">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} ForLink · forlink.app</span>
-          <span>Todos os direitos reservados.</span>
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
+            <Link to="/termos" className="hover:text-foreground">Termos</Link>
+            <a href="mailto:contato@forlink.app" className="hover:text-foreground">Contato</a>
+          </nav>
         </div>
       </footer>
     </div>
