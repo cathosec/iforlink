@@ -12,16 +12,44 @@ import { AdSlot } from "@/components/ad-slot";
 
 export const Route = createFileRoute("/")({
   component: Home,
-  head: () => ({
-    meta: [
-      { title: "ForLink — Seus links favoritos, organizados e acessíveis de qualquer lugar" },
-      { name: "description", content: "Salve, organize e acesse seus links favoritos em um só lugar. Categorias, links privados, perfil público compartilhável e sincronização entre dispositivos." },
-      { property: "og:title", content: "ForLink — Seus links favoritos, organizados e acessíveis de qualquer lugar" },
-      { property: "og:description", content: "Salve, organize e acesse seus links favoritos em um só lugar. Categorias, links privados, perfil público compartilhável e sincronização entre dispositivos." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => {
+    const title = "ForLink — Bio link e agregador de links profissional";
+    const description =
+      "Crie seu perfil ForLink em forlink.app/seu-usuario. Organize seus links favoritos em categorias, compartilhe em um único endereço e acompanhe cliques. Grátis para começar.";
+    const url = "https://forlink.app/";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { name: "keywords", content: "bio link, agregador de links, link na bio, linktree brasileiro, perfil de links, forlink" },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "website" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: "ForLink",
+            url: "https://forlink.app/",
+            applicationCategory: "SocialNetworkingApplication",
+            operatingSystem: "Web",
+            inLanguage: "pt-BR",
+            offers: [
+              { "@type": "Offer", name: "Free", price: "0", priceCurrency: "BRL" },
+              { "@type": "Offer", name: "Pro", priceCurrency: "BRL", category: "subscription" },
+            ],
+          }),
+        },
+      ],
+    };
+  },
 });
 
 interface DirProfile {

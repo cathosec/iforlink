@@ -13,8 +13,93 @@ import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
 import { LogoWordmark } from "@/components/logo";
 
+interface HeadProfile {
+  username: string;
+  display_name: string;
+  bio: string | null;
+  avatar_url: string | null;
+  is_verified: boolean;
+}
+
+async function fetchProfileForHead(username: string): Promise<HeadProfile | null> {
+  const url = (typeof process !== "undefined" && process.env?.SUPABASE_URL) || undefined;
+  const key = (typeof process !== "undefined" && process.env?.SUPABASE_PUBLISHABLE_KEY) || undefined;
+  if (!url || !key) return null;
+  try {
+    const res = await fetch(
+      `${url}/rest/v1/profiles?select=username,display_name,bio,avatar_url,is_verified&username=eq.${encodeURIComponent(username)}&limit=1`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+    );
+    if (!res.ok) return null;
+    const rows = (await res.json()) as HeadProfile[];
+    return rows[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/$username")({
   component: PublicProfile,
+  loader: async ({ params }) => ({
+    profileHead: await fetchProfileForHead(params.username),
+  }),
+  head: ({ params, loaderData }) => {
+    const p = loaderData?.profileHead;
+    const url = `https://forlink.app/${params.username}`;
+    if (!p) {
+      const title = `@${params.username} · ForLink`;
+      return {
+        meta: [
+          { title },
+          { name: "description", content: `Perfil @${params.username} no ForLink.` },
+          { name: "robots", content: "noindex,follow" },
+          { property: "og:url", content: url },
+        ],
+        links: [{ rel: "canonical", href: url }],
+      };
+    }
+    const title = `${p.display_name} (@${p.username}) · ForLink`;
+    const description = (p.bio && p.bio.trim().length > 0
+      ? p.bio.trim()
+      : `Confira os links favoritos de ${p.display_name} no ForLink.`
+    ).slice(0, 300);
+    const image = p.avatar_url || "https://forlink.app/brand/mark-color.svg";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:type", content: "profile" },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+        { property: "og:image", content: image },
+        { property: "profile:username", content: p.username },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:image", content: image },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ProfilePage",
+            url,
+            inLanguage: "pt-BR",
+            mainEntity: {
+              "@type": "Person",
+              name: p.display_name,
+              alternateName: `@${p.username}`,
+              url,
+              image,
+              description,
+            },
+          }),
+        },
+      ],
+    };
+  },
   notFoundComponent: () => (
     <div className="min-h-screen bg-background">
       <SiteHeader />

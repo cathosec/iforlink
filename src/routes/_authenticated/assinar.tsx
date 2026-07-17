@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/assinar")({
   component: Assinar,
-  head: () => ({ meta: [{ title: "Assinar Pro · ForLink" }] }),
+  head: () => ({ meta: [{ title: "Assinar Pro · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
 type Interval = "month" | "quarter" | "year";

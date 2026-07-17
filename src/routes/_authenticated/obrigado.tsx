@@ -12,7 +12,7 @@ import { CheckCircle2, Crown } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/obrigado")({
   component: Obrigado,
   validateSearch: (s: Record<string, unknown>) => ({ p: typeof s.p === "string" ? s.p : "" }),
-  head: () => ({ meta: [{ title: "Assinatura confirmada · ForLink" }] }),
+  head: () => ({ meta: [{ title: "Assinatura confirmada · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100);

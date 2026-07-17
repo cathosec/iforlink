@@ -14,7 +14,7 @@ type Search = { username?: string; mode?: "signin" | "signup" };
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
-  head: () => ({ meta: [{ title: "Entrar · ForLink" }] }),
+  head: () => ({ meta: [{ title: "Entrar · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
   validateSearch: (s: Record<string, unknown>): Search => ({
     username: typeof s.username === "string" ? s.username : undefined,
     mode: s.mode === "signup" || s.mode === "signin" ? s.mode : undefined,

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /admin
+Disallow: /assinar
+Disallow: /obrigado
+Disallow: /auth
+Disallow: /api/
+
+Sitemap: https://forlink.app/sitemap.xml

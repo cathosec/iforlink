@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: Settings,
-  head: () => ({ meta: [{ title: "Perfil · ForLink" }] }),
+  head: () => ({ meta: [{ title: "Perfil · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
 async function fileToSquareDataUrl(file: File, size = 320): Promise<string> {
