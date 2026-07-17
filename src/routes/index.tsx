@@ -8,17 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Search, BadgeCheck, ArrowRight, ShieldCheck, Zap, Globe2 } from "lucide-react";
+import { Search, BadgeCheck, ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
-      { title: "ForLink — Um link, todos os seus links" },
-      { name: "description", content: "Plataforma brasileira para reunir e organizar seus links em um perfil público, com categorias, verificação e planos Pro." },
+      { title: "ForLink — Seus links favoritos, organizados e acessíveis de qualquer lugar" },
+      { name: "description", content: "Salve, organize e acesse seus links favoritos em um só lugar. Categorias, links privados, perfil público compartilhável e sincronização entre dispositivos." },
+      { property: "og:title", content: "ForLink — Salve seus links, acesse de qualquer lugar" },
+      { property: "og:description", content: "O agregador de links brasileiro para salvar favoritos, organizar por categoria e compartilhar num perfil público." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-
 });
 
 interface DirProfile {
