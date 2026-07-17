@@ -60,7 +60,10 @@ export const createPixSubscription = createServerFn({ method: "POST" })
 
     // Derive webhook URL from request host
     let host = "";
-    try { host = getRequestHost(); } catch { /* noop */ }
+    try {
+      const mod = await import("@tanstack/react-start/server");
+      host = mod.getRequestHost();
+    } catch { /* noop */ }
     const notificationUrl = host ? `https://${host}/api/public/webhooks/mercadopago` : undefined;
 
     // Create pending pix_payments row
