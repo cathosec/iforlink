@@ -210,114 +210,230 @@ function PublicProfile() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  const profileUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/${p.username}`
+    : `https://forlink.app/${p.username}`;
+
   const copyProfile = async () => {
-    const url = `${window.location.origin}/${p.username}`;
-    await navigator.clipboard.writeText(url);
-    toast.success("Link copiado!");
+    await navigator.clipboard.writeText(profileUrl);
+    toast.success("Link copiado para a área de transferência");
+  };
+
+  const shareProfile = async () => {
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try {
+        await navigator.share({
+          title: p.display_name,
+          text: p.bio ?? `Confira os links de @${p.username}`,
+          url: profileUrl,
+        });
+        return;
+      } catch { /* usuário cancelou */ }
+    }
+    void copyProfile();
   };
 
   const cats = catsQ.data ?? [];
-  const defaultOpen = cats.map((c) => c.id);
-
   const hostOf = (u: string) => {
     try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; }
   };
   const totalLinks = cats.reduce((n, c) => n + c.links.length, 0);
+  const totalClicks = cats.reduce(
+    (n, c) => n + c.links.reduce((m, l) => m + (l.clicks_count ?? 0), 0),
+    0,
+  );
+
+  const filteredCats = query.trim()
+    ? cats
+        .map((c) => ({
+          ...c,
+          links: c.links.filter((l) => {
+            const q = query.toLowerCase();
+            return (
+              l.title.toLowerCase().includes(q) ||
+              (l.description ?? "").toLowerCase().includes(q) ||
+              l.url.toLowerCase().includes(q)
+            );
+          }),
+        }))
+        .filter((c) => c.links.length > 0 || c.name.toLowerCase().includes(query.toLowerCase()))
+    : cats;
+  const defaultOpen = filteredCats.map((c) => c.id);
 
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
-      <main className="mx-auto max-w-xl px-4 pb-20 pt-10">
-        {/* Header */}
-        <header className="flex items-center gap-4">
-          <Avatar className="h-16 w-16 shrink-0 border">
-            <AvatarImage src={p.avatar_url ?? undefined} alt={p.display_name} />
-            <AvatarFallback className="text-base font-medium">{p.display_name.slice(0, 1)}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <h1 className="truncate font-display text-xl font-semibold tracking-tight">{p.display_name}</h1>
-              {p.is_verified && <BadgeCheck className="h-4 w-4 shrink-0 text-brand" aria-label="Verificado" />}
-            </div>
-            <p className="truncate text-xs text-muted-foreground">@{p.username}</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={copyProfile} className="shrink-0">
-            <Copy className="h-3.5 w-3.5 sm:mr-2" />
-            <span className="hidden sm:inline">Copiar</span>
-          </Button>
-        </header>
+      {/* Cabeçalho decorativo com gradiente sutil */}
+      <div className="relative overflow-hidden border-b bg-gradient-to-b from-accent/40 via-background to-background">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(60%_60%_at_50%_0%,color-mix(in_oklab,var(--brand)_12%,transparent),transparent_70%)]"
+        />
+        <div className="relative mx-auto max-w-2xl px-4 pb-8 pt-12 sm:pt-14">
+          <header className="flex flex-col items-center text-center">
+            <Avatar className="h-24 w-24 shrink-0 border-2 border-background shadow-lg ring-1 ring-border">
+              <AvatarImage src={p.avatar_url ?? undefined} alt={p.display_name} />
+              <AvatarFallback className="text-2xl font-semibold">
+                {p.display_name.slice(0, 1)}
+              </AvatarFallback>
+            </Avatar>
 
-        {p.bio && (
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{p.bio}</p>
+            <div className="mt-5 flex items-center justify-center gap-1.5">
+              <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-[26px]">
+                {p.display_name}
+              </h1>
+              {p.is_verified && (
+                <BadgeCheck className="h-5 w-5 shrink-0 text-brand" aria-label="Verificado" />
+              )}
+            </div>
+            <p className="mt-0.5 text-sm text-muted-foreground">@{p.username}</p>
+
+            {p.bio && (
+              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-foreground/80">
+                {p.bio}
+              </p>
+            )}
+
+            <div className="mt-6 flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={copyProfile} className="h-9">
+                <Copy className="mr-2 h-3.5 w-3.5" /> Copiar link
+              </Button>
+              <Button size="sm" onClick={shareProfile} className="h-9">
+                <Share2 className="mr-2 h-3.5 w-3.5" /> Compartilhar
+              </Button>
+            </div>
+          </header>
+
+          {/* Estatísticas */}
+          <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="rounded-lg border bg-card/70 px-3 py-3 text-center backdrop-blur">
+              <div className="flex items-center justify-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <Link2 className="h-3 w-3" /> Links
+              </div>
+              <div className="mt-1 font-display text-lg font-semibold tabular-nums">
+                {totalLinks}
+              </div>
+            </div>
+            <div className="rounded-lg border bg-card/70 px-3 py-3 text-center backdrop-blur">
+              <div className="flex items-center justify-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <Folder className="h-3 w-3" /> Categorias
+              </div>
+              <div className="mt-1 font-display text-lg font-semibold tabular-nums">
+                {cats.length}
+              </div>
+            </div>
+            <div className="rounded-lg border bg-card/70 px-3 py-3 text-center backdrop-blur">
+              <div className="flex items-center justify-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <Eye className="h-3 w-3" /> Views
+              </div>
+              <div className="mt-1 font-display text-lg font-semibold tabular-nums">
+                {p.views_count.toLocaleString("pt-BR")}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <main className="mx-auto max-w-2xl px-4 pb-20 pt-8">
+        {/* Busca (só aparece com volume) */}
+        {totalLinks > 6 && (
+          <div className="relative mb-5">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar nos links..."
+              className="h-10 pl-9"
+              aria-label="Buscar nos links"
+            />
+          </div>
         )}
 
-        {/* Stats bar */}
-        <div className="mt-5 flex items-center gap-4 border-y py-2.5 text-xs text-muted-foreground">
-          <span><span className="font-semibold text-foreground">{totalLinks}</span> links</span>
-          <span className="h-3 w-px bg-border" />
-          <span><span className="font-semibold text-foreground">{cats.length}</span> categorias</span>
-          <span className="h-3 w-px bg-border" />
-          <span><span className="font-semibold text-foreground">{p.views_count.toLocaleString("pt-BR")}</span> views</span>
-        </div>
-
         {/* Links */}
-        <div className="mt-6">
-          {cats.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-10 text-center">
-              <Link2 className="mx-auto h-6 w-6 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">Este perfil ainda não publicou links.</p>
+        <div>
+          {filteredCats.length === 0 ? (
+            <div className="rounded-xl border border-dashed p-12 text-center">
+              <Link2 className="mx-auto h-7 w-7 text-muted-foreground/60" />
+              <p className="mt-3 text-sm text-muted-foreground">
+                {query ? "Nenhum resultado encontrado." : "Este perfil ainda não publicou links."}
+              </p>
             </div>
           ) : (
-            <Accordion type="multiple" defaultValue={defaultOpen} className="space-y-2">
-              {cats.map((cat) => (
+            <Accordion type="multiple" defaultValue={defaultOpen} className="space-y-3">
+              {filteredCats.map((cat) => (
                 <AccordionItem
                   key={cat.id}
                   value={cat.id}
-                  className="overflow-hidden rounded-lg border bg-card"
+                  className="overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
                 >
-                  <AccordionTrigger className="px-3.5 py-2.5 text-left hover:no-underline">
+                  <AccordionTrigger className="px-4 py-3 text-left hover:no-underline">
                     <div className="flex w-full items-center justify-between gap-3">
-                      <span className="flex min-w-0 items-center gap-2">
-                        <span className="truncate text-[13px] font-semibold uppercase tracking-wide text-foreground/80">
+                      <span className="flex min-w-0 items-center gap-2.5">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-accent text-brand">
+                          <Folder className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="truncate text-sm font-semibold text-foreground">
                           {cat.name}
                         </span>
                         {!cat.is_public && (
-                          <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-[9px] font-medium uppercase">
+                          <Badge
+                            variant="secondary"
+                            className="shrink-0 px-1.5 py-0 text-[9px] font-medium uppercase"
+                          >
                             <Lock className="mr-0.5 h-2.5 w-2.5" /> Privada
                           </Badge>
                         )}
                       </span>
-                      <span className="text-[11px] font-medium text-muted-foreground">
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
                         {cat.links.length}
                       </span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="border-t px-0 pb-0">
+                  <AccordionContent className="border-t bg-background/40 px-0 pb-0">
                     {cat.links.length === 0 ? (
-                      <p className="px-3.5 py-3 text-xs text-muted-foreground">Nenhum link.</p>
+                      <p className="px-4 py-4 text-xs text-muted-foreground">
+                        Nenhum link nesta categoria.
+                      </p>
                     ) : (
                       <ul className="divide-y">
                         {cat.links.map((l) => (
                           <li key={l.id}>
                             <button
                               onClick={() => handleClick(l.id, l.url)}
-                              className="group flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors hover:bg-accent/60"
+                              className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/60 focus-visible:bg-accent/60 focus-visible:outline-none"
                             >
-                              <img
-                                src={l.favicon_url ?? getFaviconUrl(l.url) ?? ""}
-                                alt=""
-                                className="h-6 w-6 shrink-0 rounded-sm border bg-white object-contain p-0.5"
-                                loading="lazy"
-                                onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }}
-                              />
+                              <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-md border bg-white">
+                                <img
+                                  src={l.favicon_url ?? getFaviconUrl(l.url) ?? ""}
+                                  alt=""
+                                  className="h-6 w-6 object-contain"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
+                                  }}
+                                />
+                              </span>
                               <div className="min-w-0 flex-1">
-                                <div className="truncate text-[13px] font-medium leading-tight">{l.title}</div>
-                                <div className="truncate text-[11px] leading-tight text-muted-foreground">
-                                  {l.description || hostOf(l.url)}
+                                <div className="truncate text-sm font-medium leading-snug text-foreground">
+                                  {l.title}
+                                </div>
+                                <div className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] leading-tight text-muted-foreground">
+                                  <span className="truncate">
+                                    {l.description || hostOf(l.url)}
+                                  </span>
+                                  {l.clicks_count > 0 && (
+                                    <>
+                                      <span className="opacity-40">·</span>
+                                      <span className="inline-flex shrink-0 items-center gap-0.5 tabular-nums">
+                                        <MousePointerClick className="h-2.5 w-2.5" />
+                                        {l.clicks_count.toLocaleString("pt-BR")}
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
-                              <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                              <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-all group-hover:translate-x-0.5 group-hover:text-foreground" />
                             </button>
                           </li>
                         ))}
@@ -328,10 +444,19 @@ function PublicProfile() {
               ))}
             </Accordion>
           )}
+
+          {totalClicks > 0 && !query && (
+            <p className="mt-4 text-center text-[11px] text-muted-foreground">
+              <span className="font-medium tabular-nums text-foreground/80">
+                {totalClicks.toLocaleString("pt-BR")}
+              </span>{" "}
+              cliques totais nos links
+            </p>
+          )}
         </div>
 
-
         {!hideAds && <AdSlot slot="profile" label="Publicidade" />}
+
 
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
           <Link to="/" className="group flex flex-col items-center gap-2">
