@@ -579,9 +579,127 @@ function GatewaysTab({ logAction }: { logAction: (a: string, t?: string, id?: st
           💡 Para ativar cobrança real, integre Stripe ou Paddle pelo Lovable Payments — as assinaturas serão registradas automaticamente aqui via webhook.
         </p>
       </Card>
+
+      <MercadoPagoCard logAction={logAction} />
     </div>
   );
 }
+
+/* ─────────── Mercado Pago (PIX) ─────────── */
+function MercadoPagoCard({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["setting", "mercadopago"],
+    queryFn: async () => {
+      const { data } = await supabase.from("platform_settings").select("*").eq("key", "mercadopago").maybeSingle();
+      return data as SettingRow | null;
+    },
+  });
+  type MPCfg = {
+    enabled?: boolean;
+    mode?: string;
+    pix_expiration_minutes?: number;
+    prices?: { month_cents?: number; quarter_cents?: number; year_cents?: number };
+  };
+  const cfg: MPCfg = (q.data?.value ?? {}) as MPCfg;
+  const prices = cfg.prices ?? {};
+
+  const save = async (patch: Partial<MPCfg>) => {
+    const next = { ...cfg, ...patch };
+    const { error } = await supabase.from("platform_settings").update({ value: next as never }).eq("key", "mercadopago");
+    if (error) return toast.error(error.message);
+    toast.success("Configuração salva");
+    await logAction("mercadopago.update", "setting", "mercadopago", patch as Record<string, unknown>);
+    qc.invalidateQueries({ queryKey: ["setting", "mercadopago"] });
+  };
+  const savePrices = async (patch: Partial<NonNullable<MPCfg["prices"]>>) => {
+    await save({ prices: { ...prices, ...patch } });
+  };
+
+  const webhookUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/api/public/webhooks/mercadopago`
+    : "/api/public/webhooks/mercadopago";
+
+  return (
+    <Card className="p-6">
+      <div className="flex items-center gap-3">
+        <div className="grid h-10 w-10 place-items-center rounded-lg bg-sky-500/15 text-sky-600">
+          <DollarSign className="h-5 w-5" />
+        </div>
+        <div>
+          <h3 className="font-semibold">Mercado Pago · PIX</h3>
+          <p className="text-xs text-muted-foreground">Cobrança PIX avulsa ou por ciclo (mensal, trimestral, anual). Aprovação automática por webhook.</p>
+        </div>
+        <div className="ml-auto flex items-center gap-2 text-sm">
+          <span>Ativado</span>
+          <Switch checked={!!cfg.enabled} onCheckedChange={(v) => save({ enabled: v })} />
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label className="text-xs">Ambiente</Label>
+          <Select value={cfg.mode ?? "test"} onValueChange={(v) => save({ mode: v })}>
+            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="test">Teste (TEST-…)</SelectItem>
+              <SelectItem value="live">Produção (APP_USR-…)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">Expiração do PIX (minutos)</Label>
+          <Input type="number" min={5} max={1440} defaultValue={cfg.pix_expiration_minutes ?? 30}
+                 onBlur={(e) => save({ pix_expiration_minutes: +e.target.value })} />
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <Label className="text-xs">URL do webhook (cadastre no painel do Mercado Pago)</Label>
+        <div className="mt-1 flex gap-2">
+          <Input readOnly value={webhookUrl} className="font-mono text-xs" />
+          <Button variant="outline" onClick={() => { navigator.clipboard.writeText(webhookUrl); toast.success("URL copiada"); }}>
+            Copiar
+          </Button>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Configure em: Suas integrações → sua aplicação → Webhooks. Evento: <code>payment</code>.
+        </p>
+      </div>
+
+      <div className="mt-5">
+        <div className="text-xs font-medium text-muted-foreground">Credenciais</div>
+        <div className="mt-2 rounded-md border bg-muted/40 p-3 text-xs">
+          As chaves ficam armazenadas como <strong>segredos do servidor</strong> (nunca expostas ao navegador):
+          <ul className="mt-2 list-inside list-disc space-y-0.5">
+            <li><code>MERCADOPAGO_ACCESS_TOKEN</code> — Access Token (obrigatório)</li>
+            <li><code>MERCADOPAGO_WEBHOOK_SECRET</code> — Segredo do webhook (opcional, valida assinatura)</li>
+          </ul>
+          <p className="mt-2">Para alterar, atualize os segredos do projeto na área de configurações.</p>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <div className="text-xs font-medium text-muted-foreground">Planos PIX (valor em centavos)</div>
+        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {([
+            ["month_cents", "Mensal"],
+            ["quarter_cents", "Trimestral"],
+            ["year_cents", "Anual"],
+          ] as const).map(([k, label]) => (
+            <div key={k}>
+              <Label className="text-xs">{label}</Label>
+              <Input type="number" defaultValue={prices[k] ?? 0}
+                     onBlur={(e) => savePrices({ [k]: +e.target.value } as Partial<NonNullable<MPCfg["prices"]>>)} />
+              <div className="mt-1 text-[10px] text-muted-foreground">= {brl(prices[k] ?? 0)}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 
 /* ─────────── Platform settings (limits + features) ─────────── */
 function SettingsTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
