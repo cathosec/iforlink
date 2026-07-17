@@ -44,9 +44,6 @@ export const createPixSubscription = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
-    if (!token) throw new Error("Mercado Pago não configurado (MERCADOPAGO_ACCESS_TOKEN ausente).");
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Fetch config
@@ -55,12 +52,11 @@ export const createPixSubscription = createServerFn({ method: "POST" })
       .select("value")
       .eq("key", "mercadopago")
       .maybeSingle();
-    const cfg = (setting?.value ?? {}) as {
-      enabled?: boolean;
-      pix_expiration_minutes?: number;
-      prices?: { month_cents?: number; quarter_cents?: number; year_cents?: number };
-    };
+    const cfg = (setting?.value ?? {}) as MpCfg;
     if (!cfg.enabled) throw new Error("Pagamentos Mercado Pago desativados pelo administrador.");
+
+    const token = resolveToken(cfg);
+    if (!token) throw new Error("Mercado Pago não configurado (nenhum access token definido).");
 
     const priceKey = data.interval === "month" ? "month_cents" : data.interval === "quarter" ? "quarter_cents" : "year_cents";
     const amountCents = cfg.prices?.[priceKey] ?? 0;
