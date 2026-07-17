@@ -506,13 +506,6 @@ function SubscriptionsTab({ logAction }: { logAction: (a: string, t?: string, id
 /* ─────────── Gateways ─────────── */
 function GatewaysTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
   const qc = useQueryClient();
-  const setQ = useQuery({
-    queryKey: ["setting", "gateways"],
-    queryFn: async () => {
-      const { data } = await supabase.from("platform_settings").select("*").eq("key", "gateways").maybeSingle();
-      return data as SettingRow | null;
-    },
-  });
   const pricingQ = useQuery({
     queryKey: ["setting", "pricing"],
     queryFn: async () => {
@@ -521,16 +514,7 @@ function GatewaysTab({ logAction }: { logAction: (a: string, t?: string, id?: st
     },
   });
 
-  const gateways = (setQ.data?.value ?? {}) as Record<string, { enabled: boolean; mode: string }>;
   const pricing = (pricingQ.data?.value ?? {}) as { pro_month_brl: number; pro_year_brl: number };
-
-  const saveGateway = async (name: string, patch: Partial<{ enabled: boolean; mode: string }>) => {
-    const next = { ...gateways, [name]: { ...(gateways[name] ?? { enabled: false, mode: "test" }), ...patch } };
-    const { error } = await supabase.from("platform_settings").update({ value: next }).eq("key", "gateways");
-    if (error) return toast.error(error.message);
-    await logAction("gateway.update", "setting", name, patch);
-    qc.invalidateQueries({ queryKey: ["setting", "gateways"] });
-  };
 
   const savePricing = async (patch: Partial<{ pro_month_brl: number; pro_year_brl: number }>) => {
     const next = { ...pricing, ...patch };
