@@ -256,7 +256,10 @@ function Home() {
 
 
       {/* Top ad slot */}
-      <div className="mx-auto max-w-6xl px-4"><AdSlot slot="top" label="Publicidade" /></div>
+      <div className="mx-auto max-w-6xl px-4">
+        <AdPlaceholder position="Topo do diretório" />
+        <AdSlot slot="top" label="Publicidade" />
+      </div>
 
       {/* Search + Directory */}
       <section id="diretorio" className="mx-auto max-w-6xl px-4 py-20">
