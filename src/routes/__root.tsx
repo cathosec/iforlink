@@ -14,6 +14,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { LogoWordmark } from "@/components/logo";
+import { CookieConsent } from "@/components/cookie-consent";
+import { AdSlot } from "@/components/ad-slot";
 
 function NotFoundComponent() {
   return (
@@ -177,6 +179,8 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <AdSlot slot="mobile_sticky" label="Publicidade" />
+        <CookieConsent />
         <Toaster position="top-center" richColors />
       </AuthProvider>
     </QueryClientProvider>
