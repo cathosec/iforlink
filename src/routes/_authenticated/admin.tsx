@@ -569,10 +569,33 @@ function MercadoPagoCard({ logAction }: { logAction: (a: string, t?: string, id?
     enabled?: boolean;
     mode?: string;
     pix_expiration_minutes?: number;
+    access_token_test?: string;
+    access_token_live?: string;
+    webhook_secret?: string;
     prices?: { month_cents?: number; quarter_cents?: number; year_cents?: number };
   };
   const cfg: MPCfg = (q.data?.value ?? {}) as MPCfg;
   const prices = cfg.prices ?? {};
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; message?: string; prefixOk?: boolean; mode?: string; account?: { nickname?: string; email?: string; site_id?: string; id?: number } } | null>(null);
+
+  const runTest = async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const { testMercadoPago } = await import("@/lib/mercadopago.functions");
+      const res = await testMercadoPago();
+      setTestResult(res);
+      if (res.ok) toast.success("Conexão OK com Mercado Pago");
+      else toast.error(res.message ?? "Falha ao conectar");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      setTestResult({ ok: false, message: msg });
+      toast.error(msg);
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const save = async (patch: Partial<MPCfg>) => {
     const next = { ...cfg, ...patch };
