@@ -237,15 +237,17 @@ export async function applyPaymentUpdate(pixId: string, mpPayment: Record<string
 export const testMercadoPago = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // Ensure caller is admin
+    // Ensure caller is admin (RLS-scoped client, no service role needed)
     const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
     if (!roles?.some((r) => r.role === "admin")) throw new Error("Acesso restrito a admins.");
 
-    const { data: setting } = await supabaseAdmin.from("platform_settings").select("value").eq("key", "mercadopago").maybeSingle();
+    // platform_settings is readable by admins via RLS
+    const { data: setting, error: settingErr } = await context.supabase
+      .from("platform_settings").select("value").eq("key", "mercadopago").maybeSingle();
+    if (settingErr) return { ok: false, message: `Erro lendo configurações: ${settingErr.message}` };
     const cfg = (setting?.value ?? {}) as MpCfg;
     const token = resolveToken(cfg);
-    if (!token) return { ok: false, message: "Nenhum access token configurado (test/live)." };
+    if (!token) return { ok: false, message: "Nenhum access token configurado (test/live). Cole o Access Token no painel e salve antes de testar." };
 
     const expectedPrefix = cfg.mode === "live" ? "APP_USR-" : "TEST-";
     const prefixOk = token.startsWith(expectedPrefix);
