@@ -16,22 +16,81 @@ import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Este link pode ter sido movido ou nunca existiu.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
-          >
-            Voltar para o início
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="border-b">
+        <div className="mx-auto flex h-14 max-w-5xl items-center px-4">
+          <Link to="/" className="flex items-center gap-2">
+            <LogoWordmark />
           </Link>
         </div>
-      </div>
+      </header>
+
+      <main className="flex flex-1 items-center justify-center px-4 py-16">
+        <div className="w-full max-w-lg">
+          <div className="flex items-baseline gap-3">
+            <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              Erro 404
+            </span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+            Este link não existe por aqui.
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            A página que você tentou abrir pode ter sido removida, renomeada
+            ou nunca existiu no ForLink. Confira o endereço ou volte para
+            explorar perfis públicos do diretório.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-2">
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"
+            >
+              Ir para o início
+            </Link>
+            <Link
+              to="/auth"
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              Entrar
+            </Link>
+          </div>
+
+          <div className="mt-10 rounded-lg border bg-card p-4">
+            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              Atalhos
+            </p>
+            <ul className="mt-3 divide-y">
+              <li>
+                <Link to="/" className="flex items-center justify-between py-2 text-sm hover:text-brand">
+                  <span>Diretório de perfis</span>
+                  <span className="text-muted-foreground">/</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/auth" className="flex items-center justify-between py-2 text-sm hover:text-brand">
+                  <span>Criar conta / entrar</span>
+                  <span className="text-muted-foreground">/auth</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/dashboard" className="flex items-center justify-between py-2 text-sm hover:text-brand">
+                  <span>Meu painel</span>
+                  <span className="text-muted-foreground">/dashboard</span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </main>
+
+      <footer className="border-t">
+        <div className="mx-auto max-w-5xl px-4 py-6 text-xs text-muted-foreground">
+          ForLink · forlink.app
+        </div>
+      </footer>
     </div>
   );
 }
