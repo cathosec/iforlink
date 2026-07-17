@@ -165,7 +165,8 @@ export const getPixStatus = createServerFn({ method: "POST" })
 
     // Se ainda pendente, consulta Mercado Pago
     if (row.status === "pending" && row.mp_payment_id) {
-      const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+      const { data: setting } = await supabaseAdmin.from("platform_settings").select("value").eq("key", "mercadopago").maybeSingle();
+      const token = resolveToken((setting?.value ?? {}) as MpCfg);
       if (token) {
         const resp = await fetch(`https://api.mercadopago.com/v1/payments/${row.mp_payment_id}`, {
           headers: { Authorization: `Bearer ${token}` },
