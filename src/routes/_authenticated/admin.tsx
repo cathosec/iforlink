@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Users, Link2, BadgeCheck, ExternalLink, DollarSign, CreditCard,
   Settings2, ShieldAlert, ShieldCheck, TrendingUp, Trash2, Search, Activity,
-  FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone,
+  FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone, Scissors, Copy, MousePointerClick,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -87,6 +87,7 @@ function Admin() {
               ["overview", TrendingUp, "Visão geral"],
               ["users", Users, "Usuários"],
               ["content", FolderTree, "Conteúdo"],
+              ["shortener", Scissors, "Encurtador"],
               ["security", ShieldCheck, "Segurança"],
               ["subscriptions", CreditCard, "Assinaturas"],
               ["gateways", DollarSign, "Pagamentos"],
@@ -112,6 +113,7 @@ function Admin() {
             <TabsContent value="overview" className="mt-0"><OverviewTab /></TabsContent>
             <TabsContent value="users" className="mt-0"><UsersTab logAction={logAction} /></TabsContent>
             <TabsContent value="content" className="mt-0"><ContentTab logAction={logAction} /></TabsContent>
+            <TabsContent value="shortener" className="mt-0"><ShortenerTab logAction={logAction} /></TabsContent>
             <TabsContent value="security" className="mt-0"><SecurityTab logAction={logAction} /></TabsContent>
             <TabsContent value="subscriptions" className="mt-0"><SubscriptionsTab logAction={logAction} /></TabsContent>
             <TabsContent value="gateways" className="mt-0"><GatewaysTab logAction={logAction} /></TabsContent>
@@ -1247,4 +1249,167 @@ function AdsTab({ logAction }: { logAction: (a: string, t?: string, id?: string,
     </div>
   );
 }
+
+/* ─────────── Encurtador ─────────── */
+interface AdminShortLink {
+  id: string; code: string; url: string; clicks_count: number;
+  created_at: string; user_id: string;
+  profiles?: { username: string; display_name: string } | null;
+}
+
+function ShortenerTab({ logAction }: { logAction: (a: string, tt?: string, tid?: string, m?: Record<string, unknown>) => Promise<void> }) {
+  const qc = useQueryClient();
+  const [q, setQ] = useState("");
+
+  const linksQ = useQuery({
+    queryKey: ["admin-short-links"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("short_links")
+        .select("id, code, url, clicks_count, created_at, user_id, profiles:user_id(username, display_name)")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      return (data ?? []) as unknown as AdminShortLink[];
+    },
+  });
+
+  const links = linksQ.data ?? [];
+  const filtered = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if (!t) return links;
+    return links.filter(
+      (l) =>
+        l.code.toLowerCase().includes(t) ||
+        l.url.toLowerCase().includes(t) ||
+        l.profiles?.username?.toLowerCase().includes(t),
+    );
+  }, [links, q]);
+
+  const totalClicks = links.reduce((n, l) => n + l.clicks_count, 0);
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://forlink.app";
+
+  const remove = async (l: AdminShortLink) => {
+    if (!confirm(`Excluir /s/${l.code}? O link curto deixará de funcionar.`)) return;
+    const { error } = await supabase.from("short_links").delete().eq("id", l.id);
+    if (error) return toast.error("Erro ao excluir");
+    await logAction("shortener.delete", "short_link", l.id, { code: l.code, url: l.url });
+    toast.success("Removido");
+    qc.invalidateQueries({ queryKey: ["admin-short-links"] });
+  };
+
+  const copy = async (code: string) => {
+    await navigator.clipboard.writeText(`${origin}/s/${code}`);
+    toast.success("Link copiado!");
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Card className="p-5">
+          <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            <Scissors className="h-3 w-3" /> Encurtadores
+          </div>
+          <div className="mt-1 font-display text-2xl font-semibold tabular-nums">{links.length}</div>
+        </Card>
+        <Card className="p-5">
+          <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            <MousePointerClick className="h-3 w-3" /> Cliques totais
+          </div>
+          <div className="mt-1 font-display text-2xl font-semibold tabular-nums">
+            {totalClicks.toLocaleString("pt-BR")}
+          </div>
+        </Card>
+        <Card className="p-5">
+          <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            <Users className="h-3 w-3" /> Usuários únicos
+          </div>
+          <div className="mt-1 font-display text-2xl font-semibold tabular-nums">
+            {new Set(links.map((l) => l.user_id)).size}
+          </div>
+        </Card>
+      </div>
+
+      <Card className="p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Todos os encurtadores</h2>
+            <p className="text-xs text-muted-foreground">
+              Moderação global de todos os links curtos criados na plataforma.
+            </p>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar por código, URL ou usuário..."
+              className="pl-9"
+            />
+          </div>
+        </div>
+
+        {linksQ.isLoading ? (
+          <div className="mt-6 py-10 text-center text-sm text-muted-foreground">Carregando...</div>
+        ) : filtered.length === 0 ? (
+          <div className="mt-6 rounded-lg border border-dashed py-10 text-center text-sm text-muted-foreground">
+            Nenhum encurtador encontrado.
+          </div>
+        ) : (
+          <ul className="mt-5 divide-y overflow-hidden rounded-lg border">
+            {filtered.map((l) => (
+              <li key={l.id} className="flex items-center gap-3 p-3 sm:p-4">
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <code className="rounded bg-muted px-1.5 py-0.5 text-[12px] font-medium text-brand">
+                      /s/{l.code}
+                    </code>
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground">
+                      <MousePointerClick className="h-2.5 w-2.5" />
+                      {l.clicks_count.toLocaleString("pt-BR")}
+                    </span>
+                    {l.profiles?.username && (
+                      <Link
+                        to="/$username"
+                        params={{ username: l.profiles.username }}
+                        className="text-[11px] text-muted-foreground hover:text-brand"
+                      >
+                        por @{l.profiles.username}
+                      </Link>
+                    )}
+                  </div>
+                  <div className="mt-1 truncate text-[11px] text-muted-foreground" title={l.url}>
+                    → {l.url}
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-muted-foreground/70">
+                    {new Date(l.created_at).toLocaleString("pt-BR")}
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => void copy(l.code)} title="Copiar">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <a href={`${origin}/s/${l.code}`} target="_blank" rel="noopener noreferrer" title="Abrir">
+                    <Button variant="ghost" size="sm">
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </a>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void remove(l)}
+                    title="Excluir"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
+}
+
 
