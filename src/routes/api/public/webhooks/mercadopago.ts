@@ -45,7 +45,8 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
           return new Response("ignored", { status: 200 });
         }
 
-        const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+        const modeToken = cfg.mode === "live" ? cfg.access_token_live : cfg.access_token_test;
+        const token = (modeToken && modeToken.trim()) || process.env.MERCADOPAGO_ACCESS_TOKEN || "";
         if (!token) return new Response("mp token missing", { status: 500 });
 
         // Fetch full payment
