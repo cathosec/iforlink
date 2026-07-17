@@ -322,6 +322,7 @@ function Home() {
           </div>
         )}
 
+        <AdPlaceholder position="Entre os perfis do diretório" />
         <AdSlot slot="feed" label="Publicidade" />
       </section>
 
