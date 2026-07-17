@@ -232,3 +232,33 @@ export async function applyPaymentUpdate(pixId: string, mpPayment: Record<string
   }
   await supabaseAdmin.from("pix_payments").update(patch as never).eq("id", pixId);
 }
+
+/** Admin: test connection using the token stored in platform_settings (by current mode). */
+export const testMercadoPago = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Ensure caller is admin
+    const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+    if (!roles?.some((r) => r.role === "admin")) throw new Error("Acesso restrito a admins.");
+
+    const { data: setting } = await supabaseAdmin.from("platform_settings").select("value").eq("key", "mercadopago").maybeSingle();
+    const cfg = (setting?.value ?? {}) as MpCfg;
+    const token = resolveToken(cfg);
+    if (!token) return { ok: false, message: "Nenhum access token configurado (test/live)." };
+
+    const expectedPrefix = cfg.mode === "live" ? "APP_USR-" : "TEST-";
+    const prefixOk = token.startsWith(expectedPrefix);
+
+    const r = await fetch("https://api.mercadopago.com/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const json = (await r.json().catch(() => ({}))) as { id?: number; nickname?: string; email?: string; site_id?: string; message?: string };
+    if (!r.ok) return { ok: false, message: json?.message ?? `Falha (${r.status})`, prefixOk };
+    return {
+      ok: true,
+      prefixOk,
+      mode: cfg.mode ?? "test",
+      account: { id: json.id, nickname: json.nickname, email: json.email, site_id: json.site_id },
+    };
+  });
