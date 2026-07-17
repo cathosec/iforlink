@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Copy, Trash2, ExternalLink, Link2, MousePointerClick, Scissors, ArrowLeft } from "lucide-react";
+import { Copy, Trash2, ExternalLink, Link2, MousePointerClick, Scissors, ArrowLeft, Sparkles } from "lucide-react";
 import { normalizeUrl } from "@/lib/favicon";
 
 export const Route = createFileRoute("/_authenticated/encurtar")({
