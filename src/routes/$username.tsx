@@ -33,10 +33,11 @@ interface LinkItem {
   id: string; title: string; description: string | null; url: string;
   favicon_url: string | null; clicks_count: number; display_order: number; is_visible: boolean;
 }
-interface CatRow { id: string; name: string; display_order: number; links: LinkItem[] }
+interface CatRow { id: string; name: string; display_order: number; is_public: boolean; links: LinkItem[] }
 
 function PublicProfile() {
   const { username } = Route.useParams();
+  const { user } = useAuth();
 
   const profileQ = useQuery({
     queryKey: ["profile", username],
@@ -51,16 +52,22 @@ function PublicProfile() {
     },
   });
 
+  const isOwner = !!user && !!profileQ.data && user.id === profileQ.data.id;
+
   const catsQ = useQuery({
-    queryKey: ["cats", profileQ.data?.id],
+    queryKey: ["cats", profileQ.data?.id, isOwner],
     enabled: !!profileQ.data?.id,
     queryFn: async () => {
-      const { data } = await supabase
+      // Owner (logged as themselves) gets everything, including private categories.
+      // Anyone else only gets public + visible (RLS also enforces this).
+      let q = supabase
         .from("user_categories")
-        .select("id,name,display_order,links(id,title,description,url,favicon_url,clicks_count,display_order,is_visible)")
+        .select("id,name,display_order,is_public,links(id,title,description,url,favicon_url,clicks_count,display_order,is_visible)")
         .eq("user_id", profileQ.data!.id)
         .eq("is_visible", true)
         .order("display_order");
+      if (!isOwner) q = q.eq("is_public", true);
+      const { data } = await q;
       const cats = ((data ?? []) as CatRow[]).map((c) => ({
         ...c,
         links: c.links.filter((l) => l.is_visible).sort((a, b) => a.display_order - b.display_order),
