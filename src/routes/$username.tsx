@@ -11,6 +11,7 @@ import { BadgeCheck, Copy, Link2, ExternalLink, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
+import { LogoWordmark } from "@/components/logo";
 
 export const Route = createFileRoute("/$username")({
   component: PublicProfile,
@@ -76,6 +77,21 @@ function PublicProfile() {
       return cats;
     },
   });
+
+  // Plano do dono do perfil — Pro/Admin não exibe anúncios na página pública.
+  const roleQ = useQuery({
+    queryKey: ["owner-role", profileQ.data?.id],
+    enabled: !!profileQ.data?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", profileQ.data!.id);
+      const roles = (data ?? []).map((r) => r.role as string);
+      return { isPro: roles.includes("pro") || roles.includes("admin") };
+    },
+  });
+  const hideAds = roleQ.data?.isPro === true;
 
   if (profileQ.isLoading) {
     return (
@@ -217,19 +233,23 @@ function PublicProfile() {
         </div>
 
 
-        <AdSlot slot="profile" label="Publicidade" />
+        {!hideAds && <AdSlot slot="profile" label="Publicidade" />}
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 flex flex-col items-center gap-4 text-center">
           <Link to="/" className="text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground">
             criado com <span className="font-semibold text-foreground">ForLink</span>
           </Link>
-          <div className="mt-3 flex justify-center gap-3 text-[11px] text-muted-foreground">
+          <div className="flex justify-center gap-3 text-[11px] text-muted-foreground">
             <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
             <span>·</span>
             <Link to="/termos" className="hover:text-foreground">Termos</Link>
           </div>
+          <Link to="/" aria-label="ForLink" className="mt-2 opacity-70 transition-opacity hover:opacity-100">
+            <LogoWordmark className="h-5 w-auto" />
+          </Link>
         </div>
       </main>
+      {hideAds && <style>{`[data-ad-slot="mobile_sticky"]{display:none !important;}`}</style>}
     </div>
   );
 }
