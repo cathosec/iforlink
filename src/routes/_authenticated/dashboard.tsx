@@ -91,6 +91,11 @@ function Dashboard() {
     if (error) return toast.error(error.message);
     refresh();
   };
+  const toggleCategoryPublic = async (id: string, v: boolean) => {
+    const { error } = await supabase.from("user_categories").update({ is_public: v }).eq("id", id);
+    if (error) return toast.error(error.message);
+    refresh();
+  };
   const deleteCategory = async (id: string) => {
     if (!confirm("Excluir esta categoria e todos os seus links?")) return;
     const { error } = await supabase.from("user_categories").delete().eq("id", id);
