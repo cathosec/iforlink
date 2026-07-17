@@ -59,11 +59,11 @@ function PublicProfile() {
         .eq("user_id", profileQ.data!.id)
         .eq("is_visible", true)
         .order("display_order");
-      const cats = (data ?? []).map((c: CatRow & { links: (CatRow["links"][number] & { is_visible: boolean })[] }) => ({
+      const cats = ((data ?? []) as CatRow[]).map((c) => ({
         ...c,
         links: c.links.filter((l) => l.is_visible).sort((a, b) => a.display_order - b.display_order),
       }));
-      return cats as CatRow[];
+      return cats;
     },
   });
 
