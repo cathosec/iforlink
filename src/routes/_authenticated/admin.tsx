@@ -1070,3 +1070,181 @@ function SecurityTab({ logAction }: { logAction: (a: string, t?: string, id?: st
     </div>
   );
 }
+
+/* ─────────── Anúncios (AdSense / parceiros) ─────────── */
+type AdsSlot = { enabled: boolean; code: string; every?: number };
+type AdsCfg = {
+  enabled: boolean;
+  top: AdsSlot;
+  feed: AdsSlot;
+  profile: AdsSlot;
+  mobile_sticky: AdsSlot;
+};
+
+const DEFAULT_ADS: AdsCfg = {
+  enabled: false,
+  top: { enabled: false, code: "" },
+  feed: { enabled: false, code: "", every: 6 },
+  profile: { enabled: false, code: "" },
+  mobile_sticky: { enabled: false, code: "" },
+};
+
+function AdsTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["setting", "ads"],
+    queryFn: async () =>
+      (await supabase.from("platform_settings").select("*").eq("key", "ads").maybeSingle()).data as SettingRow | null,
+  });
+
+  const cfg: AdsCfg = { ...DEFAULT_ADS, ...((q.data?.value as Partial<AdsCfg>) ?? {}) };
+  const [draft, setDraft] = useState<AdsCfg>(cfg);
+  useEffect(() => { setDraft({ ...DEFAULT_ADS, ...((q.data?.value as Partial<AdsCfg>) ?? {}) }); }, [q.data?.value]);
+
+  const save = async (next: AdsCfg) => {
+    const { error } = await supabase
+      .from("platform_settings")
+      .upsert({ key: "ads", value: next as never, description: "Códigos de anúncios (AdSense, etc.)" });
+    if (error) return toast.error(error.message);
+    toast.success("Anúncios salvos");
+    await logAction("ads.update", "setting", "ads", { enabled: next.enabled });
+    qc.invalidateQueries({ queryKey: ["setting", "ads"] });
+    qc.invalidateQueries({ queryKey: ["platform_setting", "ads"] });
+  };
+
+  const patchSlot = (slot: keyof Omit<AdsCfg, "enabled">, patch: Partial<AdsSlot>) => {
+    setDraft((d) => ({ ...d, [slot]: { ...d[slot], ...patch } }));
+  };
+
+  const slots: Array<{
+    key: keyof Omit<AdsCfg, "enabled">;
+    title: string;
+    hint: string;
+    recommended: string;
+  }> = [
+    {
+      key: "top",
+      title: "Topo do diretório (desktop + mobile)",
+      hint: "Exibido acima da listagem pública de perfis, na página inicial.",
+      recommended: "Formato responsivo · 728×90 (desktop) / 320×100 (mobile)",
+    },
+    {
+      key: "feed",
+      title: "Dentro do diretório",
+      hint: "Exibido após a grade de perfis, integrado ao conteúdo.",
+      recommended: "Nativo responsivo · in-feed",
+    },
+    {
+      key: "profile",
+      title: "Página pública de perfil",
+      hint: "Exibido no final da página /usuario, antes do rodapé.",
+      recommended: "Retângulo médio · 300×250 responsivo",
+    },
+    {
+      key: "mobile_sticky",
+      title: "Rodapé fixo (somente mobile)",
+      hint: "Barra fixa na parte inferior em telas < 768px. Não aparece no desktop.",
+      recommended: "Banner âncora · 320×50 / 320×100",
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Megaphone className="h-4 w-4 text-brand" />
+              <h3 className="font-semibold">Rede de anúncios</h3>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Cole aqui o código completo de cada slot (AdSense, ADX, parceiros).
+              Os anúncios só serão exibidos ao público que autorizar cookies de
+              publicidade no banner LGPD.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs">Ativar global</Label>
+            <Switch
+              checked={draft.enabled}
+              onCheckedChange={(v) => { const next = { ...draft, enabled: v }; setDraft(next); save(next); }}
+            />
+          </div>
+        </div>
+      </Card>
+
+      {slots.map((s) => (
+        <Card key={s.key} className="p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold">{s.title}</h4>
+                {draft[s.key].enabled ? (
+                  <Badge className="bg-brand-soft text-brand hover:bg-brand-soft">Ativo</Badge>
+                ) : (
+                  <Badge variant="outline">Desativado</Badge>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{s.hint}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                Recomendado: <span className="font-mono">{s.recommended}</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs">Ativar</Label>
+              <Switch
+                checked={draft[s.key].enabled}
+                onCheckedChange={(v) => patchSlot(s.key, { enabled: v })}
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <Label htmlFor={`code-${s.key}`} className="text-xs uppercase tracking-widest text-muted-foreground">
+              Código do anúncio (HTML/JS)
+            </Label>
+            <Textarea
+              id={`code-${s.key}`}
+              rows={6}
+              spellCheck={false}
+              className="mt-1.5 font-mono text-xs"
+              placeholder={`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXX" crossorigin="anonymous"></script>\n<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXX" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>\n<script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>`}
+              value={draft[s.key].code}
+              onChange={(e) => patchSlot(s.key, { code: e.target.value })}
+            />
+          </div>
+
+          <div className="mt-4 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { const next = { ...draft, [s.key]: { ...draft[s.key], code: "" } }; setDraft(next); save(next); }}
+            >
+              Limpar
+            </Button>
+            <Button
+              size="sm"
+              className="bg-brand text-brand-foreground hover:bg-brand/90"
+              onClick={() => save(draft)}
+            >
+              Salvar este slot
+            </Button>
+          </div>
+        </Card>
+      ))}
+
+      <Card className="border-amber-500/30 bg-amber-500/5 p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <div className="text-xs leading-relaxed text-amber-900 dark:text-amber-200">
+            <strong>Segurança:</strong> apenas administradores podem editar
+            estes códigos. Cole somente snippets oficiais de redes de anúncios
+            confiáveis — o HTML/JS informado é executado nas páginas públicas
+            do site.
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
