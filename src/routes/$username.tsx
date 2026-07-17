@@ -402,13 +402,13 @@ function PublicProfile() {
                           <li key={l.id}>
                             <button
                               onClick={() => handleClick(l.id, l.url)}
-                              className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/60 focus-visible:bg-accent/60 focus-visible:outline-none"
+                              className="group flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-accent/60 focus-visible:bg-accent/60 focus-visible:outline-none"
                             >
-                              <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-md border bg-white">
+                              <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-md border bg-white">
                                 <img
                                   src={l.favicon_url ?? getFaviconUrl(l.url) ?? ""}
                                   alt=""
-                                  className="h-6 w-6 object-contain"
+                                  className="h-5 w-5 object-contain"
                                   loading="lazy"
                                   onError={(e) => {
                                     (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
@@ -416,10 +416,10 @@ function PublicProfile() {
                                 />
                               </span>
                               <div className="min-w-0 flex-1">
-                                <div className="truncate text-sm font-medium leading-snug text-foreground">
+                                <div className="truncate text-[13px] font-medium leading-snug text-foreground">
                                   {l.title}
                                 </div>
-                                <div className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] leading-tight text-muted-foreground">
+                                <div className="mt-0 flex items-center gap-1.5 truncate text-[10px] leading-tight text-muted-foreground">
                                   <span className="truncate">
                                     {l.description || hostOf(l.url)}
                                   </span>
@@ -434,7 +434,7 @@ function PublicProfile() {
                                   )}
                                 </div>
                               </div>
-                              <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-all group-hover:translate-x-0.5 group-hover:text-foreground" />
+                              <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-all group-hover:translate-x-0.5 group-hover:text-foreground" />
                             </button>
                           </li>
                         ))}
