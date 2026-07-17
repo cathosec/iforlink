@@ -24,7 +24,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
-  head: () => ({ meta: [{ title: "Super Admin · ForLink" }] }),
+  head: () => ({ meta: [{ title: "Super Admin · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
 type RoleName = "free" | "pro" | "admin";
