@@ -64,57 +64,111 @@ function Home() {
 
       {/* Hero */}
       <section className="border-b border-border/60 bg-gradient-to-b from-background to-secondary/40">
-        <div className="mx-auto max-w-5xl px-4 py-20 sm:py-28">
-          <div className="max-w-3xl">
+        <div className="mx-auto grid max-w-6xl gap-14 px-4 py-20 sm:py-28 lg:grid-cols-[1.15fr_1fr] lg:items-center">
+          <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-              Plataforma brasileira · forlink.app
+              Agregador de links · brasileiro
             </div>
-            <h1 className="text-balance text-4xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-5xl md:text-6xl">
-              Um link, todos os seus links.
+            <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-[3.4rem]">
+              Salve seus links favoritos.
+              <br />
+              <span className="text-brand">Acesse de qualquer lugar.</span>
             </h1>
             <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-              A ForLink reúne, organiza e dá contexto aos links que você compartilha.
-              Perfil público, categorias, métricas e um plano Pro sem enrolação.
+              Guarde artigos, ferramentas, referências e sites que você usa todo dia.
+              Organize por categoria, mantenha uma parte privada só sua, e compartilhe o resto num perfil público em <span className="font-medium text-foreground">forlink.app/seu-usuario</span>.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link to="/auth">
                 <Button size="lg" className="bg-brand text-brand-foreground hover:bg-brand/90">
-                  Criar meu perfil <ArrowRight className="ml-1.5 h-4 w-4" />
+                  Começar de graça <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
               </Link>
               <a href="#diretorio">
-                <Button size="lg" variant="outline">Ver o diretório</Button>
+                <Button size="lg" variant="outline">Explorar o diretório</Button>
               </a>
             </div>
 
-            <div className="mt-10 grid max-w-2xl grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-              <div className="flex items-start gap-2.5">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
-                <div>
-                  <div className="font-medium text-foreground">Perfis verificados</div>
-                  <div className="text-muted-foreground">Selo oficial para marcas e criadores.</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <Zap className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
-                <div>
-                  <div className="font-medium text-foreground">Pagamento em PIX</div>
-                  <div className="text-muted-foreground">Ativação imediata do plano Pro.</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
-                <div>
-                  <div className="font-medium text-foreground">Domínio próprio</div>
-                  <div className="text-muted-foreground">forlink.app/seu-usuario, pronto para compartilhar.</div>
-                </div>
-              </div>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-brand" /> Links privados</span>
+              <span className="inline-flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5 text-brand" /> Sincronizado em todo dispositivo</span>
+              <span className="inline-flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-brand" /> Pro via PIX</span>
             </div>
+          </div>
+
+          {/* Visual mock — bookmark card preview */}
+          <div className="relative">
+            <div className="absolute inset-x-4 -bottom-4 h-32 rounded-2xl bg-brand/10 blur-2xl" aria-hidden />
+            <Card className="relative overflow-hidden p-0 shadow-lg">
+              <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-3">
+                <div className="flex gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                </div>
+                <span className="ml-2 text-xs text-muted-foreground">forlink.app/voce</span>
+              </div>
+              <div className="space-y-4 p-5">
+                {[
+                  { cat: "Ferramentas do dia", items: [["Figma", "figma.com"], ["Linear", "linear.app"], ["Notion", "notion.so"]] },
+                  { cat: "Leituras salvas", items: [["Paul Graham — Essays", "paulgraham.com"], ["Nielsen Norman Group", "nngroup.com"]] },
+                ].map((g) => (
+                  <div key={g.cat}>
+                    <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{g.cat}</div>
+                    <div className="space-y-1.5">
+                      {g.items.map(([title, host]) => (
+                        <div key={host} className="flex items-center gap-2.5 rounded-md border bg-card px-2.5 py-1.5">
+                          <span className="grid h-6 w-6 place-items-center rounded bg-brand-soft text-[10px] font-bold text-brand">
+                            {title.slice(0, 1)}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-medium">{title}</div>
+                            <div className="truncate text-[10px] text-muted-foreground">{host}</div>
+                          </div>
+                          <Bookmark className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
           </div>
         </div>
       </section>
+
+      {/* How it works */}
+      <section className="border-b bg-card/30">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <div className="max-w-2xl">
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Como funciona</h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Um lugar para tudo que você precisa acessar rápido — do celular, do trabalho, da casa de amigo.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+            {[
+              { n: "01", icon: Bookmark, t: "Salve", d: "Cole qualquer URL. A ForLink busca o favicon, o título e prepara o card automaticamente." },
+              { n: "02", icon: FolderTree, t: "Organize", d: "Agrupe por categoria — leituras, ferramentas, clientes. Marque como pública ou privada." },
+              { n: "03", icon: Share2, t: "Acesse", d: "Abra o painel em qualquer navegador ou compartilhe seu perfil público num link só." },
+            ].map(({ n, icon: Icon, t, d }) => (
+              <div key={n} className="rounded-lg border bg-background p-6">
+                <div className="flex items-center justify-between">
+                  <span className="grid h-9 w-9 place-items-center rounded-md bg-brand-soft text-brand">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="font-mono text-xs text-muted-foreground">{n}</span>
+                </div>
+                <h3 className="mt-4 text-base font-semibold">{t}</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
 
       {/* Search + Directory */}
       <section id="diretorio" className="mx-auto max-w-6xl px-4 py-20">
