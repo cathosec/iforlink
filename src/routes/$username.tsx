@@ -1,11 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { SiteHeader } from "@/components/site-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BadgeCheck, Copy, Link2, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { BadgeCheck, Copy, Link2, ExternalLink, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { getFaviconUrl } from "@/lib/favicon";
 
@@ -31,10 +33,11 @@ interface LinkItem {
   id: string; title: string; description: string | null; url: string;
   favicon_url: string | null; clicks_count: number; display_order: number; is_visible: boolean;
 }
-interface CatRow { id: string; name: string; display_order: number; links: LinkItem[] }
+interface CatRow { id: string; name: string; display_order: number; is_public: boolean; links: LinkItem[] }
 
 function PublicProfile() {
   const { username } = Route.useParams();
+  const { user } = useAuth();
 
   const profileQ = useQuery({
     queryKey: ["profile", username],
@@ -49,16 +52,22 @@ function PublicProfile() {
     },
   });
 
+  const isOwner = !!user && !!profileQ.data && user.id === profileQ.data.id;
+
   const catsQ = useQuery({
-    queryKey: ["cats", profileQ.data?.id],
+    queryKey: ["cats", profileQ.data?.id, isOwner],
     enabled: !!profileQ.data?.id,
     queryFn: async () => {
-      const { data } = await supabase
+      // Owner (logged as themselves) gets everything, including private categories.
+      // Anyone else only gets public + visible (RLS also enforces this).
+      let q = supabase
         .from("user_categories")
-        .select("id,name,display_order,links(id,title,description,url,favicon_url,clicks_count,display_order,is_visible)")
+        .select("id,name,display_order,is_public,links(id,title,description,url,favicon_url,clicks_count,display_order,is_visible)")
         .eq("user_id", profileQ.data!.id)
         .eq("is_visible", true)
         .order("display_order");
+      if (!isOwner) q = q.eq("is_public", true);
+      const { data } = await q;
       const cats = ((data ?? []) as CatRow[]).map((c) => ({
         ...c,
         links: c.links.filter((l) => l.is_visible).sort((a, b) => a.display_order - b.display_order),
@@ -154,8 +163,15 @@ function PublicProfile() {
                 >
                   <AccordionTrigger className="px-3.5 py-2.5 text-left hover:no-underline">
                     <div className="flex w-full items-center justify-between gap-3">
-                      <span className="text-[13px] font-semibold uppercase tracking-wide text-foreground/80">
-                        {cat.name}
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="truncate text-[13px] font-semibold uppercase tracking-wide text-foreground/80">
+                          {cat.name}
+                        </span>
+                        {!cat.is_public && (
+                          <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-[9px] font-medium uppercase">
+                            <Lock className="mr-0.5 h-2.5 w-2.5" /> Privada
+                          </Badge>
+                        )}
                       </span>
                       <span className="text-[11px] font-medium text-muted-foreground">
                         {cat.links.length}

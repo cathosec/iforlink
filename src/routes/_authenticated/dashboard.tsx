@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { getFaviconUrl, normalizeUrl } from "@/lib/favicon";
 import {
-  Plus, Pencil, Trash2, ChevronUp, ChevronDown, ExternalLink, FolderPlus, Sparkles, Eye, EyeOff, Link2,
+  Plus, Pencil, Trash2, ChevronUp, ChevronDown, ExternalLink, FolderPlus, Sparkles, Eye, EyeOff, Link2, Lock,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel · ForLink" }] }),
 });
 
-interface Category { id: string; name: string; display_order: number; is_visible: boolean; }
+interface Category { id: string; name: string; display_order: number; is_visible: boolean; is_public: boolean; }
 interface LinkRow {
   id: string; category_id: string; title: string; description: string | null;
   url: string; favicon_url: string | null; clicks_count: number; is_visible: boolean; display_order: number;
@@ -88,6 +88,11 @@ function Dashboard() {
   };
   const toggleCategoryVisible = async (id: string, v: boolean) => {
     const { error } = await supabase.from("user_categories").update({ is_visible: v }).eq("id", id);
+    if (error) return toast.error(error.message);
+    refresh();
+  };
+  const toggleCategoryPublic = async (id: string, v: boolean) => {
+    const { error } = await supabase.from("user_categories").update({ is_public: v }).eq("id", id);
     if (error) return toast.error(error.message);
     refresh();
   };
@@ -230,12 +235,17 @@ function Dashboard() {
                       </div>
                       <RenameableTitle name={cat.name} onSave={(n) => renameCategory(cat.id, n)} />
                       {!cat.is_visible && <Badge variant="outline" className="text-[10px]"><EyeOff className="mr-1 h-3 w-3" /> Rascunho</Badge>}
+                      {cat.is_visible && !cat.is_public && <Badge variant="secondary" className="text-[10px]"><Lock className="mr-1 h-3 w-3" /> Privada</Badge>}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>Público</span>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Publicar (visível no perfil) ou manter como rascunho">
+                        <span>Publicar</span>
                         <Switch checked={cat.is_visible} onCheckedChange={(v) => toggleCategoryVisible(cat.id, v)} />
-                      </div>
+                      </label>
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Público: todos veem. Privado: só você (logado) vê no seu perfil.">
+                        <span>Pública</span>
+                        <Switch checked={cat.is_public} onCheckedChange={(v) => toggleCategoryPublic(cat.id, v)} disabled={!cat.is_visible} />
+                      </label>
                       <NewLinkDialog categories={cats} defaultCategoryId={cat.id} onSave={saveLink} disabled={isFree && links.length >= FREE_MAX_LINKS} />
                       <Button variant="ghost" size="icon" onClick={() => deleteCategory(cat.id)}>
                         <Trash2 className="h-4 w-4 text-muted-foreground" />
