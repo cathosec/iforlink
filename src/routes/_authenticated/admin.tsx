@@ -708,3 +708,207 @@ function AuditTab() {
     </Card>
   );
 }
+
+/* ─────────── Security (link moderation + domain blocklist) ─────────── */
+function SecurityTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
+  const qc = useQueryClient();
+
+  const secQ = useQuery({
+    queryKey: ["setting", "security"],
+    queryFn: async () => (await supabase.from("platform_settings").select("*").eq("key", "security").maybeSingle()).data as SettingRow | null,
+  });
+  const blocked = ((secQ.data?.value?.blocked_domains as string[] | undefined) ?? []);
+
+  const saveBlocked = async (next: string[]) => {
+    const value = { ...(secQ.data?.value ?? {}), blocked_domains: next };
+    const { error } = await supabase
+      .from("platform_settings")
+      .upsert({ key: "security", value, description: "Configurações de segurança" }, { onConflict: "key" });
+    if (error) return toast.error(error.message);
+    await logAction("security.blocklist_update", "setting", "security", { count: next.length });
+    qc.invalidateQueries({ queryKey: ["setting", "security"] });
+  };
+
+  const [newDomain, setNewDomain] = useState("");
+  const addDomain = async () => {
+    const d = newDomain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    if (!d) return;
+    if (blocked.includes(d)) return toast.error("Domínio já bloqueado");
+    await saveBlocked([...blocked, d]);
+    setNewDomain("");
+    toast.success(`${d} bloqueado`);
+  };
+  const removeDomain = async (d: string) => {
+    await saveBlocked(blocked.filter(x => x !== d));
+    toast.success("Domínio liberado");
+  };
+
+  const linksQ = useQuery({
+    queryKey: ["security-links"],
+    queryFn: async () => {
+      const { data: links } = await supabase
+        .from("links")
+        .select("id,title,url,is_visible,created_at,user_id,clicks_count")
+        .order("created_at", { ascending: false })
+        .limit(300);
+      const ids = Array.from(new Set((links ?? []).map(l => l.user_id)));
+      const { data: profs } = ids.length
+        ? await supabase.from("profiles").select("id,username,display_name").in("id", ids)
+        : { data: [] as { id: string; username: string; display_name: string }[] };
+      const map = new Map((profs ?? []).map(p => [p.id, p]));
+      return (links ?? []).map(l => ({ ...l, profile: map.get(l.user_id) ?? { username: "—", display_name: "—" } }));
+    },
+  });
+
+  const analyzed = useMemo(() => {
+    const IP_RX = /^\d{1,3}(\.\d{1,3}){3}$/;
+    const SHORTENERS = new Set(["bit.ly", "t.co", "tinyurl.com", "goo.gl", "is.gd", "cutt.ly", "rebrand.ly", "ow.ly"]);
+    const BAD_TLDS = [".zip", ".mov", ".xyz", ".top", ".click", ".loan"];
+    return (linksQ.data ?? []).map(l => {
+      const flags: string[] = [];
+      let host = "";
+      try { host = new URL(l.url).hostname.toLowerCase(); } catch { flags.push("URL inválida"); }
+      const isHttps = l.url.toLowerCase().startsWith("https://");
+      if (!isHttps && !flags.includes("URL inválida")) flags.push("Sem HTTPS");
+      if (host && IP_RX.test(host)) flags.push("IP direto");
+      if (host && SHORTENERS.has(host)) flags.push("Encurtador");
+      if (host && BAD_TLDS.some(t => host.endsWith(t))) flags.push("TLD suspeito");
+      if (host && blocked.some(b => host === b || host.endsWith("." + b))) flags.push("Domínio bloqueado");
+      if (l.url.length > 250) flags.push("URL muito longa");
+      return { ...l, host, flags };
+    });
+  }, [linksQ.data, blocked]);
+
+  const suspicious = analyzed.filter(l => l.flags.length > 0);
+
+  const hideLink = async (id: string) => {
+    await supabase.from("links").update({ is_visible: false }).eq("id", id);
+    await logAction("security.link_hide", "link", id);
+    qc.invalidateQueries({ queryKey: ["security-links"] });
+    qc.invalidateQueries({ queryKey: ["admin-links"] });
+    toast.success("Link ocultado");
+  };
+  const deleteLink = async (id: string, title: string) => {
+    if (!confirm(`Excluir permanentemente "${title}"?`)) return;
+    await supabase.from("links").delete().eq("id", id);
+    await logAction("security.link_delete", "link", id, { title });
+    qc.invalidateQueries({ queryKey: ["security-links"] });
+    qc.invalidateQueries({ queryKey: ["admin-links"] });
+    toast.success("Link excluído");
+  };
+  const hideAllSuspicious = async () => {
+    const ids = suspicious.filter(l => l.is_visible).map(l => l.id);
+    if (ids.length === 0) return toast.info("Nada a ocultar");
+    if (!confirm(`Ocultar ${ids.length} links suspeitos?`)) return;
+    await supabase.from("links").update({ is_visible: false }).in("id", ids);
+    await logAction("security.bulk_hide", "link", undefined, { count: ids.length });
+    qc.invalidateQueries({ queryKey: ["security-links"] });
+    qc.invalidateQueries({ queryKey: ["admin-links"] });
+    toast.success(`${ids.length} links ocultados`);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Card className="flex items-center gap-3 p-4">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-destructive/10 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-semibold">{suspicious.length}</div>
+            <div className="text-xs text-muted-foreground">Links suspeitos</div>
+          </div>
+        </Card>
+        <Card className="flex items-center gap-3 p-4">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-brand-soft text-brand">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-semibold">{blocked.length}</div>
+            <div className="text-xs text-muted-foreground">Domínios bloqueados</div>
+          </div>
+        </Card>
+        <Card className="flex items-center gap-3 p-4">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-muted text-foreground">
+            <Link2 className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-2xl font-semibold">{analyzed.length}</div>
+            <div className="text-xs text-muted-foreground">Links analisados (300 recentes)</div>
+          </div>
+        </Card>
+      </div>
+
+      <Card className="p-6">
+        <h3 className="font-semibold">Lista de domínios bloqueados</h3>
+        <p className="mt-1 text-xs text-muted-foreground">Links com esses domínios (ou subdomínios) são sinalizados automaticamente.</p>
+        <div className="mt-4 flex gap-2">
+          <Input
+            value={newDomain}
+            onChange={(e) => setNewDomain(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") addDomain(); }}
+            placeholder="exemplo.com"
+          />
+          <Button onClick={addDomain}><Plus className="mr-1 h-4 w-4" />Bloquear</Button>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {blocked.length === 0 && <div className="text-xs text-muted-foreground">Nenhum domínio bloqueado.</div>}
+          {blocked.map(d => (
+            <Badge key={d} variant="secondary" className="gap-1 pr-1">
+              {d}
+              <button onClick={() => removeDomain(d)} className="ml-1 rounded p-0.5 hover:bg-destructive/20" aria-label={`Remover ${d}`}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <div className="flex items-center gap-3 border-b bg-muted/30 px-5 py-3">
+          <div className="font-semibold">Links suspeitos ({suspicious.length})</div>
+          <Button size="sm" variant="outline" className="ml-auto" onClick={hideAllSuspicious} disabled={suspicious.length === 0}>
+            <EyeOff className="mr-1.5 h-4 w-4" />Ocultar todos
+          </Button>
+        </div>
+        {linksQ.isLoading ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">Analisando…</div>
+        ) : suspicious.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            <ShieldCheck className="mx-auto mb-2 h-8 w-8 text-brand" />
+            Nenhum link suspeito detectado nos 300 mais recentes.
+          </div>
+        ) : (
+          <div className="divide-y">
+            {suspicious.map(l => (
+              <div key={l.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-medium">{l.title}</span>
+                    {!l.is_visible && <Badge variant="outline" className="text-[10px]">oculto</Badge>}
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    @{l.profile.username} · <a href={l.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{l.url}</a>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {l.flags.map(f => (
+                      <Badge key={f} variant="destructive" className="text-[10px]">{f}</Badge>
+                    ))}
+                  </div>
+                </div>
+                {l.is_visible && (
+                  <Button variant="outline" size="sm" onClick={() => hideLink(l.id)}>
+                    <EyeOff className="mr-1.5 h-4 w-4" />Ocultar
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => deleteLink(l.id, l.title)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
