@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { getFaviconUrl, normalizeUrl } from "@/lib/favicon";
 import {
-  Plus, Pencil, Trash2, ChevronUp, ChevronDown, ExternalLink, FolderPlus, Sparkles, Eye, EyeOff, Link2, Lock, GripVertical,
+  Plus, Pencil, Trash2, ChevronUp, ChevronDown, ExternalLink, FolderPlus, Sparkles, Eye, EyeOff, Link2, Lock, GripVertical, Scissors,
 } from "lucide-react";
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors,
@@ -210,11 +210,19 @@ function Dashboard() {
               Organize suas categorias e links. Alterações são publicadas na hora.
             </p>
           </div>
-          {profile && (
-            <Link to="/$username" params={{ username: profile.username }}>
-              <Button variant="outline" size="sm"><ExternalLink className="mr-2 h-3.5 w-3.5" /> Ver perfil público</Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link to="/encurtar">
+              <Button variant="outline" size="sm">
+                <Scissors className="mr-2 h-3.5 w-3.5" /> Encurtador
+                {isFree && <span className="ml-2 rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">Pro</span>}
+              </Button>
             </Link>
-          )}
+            {profile && (
+              <Link to="/$username" params={{ username: profile.username }}>
+                <Button variant="outline" size="sm"><ExternalLink className="mr-2 h-3.5 w-3.5" /> Ver perfil público</Button>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Plano */}
