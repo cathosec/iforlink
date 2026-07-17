@@ -8,16 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Search, Sparkles, BadgeCheck, ArrowRight, Layers, Link2, Users } from "lucide-react";
+import { Search, BadgeCheck, ArrowRight, ShieldCheck, Zap, Globe2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
-      { title: "ForLink — Diretório de perfis e links curados" },
-      { name: "description", content: "Descubra criadores brasileiros e organize seus próprios links em um perfil público, gratuito e bonito." },
+      { title: "ForLink — Um link, todos os seus links" },
+      { name: "description", content: "Plataforma brasileira para reunir e organizar seus links em um perfil público, com categorias, verificação e planos Pro." },
     ],
   }),
+
 });
 
 interface DirProfile {
@@ -59,84 +60,109 @@ function Home() {
       <SiteHeader />
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-brand-soft/60 blur-3xl" />
-        </div>
-        <div className="mx-auto max-w-5xl px-4 pb-20 pt-20 text-center sm:pt-28">
-          <Badge variant="secondary" className="mb-5 gap-1.5 rounded-full px-3 py-1 text-xs">
-            <Sparkles className="h-3 w-3" /> forlink.app
-          </Badge>
-          <h1 className="text-balance font-display text-5xl leading-[1.05] tracking-tight text-foreground sm:text-6xl md:text-7xl">
-            Um único link para <em className="italic text-brand">tudo</em> que você compartilha.
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
-            Reúna seus melhores links em um perfil público, organizado por categorias.
-            Grátis, bonito e pronto em minutos.
-          </p>
+      <section className="border-b border-border/60 bg-gradient-to-b from-background to-secondary/40">
+        <div className="mx-auto max-w-5xl px-4 py-20 sm:py-28">
+          <div className="max-w-3xl">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand" />
+              Plataforma brasileira · forlink.app
+            </div>
+            <h1 className="text-balance text-4xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-5xl md:text-6xl">
+              Um link, todos os seus links.
+            </h1>
+            <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+              A ForLink reúne, organiza e dá contexto aos links que você compartilha.
+              Perfil público, categorias, métricas e um plano Pro sem enrolação.
+            </p>
 
-          <div className="mx-auto mt-10 flex max-w-lg items-center gap-2 rounded-full border bg-card p-1.5 shadow-sm">
-            <div className="pl-3 text-muted-foreground"><Search className="h-4 w-4" /></div>
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar perfil ou @usuario"
-              className="h-10 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
-            />
-            <Link to="/auth">
-              <Button className="rounded-full bg-brand text-brand-foreground hover:bg-brand/90">
-                Criar meu ForLink <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link to="/auth">
+                <Button size="lg" className="bg-brand text-brand-foreground hover:bg-brand/90">
+                  Criar meu perfil <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              </Link>
+              <a href="#diretorio">
+                <Button size="lg" variant="outline">Ver o diretório</Button>
+              </a>
+            </div>
 
-          <div className="mt-8 flex items-center justify-center gap-8 text-sm text-muted-foreground">
-            <span className="flex items-center gap-2"><Layers className="h-4 w-4" /> Categorias</span>
-            <span className="flex items-center gap-2"><Link2 className="h-4 w-4" /> Favicon automático</span>
-            <span className="flex items-center gap-2"><Users className="h-4 w-4" /> Perfil público</span>
+            <div className="mt-10 grid max-w-2xl grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+              <div className="flex items-start gap-2.5">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                <div>
+                  <div className="font-medium text-foreground">Perfis verificados</div>
+                  <div className="text-muted-foreground">Selo oficial para marcas e criadores.</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <Zap className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                <div>
+                  <div className="font-medium text-foreground">Pagamento em PIX</div>
+                  <div className="text-muted-foreground">Ativação imediata do plano Pro.</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                <div>
+                  <div className="font-medium text-foreground">Domínio próprio</div>
+                  <div className="text-muted-foreground">forlink.app/seu-usuario, pronto para compartilhar.</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Directory */}
-      <section className="mx-auto max-w-6xl px-4 pb-24">
-        <div className="mb-6 flex items-end justify-between">
+      {/* Search + Directory */}
+      <section id="diretorio" className="mx-auto max-w-6xl px-4 py-20">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="font-display text-3xl tracking-tight">Perfis em destaque</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Curadorias de criadores brasileiros.</p>
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Diretório de perfis</h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Descubra criadores, empresas e projetos brasileiros na ForLink.
+            </p>
+          </div>
+          <div className="flex w-full max-w-sm items-center gap-2 rounded-md border bg-card px-3 py-2 shadow-sm">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar perfil ou @usuario"
+              className="h-6 flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
+            />
           </div>
         </div>
 
         {isLoading ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-40 animate-pulse rounded-2xl bg-muted" />
+              <div key={i} className="h-40 animate-pulse rounded-md bg-muted" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed p-12 text-center text-muted-foreground">
+          <div className="rounded-md border border-dashed p-12 text-center text-sm text-muted-foreground">
             Nenhum perfil encontrado para "{q}".
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((p) => (
               <Link key={p.id} to="/$username" params={{ username: p.username }} className="group">
-                <Card className="h-full overflow-hidden p-6 transition hover:-translate-y-0.5 hover:shadow-md">
+                <Card className="h-full overflow-hidden p-6 transition-colors hover:border-brand/40 hover:bg-accent/30">
                   <div className="flex items-start gap-4">
-                    <Avatar className="h-12 w-12 border">
+                    <Avatar className="h-11 w-11 border">
                       <AvatarImage src={p.avatar_url ?? undefined} alt={p.display_name} />
                       <AvatarFallback>{p.display_name.slice(0, 1)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate font-semibold">{p.display_name}</span>
+                        <span className="truncate font-semibold text-foreground">{p.display_name}</span>
                         {p.is_verified && <BadgeCheck className="h-4 w-4 shrink-0 text-brand" />}
                       </div>
                       <div className="truncate text-sm text-muted-foreground">@{p.username}</div>
                     </div>
                   </div>
-                  {p.bio && <p className="mt-4 line-clamp-2 text-sm text-muted-foreground">{p.bio}</p>}
-                  <div className="mt-5 flex items-center justify-between text-xs text-muted-foreground">
+                  {p.bio && <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{p.bio}</p>}
+                  <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-4 text-xs text-muted-foreground">
                     <span>{p.views_count.toLocaleString("pt-BR")} visualizações</span>
                     <span className="font-medium text-brand opacity-0 transition group-hover:opacity-100">
                       Ver perfil →
@@ -149,12 +175,13 @@ function Home() {
         )}
       </section>
 
-      <footer className="border-t bg-card/40">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row">
+      <footer className="border-t bg-secondary/30">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row">
           <span>© {new Date().getFullYear()} ForLink · forlink.app</span>
-          <span>Feito com carinho no Brasil 🇧🇷</span>
+          <span>Todos os direitos reservados.</span>
         </div>
       </footer>
     </div>
   );
 }
+

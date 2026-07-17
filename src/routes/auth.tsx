@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Link2 } from "lucide-react";
+
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 
@@ -59,12 +59,10 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12">
-        <Link to="/" className="mx-auto mb-8 flex items-center gap-2 font-semibold">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-brand-foreground">
-            <Link2 className="h-4 w-4" />
-          </span>
-          <span className="text-lg">ForLink</span>
+        <Link to="/" className="mx-auto mb-8 flex items-center" aria-label="ForLink">
+          <img src="/brand/wordmark-light.svg" alt="ForLink" className="h-7 w-auto" />
         </Link>
+
 
         <Card className="p-8">
           <h1 className="font-display text-3xl tracking-tight">

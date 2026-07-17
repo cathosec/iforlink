@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Link2, LayoutDashboard, LogOut, User as UserIcon, Shield } from "lucide-react";
+import { LayoutDashboard, LogOut, User as UserIcon, Shield } from "lucide-react";
+import { LogoWordmark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -17,14 +18,12 @@ export function SiteHeader() {
   const { session, profile, role, signOut, loading } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-brand-foreground shadow-sm">
-            <Link2 className="h-4 w-4" />
-          </span>
-          <span className="text-lg">ForLink</span>
+        <Link to="/" className="flex items-center" aria-label="ForLink">
+          <LogoWordmark className="h-6" />
         </Link>
+
 
         <div className="flex items-center gap-2">
           {loading ? null : session && profile ? (
