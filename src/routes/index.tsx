@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,9 +6,8 @@ import { SiteHeader } from "@/components/site-header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Search, BadgeCheck, ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap } from "lucide-react";
+import { Search, BadgeCheck, ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -34,8 +33,21 @@ interface DirProfile {
   views_count: number;
 }
 
+function normalizeUsername(v: string) {
+  return v
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 30);
+}
+
 function Home() {
   const [q, setQ] = useState("");
+  const [uname, setUname] = useState("");
+  const navigate = useNavigate();
 
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["directory"],
@@ -48,6 +60,15 @@ function Home() {
       return (data as DirProfile[]) ?? [];
     },
   });
+
+  const cleanUname = normalizeUsername(uname);
+  const unameValid = cleanUname.length >= 3;
+
+  const claim = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!unameValid) return;
+    navigate({ to: "/auth", search: { username: cleanUname, mode: "signup" } });
+  };
 
   const filtered = q
     ? profiles.filter(
@@ -64,34 +85,61 @@ function Home() {
 
       {/* Hero */}
       <section className="border-b border-border/60 bg-gradient-to-b from-background to-secondary/40">
-        <div className="mx-auto grid max-w-6xl gap-14 px-4 py-20 sm:py-28 lg:grid-cols-[1.15fr_1fr] lg:items-center">
+        <div className="mx-auto grid max-w-6xl gap-14 px-4 py-20 sm:py-24 lg:grid-cols-[1.15fr_1fr] lg:items-center">
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" />
               Agregador de links · brasileiro
             </div>
             <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl md:text-[3.4rem]">
-              Salve seus links favoritos.
+              Reserve seu link.
               <br />
-              <span className="text-brand">Acesse de qualquer lugar.</span>
+              <span className="text-brand">Organize tudo em um só lugar.</span>
             </h1>
             <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Guarde artigos, ferramentas, referências e sites que você usa todo dia.
-              Organize por categoria, mantenha uma parte privada só sua, e compartilhe o resto num perfil público em <span className="font-medium text-foreground">forlink.app/seu-usuario</span>.
+              Escolha seu endereço em <span className="font-medium text-foreground">forlink.app</span>,
+              crie sua conta em segundos e comece a salvar, organizar e compartilhar seus links favoritos.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link to="/auth">
-                <Button size="lg" className="bg-brand text-brand-foreground hover:bg-brand/90">
-                  Começar de graça <ArrowRight className="ml-1.5 h-4 w-4" />
+            {/* Username claim */}
+            <form onSubmit={claim} className="mt-8">
+              <label htmlFor="claim" className="mb-2 block text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                Escolha seu link
+              </label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="flex flex-1 items-stretch overflow-hidden rounded-md border bg-card shadow-sm ring-brand/20 transition focus-within:border-brand focus-within:ring-2">
+                  <span className="flex items-center whitespace-nowrap border-r bg-muted/50 px-3 text-sm text-muted-foreground">
+                    forlink.app/
+                  </span>
+                  <Input
+                    id="claim"
+                    value={uname}
+                    onChange={(e) => setUname(e.target.value)}
+                    placeholder="seu-usuario"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="h-11 flex-1 border-0 bg-transparent px-3 text-base shadow-none focus-visible:ring-0"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={!unameValid}
+                  className="h-11 bg-brand text-brand-foreground hover:bg-brand/90 sm:w-auto"
+                >
+                  Reservar <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
-              </Link>
-              <a href="#diretorio">
-                <Button size="lg" variant="outline">Explorar o diretório</Button>
-              </a>
-            </div>
+              </div>
+              <p className="mt-2 min-h-[1.25rem] text-xs text-muted-foreground">
+                {uname && !unameValid
+                  ? "Use pelo menos 3 caracteres (letras, números e hífen)."
+                  : cleanUname
+                    ? <>Seu link ficará: <span className="font-medium text-foreground">forlink.app/{cleanUname}</span></>
+                    : "Grátis, sem cartão. Você confirma no próximo passo."}
+              </p>
+            </form>
 
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5"><Lock className="h-3.5 w-3.5 text-brand" /> Links privados</span>
               <span className="inline-flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5 text-brand" /> Sincronizado em todo dispositivo</span>
               <span className="inline-flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-brand" /> Pro via PIX</span>
@@ -108,7 +156,9 @@ function Home() {
                   <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
                   <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
                 </div>
-                <span className="ml-2 text-xs text-muted-foreground">forlink.app/voce</span>
+                <span className="ml-2 truncate text-xs text-muted-foreground">
+                  forlink.app/{cleanUname || "voce"}
+                </span>
               </div>
               <div className="space-y-4 p-5">
                 {[
@@ -170,6 +220,32 @@ function Home() {
                 <p className="mt-1.5 text-sm text-muted-foreground">{d}</p>
               </div>
             ))}
+          </div>
+
+          {/* Plans strip */}
+          <div className="mt-10 grid gap-4 rounded-lg border bg-background p-6 sm:grid-cols-2">
+            <div>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-base font-semibold">Plano Free</h3>
+                <span className="text-xs text-muted-foreground">para sempre</span>
+              </div>
+              <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+                {["Perfil público em forlink.app/seu-usuario", "Até 15 links e 3 categorias", "Links privados só para você", "Sincronização em todo dispositivo"].map((f) => (
+                  <li key={f} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {f}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-md border bg-secondary/40 p-4">
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-base font-semibold">Pro</h3>
+                <span className="text-xs text-muted-foreground">via PIX</span>
+              </div>
+              <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+                {["Links e categorias ilimitados", "Verificação com selo", "Estatísticas detalhadas de cliques", "Suporte prioritário"].map((f) => (
+                  <li key={f} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {f}</li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -246,4 +322,3 @@ function Home() {
     </div>
   );
 }
-
