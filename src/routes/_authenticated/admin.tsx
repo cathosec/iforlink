@@ -306,10 +306,10 @@ function ContentTab({ logAction }: { logAction: (a: string, t?: string, id?: str
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium">{l.title}</div>
                 <div className="truncate text-xs text-muted-foreground">
-                  @{l.profiles.username} · {l.url}
+                  @{l.profile.username} · {l.url}
                 </div>
               </div>
-              <Badge variant="secondary">{l.click_count} cliques</Badge>
+              <Badge variant="secondary">{l.clicks_count} cliques</Badge>
               <Switch checked={l.is_visible} onCheckedChange={(v) => toggleVisible(l.id, v)} />
               <Button variant="ghost" size="icon" onClick={() => removeLink(l.id, l.title)}>
                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -328,12 +328,17 @@ function SubscriptionsTab({ logAction }: { logAction: (a: string, t?: string, id
   const subsQ = useQuery({
     queryKey: ["admin-subs"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data: subs } = await supabase
         .from("subscriptions")
-        .select("*, profiles:user_id(username,display_name)")
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(200);
-      return (data ?? []) as Array<Subscription & { profiles: { username: string; display_name: string } | null }>;
+      const ids = Array.from(new Set((subs ?? []).map(s => s.user_id)));
+      const { data: profs } = ids.length
+        ? await supabase.from("profiles").select("id,username,display_name").in("id", ids)
+        : { data: [] as { id: string; username: string; display_name: string }[] };
+      const map = new Map((profs ?? []).map(p => [p.id, p]));
+      return (subs ?? []).map(s => ({ ...s, profile: map.get(s.user_id) ?? null })) as Array<Subscription & { profile: { username: string; display_name: string } | null }>;
     },
   });
 
