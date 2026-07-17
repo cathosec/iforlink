@@ -97,6 +97,77 @@ export type Database = {
           },
         ]
       }
+      pix_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          expires_at: string | null
+          id: string
+          interval: string
+          mp_payment_id: string | null
+          paid_at: string | null
+          payer_email: string | null
+          plan: Database["public"]["Enums"]["app_role"]
+          qr_code: string | null
+          qr_code_base64: string | null
+          raw: Json
+          status: string
+          subscription_id: string | null
+          ticket_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          interval: string
+          mp_payment_id?: string | null
+          paid_at?: string | null
+          payer_email?: string | null
+          plan?: Database["public"]["Enums"]["app_role"]
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          raw?: Json
+          status?: string
+          subscription_id?: string | null
+          ticket_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          interval?: string
+          mp_payment_id?: string | null
+          paid_at?: string | null
+          payer_email?: string | null
+          plan?: Database["public"]["Enums"]["app_role"]
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          raw?: Json
+          status?: string
+          subscription_id?: string | null
+          ticket_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           description: string | null
