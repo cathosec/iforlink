@@ -53,6 +53,9 @@ export function SiteHeader() {
                     <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Painel</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/encurtar"><Scissors className="mr-2 h-4 w-4" /> Encurtador</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/settings"><UserIcon className="mr-2 h-4 w-4" /> Perfil</Link>
                   </DropdownMenuItem>
                   {role === "admin" && (
