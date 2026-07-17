@@ -60,7 +60,7 @@ function Admin() {
 
   const logAction = async (action: string, target_type?: string, target_id?: string, metadata: Record<string, unknown> = {}) => {
     if (!user) return;
-    await supabase.from("admin_audit_log").insert({ admin_id: user.id, action, target_type: target_type ?? null, target_id: target_id ?? null, metadata });
+    await supabase.from("admin_audit_log").insert({ admin_id: user.id, action, target_type: target_type ?? null, target_id: target_id ?? null, metadata: metadata as never });
     qc.invalidateQueries({ queryKey: ["admin-audit"] });
   };
 
@@ -263,15 +263,20 @@ function ContentTab({ logAction }: { logAction: (a: string, t?: string, id?: str
   const linksQ = useQuery({
     queryKey: ["admin-links"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data: links } = await supabase
         .from("links")
-        .select("id,title,url,click_count,is_visible,created_at,user_id,profiles!inner(username,display_name)")
-        .order("click_count", { ascending: false })
+        .select("id,title,url,clicks_count,is_visible,created_at,user_id")
+        .order("clicks_count", { ascending: false })
         .limit(100);
-      return (data ?? []) as Array<{
-        id: string; title: string; url: string; click_count: number; is_visible: boolean;
-        created_at: string; user_id: string; profiles: { username: string; display_name: string };
-      }>;
+      const ids = Array.from(new Set((links ?? []).map(l => l.user_id)));
+      const { data: profs } = ids.length
+        ? await supabase.from("profiles").select("id,username,display_name").in("id", ids)
+        : { data: [] as { id: string; username: string; display_name: string }[] };
+      const map = new Map((profs ?? []).map(p => [p.id, p]));
+      return (links ?? []).map(l => ({
+        ...l,
+        profile: map.get(l.user_id) ?? { username: "—", display_name: "—" },
+      }));
     },
   });
 
