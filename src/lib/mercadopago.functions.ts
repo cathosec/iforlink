@@ -1,6 +1,22 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type MpCfg = {
+  enabled?: boolean;
+  mode?: string;
+  pix_expiration_minutes?: number;
+  access_token_test?: string;
+  access_token_live?: string;
+  webhook_secret?: string;
+  prices?: { month_cents?: number; quarter_cents?: number; year_cents?: number };
+};
+
+/** Resolve MP access token: settings (by mode) → env fallback. */
+function resolveToken(cfg: MpCfg): string {
+  const fromCfg = cfg.mode === "live" ? cfg.access_token_live : cfg.access_token_test;
+  const token = (fromCfg && fromCfg.trim()) || process.env.MERCADOPAGO_ACCESS_TOKEN || "";
+  return token.trim();
+}
 
 type Interval = "month" | "quarter" | "year";
 
