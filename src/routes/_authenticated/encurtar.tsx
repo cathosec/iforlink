@@ -288,3 +288,62 @@ function ShortenerPage() {
     </div>
   );
 }
+
+function UpgradeGate() {
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <main className="mx-auto max-w-2xl px-4 py-16">
+        <Link to="/dashboard" className="mb-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao painel
+        </Link>
+        <Card className="overflow-hidden">
+          <div className="bg-gradient-to-br from-brand/10 via-brand/5 to-transparent p-8 sm:p-10">
+            <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-brand/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-brand">
+              <Sparkles className="h-3 w-3" /> Recurso Pro
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 place-items-center rounded-lg bg-brand text-white">
+                <Scissors className="h-5 w-5" />
+              </span>
+              <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
+                Encurtador de links
+              </h1>
+            </div>
+            <p className="mt-3 max-w-lg text-sm text-muted-foreground">
+              O encurtador <span className="font-medium text-foreground">forlink.app/s/</span> está disponível
+              apenas para assinantes do plano <span className="font-medium text-foreground">Pro</span>.
+              Redirecionamentos <span className="font-medium text-foreground">301 permanentes</span> preservam todo
+              o SEO do link de destino.
+            </p>
+
+            <ul className="mt-6 space-y-2 text-sm">
+              {[
+                "URLs curtas com código automático ou personalizado",
+                "Redirecionamento 301 com header canonical",
+                "Contador de cliques em tempo real",
+                "Sem anúncios em nenhum link",
+              ].map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 flex flex-wrap gap-2">
+              <Link to="/assinar">
+                <Button size="lg" className="bg-brand text-brand-foreground hover:bg-brand/90">
+                  <Sparkles className="mr-2 h-4 w-4" /> Fazer upgrade para Pro
+                </Button>
+              </Link>
+              <Link to="/dashboard">
+                <Button size="lg" variant="outline">Voltar ao painel</Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      </main>
+    </div>
+  );
+}
