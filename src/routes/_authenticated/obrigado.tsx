@@ -12,7 +12,7 @@ import { CheckCircle2, Crown } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/obrigado")({
   component: Obrigado,
   validateSearch: (s: Record<string, unknown>) => ({ p: typeof s.p === "string" ? s.p : "" }),
-  head: () => ({ meta: [{ title: "Assinatura confirmada · ForLink" }] }),
+  head: () => ({ meta: [{ title: "Assinatura confirmada · Belink" }] }),
 });
 
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100);
@@ -45,13 +45,13 @@ function Obrigado() {
         <div className="text-center">
           <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" />
           <h1 className="mt-4 font-display text-4xl tracking-tight">Assinatura confirmada!</h1>
-          <p className="mt-2 text-muted-foreground">Obrigado por apoiar o ForLink. Você agora é <strong>Pro</strong>.</p>
+          <p className="mt-2 text-muted-foreground">Obrigado por apoiar o Belink. Você agora é <strong>Pro</strong>.</p>
         </div>
 
         <Card className="mt-8 p-6">
           <div className="flex items-center gap-2">
             <Crown className="h-5 w-5 text-amber-500" />
-            <div className="font-semibold">ForLink Pro</div>
+            <div className="font-semibold">Belink Pro</div>
             <Badge className="ml-auto" variant="secondary">Ativa</Badge>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">

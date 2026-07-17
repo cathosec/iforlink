@@ -25,7 +25,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
-  head: () => ({ meta: [{ title: "Painel · ForLink" }] }),
+  head: () => ({ meta: [{ title: "Painel · Belink" }] }),
 });
 
 interface Category { id: string; name: string; display_order: number; is_visible: boolean; }

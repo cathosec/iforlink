@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
-  head: () => ({ meta: [{ title: "Entrar · ForLink" }] }),
+  head: () => ({ meta: [{ title: "Entrar · Belink" }] }),
 });
 
 function AuthPage() {
@@ -63,7 +63,7 @@ function AuthPage() {
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-brand-foreground">
             <Link2 className="h-4 w-4" />
           </span>
-          <span className="text-lg">ForLink</span>
+          <span className="text-lg">Belink</span>
         </Link>
 
         <Card className="p-8">
@@ -71,7 +71,7 @@ function AuthPage() {
             {mode === "signin" ? "Entrar" : "Criar sua conta"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signin" ? "Bem-vindo de volta ao ForLink." : "Grátis, para sempre. Sem cartão."}
+            {mode === "signin" ? "Bem-vindo de volta ao Belink." : "Grátis, para sempre. Sem cartão."}
           </p>
 
           <form onSubmit={submit} className="mt-6 space-y-4">

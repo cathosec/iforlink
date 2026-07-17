@@ -17,7 +17,7 @@ const INTERVAL_DAYS: Record<Interval, number> = {
 };
 
 /**
- * Cria uma cobrança PIX no Mercado Pago para assinatura ForLink Pro.
+ * Cria uma cobrança PIX no Mercado Pago para assinatura Belink Pro.
  */
 export const createPixSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -52,7 +52,7 @@ export const createPixSubscription = createServerFn({ method: "POST" })
 
     // Fetch profile/email
     const { data: userRow } = await supabaseAdmin.auth.admin.getUserById(context.userId);
-    const email = userRow?.user?.email ?? "sem-email@forlink.app";
+    const email = userRow?.user?.email ?? "sem-email@belink.app";
     const displayName = (userRow?.user?.user_metadata?.display_name as string | undefined) ?? email.split("@")[0];
 
     const expMin = cfg.pix_expiration_minutes ?? 30;
@@ -85,7 +85,7 @@ export const createPixSubscription = createServerFn({ method: "POST" })
     const idempotencyKey = pix.id;
     const body = {
       transaction_amount: amountCents / 100,
-      description: `ForLink Pro ${INTERVAL_LABEL[data.interval]}`,
+      description: `Belink Pro ${INTERVAL_LABEL[data.interval]}`,
       payment_method_id: "pix",
       external_reference: pix.id,
       date_of_expiration: expiresAt.toISOString().replace("Z", "-00:00"),
@@ -93,7 +93,7 @@ export const createPixSubscription = createServerFn({ method: "POST" })
       payer: {
         email,
         first_name: displayName.split(" ")[0] || "Usuario",
-        last_name: displayName.split(" ").slice(1).join(" ") || "ForLink",
+        last_name: displayName.split(" ").slice(1).join(" ") || "Belink",
       },
     };
 
