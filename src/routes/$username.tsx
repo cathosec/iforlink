@@ -16,7 +16,7 @@ export const Route = createFileRoute("/$username")({
       <SiteHeader />
       <div className="mx-auto max-w-md px-4 py-32 text-center">
         <h1 className="font-display text-4xl">Perfil não encontrado</h1>
-        <p className="mt-3 text-muted-foreground">Este @usuario ainda não existe no Belink.</p>
+        <p className="mt-3 text-muted-foreground">Este @usuario ainda não existe no ForLink.</p>
         <Link to="/"><Button className="mt-6">Explorar perfis</Button></Link>
       </div>
     </div>
@@ -176,7 +176,7 @@ function PublicProfile() {
 
         <div className="mt-16 text-center">
           <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">
-            criado com <span className="font-semibold">Belink</span>
+            criado com <span className="font-semibold">ForLink</span>
           </Link>
         </div>
       </main>

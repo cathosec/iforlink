@@ -24,7 +24,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
-  head: () => ({ meta: [{ title: "Super Admin · Belink" }] }),
+  head: () => ({ meta: [{ title: "Super Admin · ForLink" }] }),
 });
 
 type RoleName = "free" | "pro" | "admin";
@@ -77,7 +77,7 @@ function Admin() {
           </div>
           <div>
             <h1 className="font-display text-3xl tracking-tight">Painel do Super-Admin</h1>
-            <p className="text-sm text-muted-foreground">Controle total sobre a Belink — usuários, conteúdo, assinaturas e gateways.</p>
+            <p className="text-sm text-muted-foreground">Controle total sobre a ForLink — usuários, conteúdo, assinaturas e gateways.</p>
           </div>
         </div>
 

@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/_authenticated/assinar")({
   component: Assinar,
-  head: () => ({ meta: [{ title: "Assinar Pro · Belink" }] }),
+  head: () => ({ meta: [{ title: "Assinar Pro · ForLink" }] }),
 });
 
 type Interval = "month" | "quarter" | "year";
@@ -76,7 +76,7 @@ function Assinar() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-4xl px-4 py-10">
-        <h1 className="font-display text-4xl tracking-tight">Assine o Belink Pro</h1>
+        <h1 className="font-display text-4xl tracking-tight">Assine o ForLink Pro</h1>
         <p className="mt-2 text-muted-foreground">Pagamento via PIX processado pelo Mercado Pago. Aprovação automática.</p>
 
         {!cfgQ.data?.enabled && (

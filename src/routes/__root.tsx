@@ -74,14 +74,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Belink — Um link, todos os seus links" },
+      { title: "ForLink — Um link, todos os seus links" },
       { name: "description", content: "Plataforma brasileira para reunir e organizar seus links em um perfil público, com categorias, verificação e planos Pro." },
-      { property: "og:title", content: "Belink — Um link, todos os seus links" },
+      { property: "og:title", content: "ForLink — Um link, todos os seus links" },
       { property: "og:description", content: "Plataforma brasileira para reunir e organizar seus links em um perfil público, com categorias, verificação e planos Pro." },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Belink" },
+      { property: "og:site_name", content: "ForLink" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Belink — Um link, todos os seus links" },
+      { name: "twitter:title", content: "ForLink — Um link, todos os seus links" },
       { name: "twitter:description", content: "Plataforma brasileira para reunir e organizar seus links em um perfil público, com categorias, verificação e planos Pro." },
     ],
     links: [

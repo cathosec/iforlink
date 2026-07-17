@@ -20,7 +20,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center" aria-label="Belink">
+        <Link to="/" className="flex items-center" aria-label="ForLink">
           <LogoWordmark className="h-6" />
         </Link>
 

@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
-  head: () => ({ meta: [{ title: "Entrar · Belink" }] }),
+  head: () => ({ meta: [{ title: "Entrar · ForLink" }] }),
 });
 
 function AuthPage() {
@@ -59,8 +59,8 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12">
-        <Link to="/" className="mx-auto mb-8 flex items-center" aria-label="Belink">
-          <img src="/brand/wordmark-light.svg" alt="Belink" className="h-7 w-auto" />
+        <Link to="/" className="mx-auto mb-8 flex items-center" aria-label="ForLink">
+          <img src="/brand/wordmark-light.svg" alt="ForLink" className="h-7 w-auto" />
         </Link>
 
 
@@ -69,7 +69,7 @@ function AuthPage() {
             {mode === "signin" ? "Entrar" : "Criar sua conta"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signin" ? "Bem-vindo de volta ao Belink." : "Grátis, para sempre. Sem cartão."}
+            {mode === "signin" ? "Bem-vindo de volta ao ForLink." : "Grátis, para sempre. Sem cartão."}
           </p>
 
           <form onSubmit={submit} className="mt-6 space-y-4">

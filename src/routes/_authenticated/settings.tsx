@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: Settings,
-  head: () => ({ meta: [{ title: "Perfil · Belink" }] }),
+  head: () => ({ meta: [{ title: "Perfil · ForLink" }] }),
 });
 
 function Settings() {
@@ -62,7 +62,7 @@ function Settings() {
             <div>
               <Label>Nome de usuário</Label>
               <div className="mt-1.5 flex items-center rounded-md border bg-background focus-within:ring-1 focus-within:ring-ring">
-                <span className="pl-3 text-sm text-muted-foreground">belink.app/</span>
+                <span className="pl-3 text-sm text-muted-foreground">forlink.app/</span>
                 <Input value={username} onChange={(e) => setUsername(e.target.value)} className="border-0 shadow-none focus-visible:ring-0" />
               </div>
               <p className="mt-1 text-xs text-muted-foreground">3 a 32 caracteres, apenas letras minúsculas, números e hífens.</p>

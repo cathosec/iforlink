@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
-      { title: "Belink — Um link, todos os seus links" },
+      { title: "ForLink — Um link, todos os seus links" },
       { name: "description", content: "Plataforma brasileira para reunir e organizar seus links em um perfil público, com categorias, verificação e planos Pro." },
     ],
   }),
@@ -65,13 +65,13 @@ function Home() {
           <div className="max-w-3xl">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-              Plataforma brasileira · belink.app
+              Plataforma brasileira · forlink.app
             </div>
             <h1 className="text-balance text-4xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-5xl md:text-6xl">
               Um link, todos os seus links.
             </h1>
             <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-              A Belink reúne, organiza e dá contexto aos links que você compartilha.
+              A ForLink reúne, organiza e dá contexto aos links que você compartilha.
               Perfil público, categorias, métricas e um plano Pro sem enrolação.
             </p>
 
@@ -105,7 +105,7 @@ function Home() {
                 <Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
                 <div>
                   <div className="font-medium text-foreground">Domínio próprio</div>
-                  <div className="text-muted-foreground">belink.app/seu-usuario, pronto para compartilhar.</div>
+                  <div className="text-muted-foreground">forlink.app/seu-usuario, pronto para compartilhar.</div>
                 </div>
               </div>
             </div>
@@ -119,7 +119,7 @@ function Home() {
           <div>
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Diretório de perfis</h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Descubra criadores, empresas e projetos brasileiros na Belink.
+              Descubra criadores, empresas e projetos brasileiros na ForLink.
             </p>
           </div>
           <div className="flex w-full max-w-sm items-center gap-2 rounded-md border bg-card px-3 py-2 shadow-sm">
@@ -177,7 +177,7 @@ function Home() {
 
       <footer className="border-t bg-secondary/30">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} Belink · belink.app</span>
+          <span>© {new Date().getFullYear()} ForLink · forlink.app</span>
           <span>Todos os direitos reservados.</span>
         </div>
       </footer>
