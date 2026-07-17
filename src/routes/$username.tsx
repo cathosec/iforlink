@@ -265,30 +265,36 @@ function PublicProfile() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
-      {/* Cabeçalho decorativo com gradiente sutil */}
-      <div className="relative overflow-hidden border-b bg-gradient-to-b from-accent/40 via-background to-background">
+      {/* Cabeçalho editorial */}
+      <div className="relative overflow-hidden border-b bg-gradient-to-b from-accent/30 via-background to-background">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(60%_60%_at_50%_0%,color-mix(in_oklab,var(--brand)_12%,transparent),transparent_70%)]"
+          className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(55%_55%_at_50%_0%,color-mix(in_oklab,var(--brand)_10%,transparent),transparent_70%)]"
         />
-        <div className="relative mx-auto max-w-2xl px-4 pb-8 pt-12 sm:pt-14">
+        <div className="relative mx-auto max-w-2xl px-4 pb-6 pt-10 sm:pt-14">
           <header className="flex flex-col items-center text-center">
-            <Avatar className="h-24 w-24 shrink-0 border-2 border-background shadow-lg ring-1 ring-border">
-              <AvatarImage src={p.avatar_url ?? undefined} alt={p.display_name} />
-              <AvatarFallback className="text-2xl font-semibold">
-                {p.display_name.slice(0, 1)}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <div
+                aria-hidden
+                className="absolute -inset-1 rounded-full bg-gradient-to-br from-brand/30 via-brand/10 to-transparent blur-md"
+              />
+              <Avatar className="relative h-24 w-24 shrink-0 border-[3px] border-background shadow-xl ring-1 ring-border/60">
+                <AvatarImage src={p.avatar_url ?? undefined} alt={p.display_name} />
+                <AvatarFallback className="text-2xl font-semibold">
+                  {p.display_name.slice(0, 1)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
 
             <div className="mt-5 flex items-center justify-center gap-1.5">
-              <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-[26px]">
+              <h1 className="font-display text-[26px] font-semibold tracking-tight sm:text-[28px]">
                 {p.display_name}
               </h1>
               {p.is_verified && (
                 <BadgeCheck className="h-5 w-5 shrink-0 text-brand" aria-label="Verificado" />
               )}
             </div>
-            <p className="mt-0.5 text-sm text-muted-foreground">@{p.username}</p>
+            <p className="mt-1 text-sm text-muted-foreground">@{p.username}</p>
 
             {p.bio && (
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-foreground/80">
@@ -296,43 +302,33 @@ function PublicProfile() {
               </p>
             )}
 
-            <div className="mt-6 flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={copyProfile} className="h-9">
+            {/* Estatísticas inline elegantes */}
+            <dl className="mt-6 flex items-center justify-center divide-x divide-border/70 rounded-full border bg-card/60 px-1 py-1 shadow-sm backdrop-blur">
+              <div className="flex items-baseline gap-1.5 px-4 py-1">
+                <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Links</dt>
+                <dd className="font-display text-sm font-semibold tabular-nums">{totalLinks}</dd>
+              </div>
+              <div className="flex items-baseline gap-1.5 px-4 py-1">
+                <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Categorias</dt>
+                <dd className="font-display text-sm font-semibold tabular-nums">{cats.length}</dd>
+              </div>
+              <div className="flex items-baseline gap-1.5 px-4 py-1">
+                <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Views</dt>
+                <dd className="font-display text-sm font-semibold tabular-nums">
+                  {p.views_count.toLocaleString("pt-BR")}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="mt-5 flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={copyProfile} className="h-9 rounded-full px-4">
                 <Copy className="mr-2 h-3.5 w-3.5" /> Copiar link
               </Button>
-              <Button size="sm" onClick={shareProfile} className="h-9">
+              <Button size="sm" onClick={shareProfile} className="h-9 rounded-full px-4 shadow-sm">
                 <Share2 className="mr-2 h-3.5 w-3.5" /> Compartilhar
               </Button>
             </div>
           </header>
-
-          {/* Estatísticas */}
-          <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-3">
-            <div className="rounded-lg border bg-card/70 px-3 py-3 text-center backdrop-blur">
-              <div className="flex items-center justify-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                <Link2 className="h-3 w-3" /> Links
-              </div>
-              <div className="mt-1 font-display text-lg font-semibold tabular-nums">
-                {totalLinks}
-              </div>
-            </div>
-            <div className="rounded-lg border bg-card/70 px-3 py-3 text-center backdrop-blur">
-              <div className="flex items-center justify-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                <Folder className="h-3 w-3" /> Categorias
-              </div>
-              <div className="mt-1 font-display text-lg font-semibold tabular-nums">
-                {cats.length}
-              </div>
-            </div>
-            <div className="rounded-lg border bg-card/70 px-3 py-3 text-center backdrop-blur">
-              <div className="flex items-center justify-center gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                <Eye className="h-3 w-3" /> Views
-              </div>
-              <div className="mt-1 font-display text-lg font-semibold tabular-nums">
-                {p.views_count.toLocaleString("pt-BR")}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
