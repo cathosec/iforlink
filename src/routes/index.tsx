@@ -242,10 +242,13 @@ function Home() {
                 <span className="text-xs text-muted-foreground">via PIX</span>
               </div>
               <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                {["Links e categorias ilimitados", "Verificação com selo", "Estatísticas detalhadas de cliques", "Suporte prioritário"].map((f) => (
+                {["Sem anúncios em todo o site", "Links e categorias ilimitados", "Verificação com selo", "Estatísticas detalhadas de cliques", "Suporte prioritário"].map((f) => (
                   <li key={f} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {f}</li>
                 ))}
               </ul>
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                O plano Free exibe anúncios discretos no topo do diretório, entre os perfis e uma faixa fixa no mobile. Ao assinar o Pro, todos os espaços são removidos automaticamente.
+              </p>
             </div>
           </div>
         </div>
