@@ -113,6 +113,7 @@ function Admin() {
             <TabsContent value="overview" className="mt-0"><OverviewTab /></TabsContent>
             <TabsContent value="users" className="mt-0"><UsersTab logAction={logAction} /></TabsContent>
             <TabsContent value="content" className="mt-0"><ContentTab logAction={logAction} /></TabsContent>
+            <TabsContent value="shortener" className="mt-0"><ShortenerTab logAction={logAction} /></TabsContent>
             <TabsContent value="security" className="mt-0"><SecurityTab logAction={logAction} /></TabsContent>
             <TabsContent value="subscriptions" className="mt-0"><SubscriptionsTab logAction={logAction} /></TabsContent>
             <TabsContent value="gateways" className="mt-0"><GatewaysTab logAction={logAction} /></TabsContent>
