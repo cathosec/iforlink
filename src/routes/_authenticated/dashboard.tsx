@@ -111,13 +111,20 @@ function Dashboard() {
     toast.success("Categoria excluída");
     refresh();
   };
+  const persistCategoryOrder = async (ordered: Category[]) => {
+    await Promise.all(
+      ordered.map((c, idx) =>
+        c.display_order === idx
+          ? Promise.resolve()
+          : supabase.from("user_categories").update({ display_order: idx }).eq("id", c.id),
+      ),
+    );
+    refresh();
+  };
   const moveCategory = async (id: string, dir: -1 | 1) => {
     const idx = cats.findIndex((c) => c.id === id);
-    const swap = cats[idx + dir];
-    if (!swap) return;
-    await supabase.from("user_categories").update({ display_order: swap.display_order }).eq("id", id);
-    await supabase.from("user_categories").update({ display_order: cats[idx].display_order }).eq("id", swap.id);
-    refresh();
+    if (idx < 0 || idx + dir < 0 || idx + dir >= cats.length) return;
+    await persistCategoryOrder(arrayMove(cats, idx, idx + dir));
   };
 
   const saveLink = async (data: Partial<LinkRow> & { category_id: string; title: string; url: string }) => {
