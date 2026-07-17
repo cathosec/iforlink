@@ -16,8 +16,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as UsernameRouteImport } from './routes/$username'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedObrigadoRouteImport } from './routes/_authenticated/obrigado'
+import { Route as AuthenticatedEncurtarRouteImport } from './routes/_authenticated/encurtar'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -58,6 +60,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SCodeRoute = SCodeRouteImport.update({
+  id: '/s/$code',
+  path: '/s/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -66,6 +73,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 const AuthenticatedObrigadoRoute = AuthenticatedObrigadoRouteImport.update({
   id: '/obrigado',
   path: '/obrigado',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEncurtarRoute = AuthenticatedEncurtarRouteImport.update({
+  id: '/encurtar',
+  path: '/encurtar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -105,8 +117,10 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
 }
@@ -120,8 +134,10 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
 }
@@ -137,8 +153,10 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/encurtar': typeof AuthenticatedEncurtarRoute
   '/_authenticated/obrigado': typeof AuthenticatedObrigadoRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
 }
@@ -154,8 +172,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assinar'
     | '/dashboard'
+    | '/encurtar'
     | '/obrigado'
     | '/settings'
+    | '/s/$code'
     | '/api/public/avatar/$file'
     | '/api/public/webhooks/mercadopago'
   fileRoutesByTo: FileRoutesByTo
@@ -169,8 +189,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/assinar'
     | '/dashboard'
+    | '/encurtar'
     | '/obrigado'
     | '/settings'
+    | '/s/$code'
     | '/api/public/avatar/$file'
     | '/api/public/webhooks/mercadopago'
   id:
@@ -185,8 +207,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/assinar'
     | '/_authenticated/dashboard'
+    | '/_authenticated/encurtar'
     | '/_authenticated/obrigado'
     | '/_authenticated/settings'
+    | '/s/$code'
     | '/api/public/avatar/$file'
     | '/api/public/webhooks/mercadopago'
   fileRoutesById: FileRoutesById
@@ -199,6 +223,7 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermosRoute: typeof TermosRoute
+  SCodeRoute: typeof SCodeRoute
   ApiPublicAvatarFileRoute: typeof ApiPublicAvatarFileRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
 }
@@ -254,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/s/$code': {
+      id: '/s/$code'
+      path: '/s/$code'
+      fullPath: '/s/$code'
+      preLoaderRoute: typeof SCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -266,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/obrigado'
       fullPath: '/obrigado'
       preLoaderRoute: typeof AuthenticatedObrigadoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/encurtar': {
+      id: '/_authenticated/encurtar'
+      path: '/encurtar'
+      fullPath: '/encurtar'
+      preLoaderRoute: typeof AuthenticatedEncurtarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -310,6 +349,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAssinarRoute: typeof AuthenticatedAssinarRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEncurtarRoute: typeof AuthenticatedEncurtarRoute
   AuthenticatedObrigadoRoute: typeof AuthenticatedObrigadoRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
@@ -318,6 +358,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAssinarRoute: AuthenticatedAssinarRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEncurtarRoute: AuthenticatedEncurtarRoute,
   AuthenticatedObrigadoRoute: AuthenticatedObrigadoRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
@@ -333,6 +374,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermosRoute: TermosRoute,
+  SCodeRoute: SCodeRoute,
   ApiPublicAvatarFileRoute: ApiPublicAvatarFileRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
 }

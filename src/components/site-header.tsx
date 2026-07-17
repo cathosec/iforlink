@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, LogOut, User as UserIcon, Shield } from "lucide-react";
+import { LayoutDashboard, LogOut, User as UserIcon, Shield, Scissors } from "lucide-react";
 import { LogoWordmark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -51,6 +51,9 @@ export function SiteHeader() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Painel</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/encurtar"><Scissors className="mr-2 h-4 w-4" /> Encurtador</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings"><UserIcon className="mr-2 h-4 w-4" /> Perfil</Link>
