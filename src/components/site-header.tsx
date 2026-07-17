@@ -73,7 +73,7 @@ export function SiteHeader() {
               <Link to="/auth">
                 <Button variant="ghost" size="sm">Entrar</Button>
               </Link>
-              <Link to="/auth" search={{ mode: "signup" }}>
+              <Link to="/auth">
                 <Button size="sm" className="bg-brand text-brand-foreground hover:bg-brand/90">
                   Criar conta grátis
                 </Button>
