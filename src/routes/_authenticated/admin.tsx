@@ -86,6 +86,7 @@ function Admin() {
             <TabsTrigger value="overview"><TrendingUp className="mr-1.5 h-4 w-4" />Visão geral</TabsTrigger>
             <TabsTrigger value="users"><Users className="mr-1.5 h-4 w-4" />Usuários</TabsTrigger>
             <TabsTrigger value="content"><FolderTree className="mr-1.5 h-4 w-4" />Conteúdo</TabsTrigger>
+            <TabsTrigger value="security"><ShieldCheck className="mr-1.5 h-4 w-4" />Segurança</TabsTrigger>
             <TabsTrigger value="subscriptions"><CreditCard className="mr-1.5 h-4 w-4" />Assinaturas</TabsTrigger>
             <TabsTrigger value="gateways"><DollarSign className="mr-1.5 h-4 w-4" />Gateways</TabsTrigger>
             <TabsTrigger value="settings"><Settings2 className="mr-1.5 h-4 w-4" />Plataforma</TabsTrigger>
@@ -95,6 +96,7 @@ function Admin() {
           <TabsContent value="overview" className="mt-6"><OverviewTab /></TabsContent>
           <TabsContent value="users" className="mt-6"><UsersTab logAction={logAction} /></TabsContent>
           <TabsContent value="content" className="mt-6"><ContentTab logAction={logAction} /></TabsContent>
+          <TabsContent value="security" className="mt-6"><SecurityTab logAction={logAction} /></TabsContent>
           <TabsContent value="subscriptions" className="mt-6"><SubscriptionsTab logAction={logAction} /></TabsContent>
           <TabsContent value="gateways" className="mt-6"><GatewaysTab logAction={logAction} /></TabsContent>
           <TabsContent value="settings" className="mt-6"><SettingsTab logAction={logAction} /></TabsContent>
