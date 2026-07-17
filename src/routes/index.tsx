@@ -16,8 +16,8 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "ForLink — Seus links favoritos, organizados e acessíveis de qualquer lugar" },
       { name: "description", content: "Salve, organize e acesse seus links favoritos em um só lugar. Categorias, links privados, perfil público compartilhável e sincronização entre dispositivos." },
-      { property: "og:title", content: "ForLink — Salve seus links, acesse de qualquer lugar" },
-      { property: "og:description", content: "O agregador de links brasileiro para salvar favoritos, organizar por categoria e compartilhar num perfil público." },
+      { property: "og:title", content: "ForLink — Seus links favoritos, organizados e acessíveis de qualquer lugar" },
+      { property: "og:description", content: "Salve, organize e acesse seus links favoritos em um só lugar. Categorias, links privados, perfil público compartilhável e sincronização entre dispositivos." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
