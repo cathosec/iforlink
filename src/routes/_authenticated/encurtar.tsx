@@ -38,11 +38,14 @@ const genCode = (len = 6) =>
   ).join("");
 
 function ShortenerPage() {
-  const { user } = useAuth();
+  const { user, role, loading } = useAuth();
   const qc = useQueryClient();
   const [longUrl, setLongUrl] = useState("");
   const [customCode, setCustomCode] = useState("");
   const [creating, setCreating] = useState(false);
+  const isPro = role === "pro" || role === "admin";
+
+  if (!loading && !isPro) return <UpgradeGate />;
 
   const origin = typeof window !== "undefined" ? window.location.origin : "https://forlink.app";
 
