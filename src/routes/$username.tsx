@@ -163,8 +163,15 @@ function PublicProfile() {
                 >
                   <AccordionTrigger className="px-3.5 py-2.5 text-left hover:no-underline">
                     <div className="flex w-full items-center justify-between gap-3">
-                      <span className="text-[13px] font-semibold uppercase tracking-wide text-foreground/80">
-                        {cat.name}
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="truncate text-[13px] font-semibold uppercase tracking-wide text-foreground/80">
+                          {cat.name}
+                        </span>
+                        {!cat.is_public && (
+                          <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-[9px] font-medium uppercase">
+                            <Lock className="mr-0.5 h-2.5 w-2.5" /> Privada
+                          </Badge>
+                        )}
                       </span>
                       <span className="text-[11px] font-medium text-muted-foreground">
                         {cat.links.length}
