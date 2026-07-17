@@ -87,6 +87,7 @@ function Admin() {
               ["overview", TrendingUp, "Visão geral"],
               ["users", Users, "Usuários"],
               ["content", FolderTree, "Conteúdo"],
+              ["shortener", Scissors, "Encurtador"],
               ["security", ShieldCheck, "Segurança"],
               ["subscriptions", CreditCard, "Assinaturas"],
               ["gateways", DollarSign, "Pagamentos"],
