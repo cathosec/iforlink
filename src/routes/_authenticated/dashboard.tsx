@@ -188,12 +188,15 @@ function Dashboard() {
               </div>
             </div>
           </div>
-          {isFree && (
-            <Button variant="outline" size="sm" onClick={() => toast.info("Em breve: assinatura Pro")}>
-              Fazer upgrade
-            </Button>
+          {role !== "admin" && (
+            <Link to="/assinar"><Button variant={role === "pro" ? "outline" : "default"} size="sm">
+              {role === "pro" ? "Renovar assinatura" : "Fazer upgrade para Pro"}
+            </Button></Link>
           )}
         </Card>
+
+        {user?.id && <SubscriptionCard userId={user.id} />}
+
 
         {/* Nova categoria */}
         <div className="mt-8 flex items-center justify-between">
