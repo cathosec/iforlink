@@ -3,8 +3,8 @@ import { render } from '@react-email/render'
 import { TEMPLATES } from './registry'
 
 // Server-only: uses Resend (https://resend.com). Configured via:
-//   - env RESEND_API_KEY (secret)
 //   - platform_settings key = 'email' (from address, reply-to, enabled) — managed at /admin.
+//   - optional env RESEND_API_KEY as a server fallback.
 
 const SITE_NAME_FALLBACK = 'ForLink'
 const FROM_FALLBACK = 'ForLink <noreply@forlink.app>'
@@ -18,9 +18,11 @@ export interface SendTemplateEmailOptions {
   /** Dedupes retries of the same logical send (Resend Idempotency-Key). */
   idempotencyKey?: string
   replyTo?: string
+  settings?: EmailSettings
+  settingsClient?: SettingsClient
 }
 
-interface EmailSettings {
+export interface EmailSettings {
   enabled?: boolean
   from_name?: string
   from_address?: string
@@ -28,7 +30,33 @@ interface EmailSettings {
   api_key?: string
 }
 
-async function loadSettings(): Promise<EmailSettings> {
+type SettingsClient = {
+  from: (table: 'platform_settings') => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        maybeSingle: () => Promise<{ data: { value: unknown } | null; error: { message: string } | null }>
+      }
+    }
+  }
+}
+
+async function loadSettings(settingsClient?: SettingsClient): Promise<EmailSettings> {
+  if (settingsClient) {
+    try {
+      const { data, error } = await settingsClient
+        .from('platform_settings')
+        .select('value')
+        .eq('key', 'email')
+        .maybeSingle()
+      if (!error) return ((data?.value ?? {}) as EmailSettings) || {}
+      console.warn('[email] settings client read skipped:', error.message)
+    } catch (e) {
+      console.warn('[email] settings client exception:', e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return {}
+
   try {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
     const { data, error } = await supabaseAdmin
@@ -63,7 +91,7 @@ export async function sendTemplateEmail(
   to: string,
   options: SendTemplateEmailOptions = {},
 ): Promise<SendTemplateEmailResult> {
-  const settings = await loadSettings()
+  const settings = options.settings ?? (await loadSettings(options.settingsClient))
   const apiKey = (settings.api_key ?? process.env.RESEND_API_KEY ?? '').trim()
   if (!apiKey) {
     console.warn('[email] Resend API key não configurada — envio ignorado')

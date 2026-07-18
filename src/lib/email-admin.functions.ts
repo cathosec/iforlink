@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
+import type { EmailSettings } from '@/lib/email-templates/send-email'
 
 /** Verifica se o caller é admin. */
 async function assertAdmin(context: { supabase: any; userId: string }) {
@@ -11,16 +12,15 @@ async function assertAdmin(context: { supabase: any; userId: string }) {
   if (!isAdmin) throw new Error('Acesso restrito a administradores')
 }
 
-/** Lê a chave da Resend do platform_settings usando o próprio client autenticado (RLS admin). */
-async function loadApiKey(supa: any): Promise<string> {
+/** Lê a configuração da Resend usando o próprio client autenticado (RLS admin). */
+async function loadEmailSettings(supa: any): Promise<EmailSettings> {
   const { data, error } = await supa
     .from('platform_settings')
     .select('value')
     .eq('key', 'email')
     .maybeSingle()
   if (error) throw new Error(`platform_settings: ${error.message}`)
-  const cfg = (data?.value ?? {}) as { api_key?: string }
-  return (cfg?.api_key ?? '').trim()
+  return ((data?.value ?? {}) as EmailSettings) || {}
 }
 
 /** Status da configuração (chave presente? valida na API do Resend?). */
@@ -28,7 +28,8 @@ export const getResendStatus = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context as never)
-    const apiKey = await loadApiKey((context as never as { supabase: any }).supabase)
+    const settings = await loadEmailSettings((context as never as { supabase: any }).supabase)
+    const apiKey = (settings.api_key ?? '').trim()
     if (!apiKey) {
       return { ok: false as const, hasKey: false, message: 'Chave da Resend não configurada' }
     }
@@ -70,10 +71,12 @@ export const sendResendTest = createServerFn({ method: 'POST' })
   })
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never)
+    const settings = await loadEmailSettings((context as never as { supabase: any }).supabase)
     const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
     const result = await sendTemplateEmail('welcome', data.to, {
       templateData: { displayName: 'Admin (teste)' },
       idempotencyKey: `resend-test-${Date.now()}`,
+      settings,
     })
     return result
   })

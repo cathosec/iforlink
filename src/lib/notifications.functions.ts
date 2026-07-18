@@ -8,22 +8,31 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
 export const sendWelcomeEmail = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
     const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
 
-    const { data: userRow } = await supabaseAdmin.auth.admin.getUserById(context.userId)
-    const email = userRow?.user?.email
+    const ctx = context as {
+      supabase: typeof context.supabase
+      userId: string
+      claims?: { email?: string }
+      accessToken?: string
+    }
+    let email = ctx.claims?.email
+    if (!email && ctx.accessToken) {
+      const { data } = await ctx.supabase.auth.getUser(ctx.accessToken)
+      email = data.user?.email
+    }
     if (!email) return { sent: false, reason: 'no_email' as const }
 
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await ctx.supabase
       .from('profiles')
       .select('username, display_name')
-      .eq('id', context.userId)
+      .eq('id', ctx.userId)
       .maybeSingle()
 
     try {
       const res = await sendTemplateEmail('welcome', email, {
-        idempotencyKey: `welcome-${context.userId}`,
+        idempotencyKey: `welcome-${ctx.userId}`,
+        settingsClient: ctx.supabase,
         templateData: {
           displayName: profile?.display_name ?? undefined,
           username: profile?.username ?? undefined,
