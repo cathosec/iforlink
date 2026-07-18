@@ -1,14 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { Search, BadgeCheck, ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check, HelpCircle, ShieldCheck, Mail } from "lucide-react";
 import { AdSlot } from "@/components/ad-slot";
+
 
 export const Route = createFileRoute("/")({
   component: Home,
