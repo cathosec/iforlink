@@ -51,16 +51,6 @@ export const Route = createFileRoute("/")({
   },
 });
 
-interface DirProfile {
-  id: string;
-  username: string;
-  display_name: string;
-  bio: string | null;
-  avatar_url: string | null;
-  is_verified: boolean;
-  views_count: number;
-}
-
 function normalizeUsername(v: string) {
   return v
     .toLowerCase()
@@ -85,22 +75,52 @@ function AdPlaceholder({ position }: { position: string }) {
   );
 }
 
+const FAQ_ITEMS: { q: string; a: string }[] = [
+  {
+    q: "O que é a ForLink?",
+    a: "A ForLink é uma plataforma brasileira de bio link e agregador de links. Você cria um endereço único em forlink.app/seu-usuario, organiza seus links em categorias e compartilha tudo em um só lugar.",
+  },
+  {
+    q: "É realmente grátis?",
+    a: "Sim. O plano Free é gratuito para sempre e inclui até 15 links, 3 categorias, perfil público, links privados e sincronização em todos os dispositivos. Anúncios discretos ajudam a manter o serviço no ar.",
+  },
+  {
+    q: "Qual a diferença entre Free e Pro?",
+    a: "O Pro remove todos os anúncios do site, libera links e categorias ilimitados, dá acesso ao encurtador forlink.app/s/, selo de verificação, estatísticas detalhadas de cliques e suporte prioritário.",
+  },
+  {
+    q: "Como faço para assinar o Pro?",
+    a: "A assinatura é feita via PIX pelo Mercado Pago, com opções mensal, trimestral ou anual. A confirmação é automática e o Pro é liberado assim que o pagamento é aprovado.",
+  },
+  {
+    q: "Meus links ficam públicos?",
+    a: "Você decide. Cada categoria tem uma chave 'Pública' — quando desligada, os links dentro dela só aparecem quando você estiver logado no seu painel. Ideal para separar links pessoais dos que você quer compartilhar.",
+  },
+  {
+    q: "Como funciona o encurtador?",
+    a: "Assinantes Pro podem criar links curtos no formato forlink.app/s/codigo. O redirecionamento é 301 e mantém a autoridade de SEO do link original via canonical, sem prejudicar o site de destino.",
+  },
+  {
+    q: "Meus dados estão seguros? E a LGPD?",
+    a: "Sim. Seguimos a LGPD: você tem controle total sobre seus dados, pode exportar ou excluir sua conta a qualquer momento pelo painel. Usamos cookies apenas com seu consentimento — veja detalhes em Privacidade.",
+  },
+  {
+    q: "Posso mudar meu nome de usuário depois?",
+    a: "Sim, você pode alterar seu @usuario nas configurações da conta. Lembre-se que o endereço público (forlink.app/seu-usuario) também mudará, então avise quem já tem o link antigo.",
+  },
+  {
+    q: "Como cancelo a assinatura Pro?",
+    a: "No painel, acesse 'Assinatura' e clique em cancelar. Você continua com os benefícios Pro até o fim do período já pago e depois volta automaticamente para o plano Free — sem perder seus links.",
+  },
+  {
+    q: "Preciso instalar algum aplicativo?",
+    a: "Não. A ForLink funciona 100% no navegador, em qualquer dispositivo. Você pode adicionar o site à tela inicial do celular para ter uma experiência parecida com a de um app.",
+  },
+];
+
 function Home() {
-  const [q, setQ] = useState("");
   const [uname, setUname] = useState("");
   const navigate = useNavigate();
-
-  const { data: profiles = [], isLoading } = useQuery({
-    queryKey: ["directory"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id,username,display_name,bio,avatar_url,is_verified,views_count")
-        .order("views_count", { ascending: false })
-        .limit(24);
-      return (data as DirProfile[]) ?? [];
-    },
-  });
 
   const cleanUname = normalizeUsername(uname);
   const unameValid = cleanUname.length >= 3;
@@ -111,14 +131,6 @@ function Home() {
     navigate({ to: "/auth", search: { username: cleanUname, mode: "signup" } });
   };
 
-  const filtered = q
-    ? profiles.filter(
-        (p) =>
-          p.username.toLowerCase().includes(q.toLowerCase()) ||
-          p.display_name.toLowerCase().includes(q.toLowerCase()) ||
-          (p.bio ?? "").toLowerCase().includes(q.toLowerCase()),
-      )
-    : profiles;
 
   return (
     <div className="min-h-screen bg-background">
