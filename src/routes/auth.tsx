@@ -49,8 +49,8 @@ function AuthPage() {
   const { session } = useAuth();
 
   useEffect(() => {
-    if (session) navigate({ to: "/dashboard" });
-  }, [session, navigate]);
+    if (session && !showConfirm) navigate({ to: "/dashboard" });
+  }, [session, navigate, showConfirm]);
 
   const cleanUname = useMemo(() => normalizeUsername(username), [username]);
   const unameValid = cleanUname.length >= 3;
@@ -104,6 +104,11 @@ function AuthPage() {
             // Non-fatal; user can adjust in settings
             console.warn("Falha ao reservar username:", upErr.message);
           }
+        }
+        // Force confirmation flow: if Supabase returned a session (auto-confirm
+        // or already-existing user), sign out so the user must click the link.
+        if (data.session) {
+          await supabase.auth.signOut();
         }
         setShowConfirm(true);
         toast.success("Conta criada! Verifique seu e-mail para ativar.");
