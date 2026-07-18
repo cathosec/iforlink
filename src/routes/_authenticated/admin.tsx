@@ -1537,6 +1537,14 @@ function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: stri
         <div className="mt-4 rounded-md border p-3 text-xs">
           {status.isLoading ? (
             <span className="text-muted-foreground">Verificando conexão com Resend…</span>
+          ) : status.isError ? (
+            <div className="text-destructive space-y-1">
+              <div>✗ Falha ao consultar Resend</div>
+              <div className="font-mono break-all text-[11px] opacity-80">
+                {(status.error as Error)?.message ?? String(status.error)}
+              </div>
+              <button type="button" className="underline" onClick={() => status.refetch()}>Tentar novamente</button>
+            </div>
           ) : s?.ok ? (
             <div className="space-y-2">
               <div className="text-emerald-700 dark:text-emerald-400">
@@ -1557,7 +1565,7 @@ function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: stri
           ) : (
             <div className="text-destructive">
               ✗ {s?.message ?? "Falha ao consultar Resend"}
-              {!s?.hasKey && (
+              {s && !s.hasKey && (
                 <div className="mt-1 text-muted-foreground">
                   Preencha a Resend API Key acima para ativar o envio.
                 </div>
