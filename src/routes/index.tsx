@@ -313,70 +313,63 @@ function Home() {
         <AdSlot slot="top" label="Publicidade" />
       </div>
 
-      {/* Search + Directory */}
-      <section id="diretorio" className="mx-auto max-w-6xl px-4 py-20">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Diretório de perfis</h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Descubra criadores, empresas e projetos brasileiros na ForLink.
-            </p>
+      {/* FAQ */}
+      <section id="faq" className="mx-auto max-w-4xl px-4 py-20">
+        <div className="mb-10 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+            <HelpCircle className="h-3.5 w-3.5 text-brand" />
+            Perguntas frequentes
           </div>
-          <div className="flex w-full max-w-sm items-center gap-2 rounded-md border bg-card px-3 py-2 shadow-sm">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar perfil ou @usuario"
-              className="h-6 flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
-            />
-          </div>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Tudo o que você precisa saber</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Se ficar alguma dúvida, fale com a gente em <a href="mailto:contato@forlink.app" className="text-brand hover:underline">contato@forlink.app</a>.
+          </p>
         </div>
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-40 animate-pulse rounded-md bg-muted" />
+        <Card className="p-2 sm:p-4">
+          <Accordion type="single" collapsible className="w-full">
+            {FAQ_ITEMS.map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border-b last:border-b-0">
+                <AccordionTrigger className="px-3 text-left text-sm font-medium sm:text-base">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="px-3 pb-4 text-sm leading-relaxed text-muted-foreground">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="rounded-md border border-dashed p-12 text-center text-sm text-muted-foreground">
-            Nenhum perfil encontrado para "{q}".
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((p) => (
-              <Link key={p.id} to="/$username" params={{ username: p.username }} className="group">
-                <Card className="h-full overflow-hidden p-6 transition-colors hover:border-brand/40 hover:bg-accent/30">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-11 w-11 border">
-                      <AvatarImage src={p.avatar_url ?? undefined} alt={p.display_name} />
-                      <AvatarFallback>{p.display_name.slice(0, 1)}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="truncate font-semibold text-foreground">{p.display_name}</span>
-                        {p.is_verified && <BadgeCheck className="h-4 w-4 shrink-0 text-brand" />}
-                      </div>
-                      <div className="truncate text-sm text-muted-foreground">@{p.username}</div>
-                    </div>
-                  </div>
-                  {p.bio && <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{p.bio}</p>}
-                  <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-4 text-xs text-muted-foreground">
-                    <span>{p.views_count.toLocaleString("pt-BR")} visualizações</span>
-                    <span className="font-medium text-brand opacity-0 transition group-hover:opacity-100">
-                      Ver perfil →
-                    </span>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
+          </Accordion>
+        </Card>
 
-        <AdPlaceholder position="Entre os perfis do diretório" />
+        <AdPlaceholder position="Após o FAQ" />
         <AdSlot slot="feed" label="Publicidade" />
+
+        {/* Trust & contact strip */}
+        <div className="mt-12 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-lg border bg-card p-5">
+            <ShieldCheck className="h-5 w-5 text-brand" />
+            <h3 className="mt-3 text-sm font-semibold">Segurança e LGPD</h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              Seus dados são criptografados e você controla o que é público. Exporte ou exclua sua conta quando quiser.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-5">
+            <Zap className="h-5 w-5 text-brand" />
+            <h3 className="mt-3 text-sm font-semibold">Pagamento por PIX</h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              Assinatura Pro processada via Mercado Pago, com confirmação automática em segundos. Sem cartão obrigatório.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-5">
+            <Mail className="h-5 w-5 text-brand" />
+            <h3 className="mt-3 text-sm font-semibold">Suporte humano</h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              Atendimento em português por e-mail. Assinantes Pro têm prioridade no suporte.
+            </p>
+          </div>
+        </div>
       </section>
+
 
       <footer className="border-t bg-secondary/30">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
