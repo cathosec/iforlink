@@ -43,13 +43,14 @@ export const Route = createFileRoute("/s/$code")({
         return new Response(null, {
           status: 301,
           headers: {
-            Location: data.url,
+            Location: targetUrl,
             "Cache-Control": "public, max-age=300",
             // Sinal explícito para crawlers: SEO deve ir para o destino
-            Link: `<${data.url}>; rel="canonical"`,
+            Link: `<${targetUrl}>; rel="canonical"`,
             "X-Robots-Tag": "noindex, follow",
           },
         });
+
       },
     },
   },
