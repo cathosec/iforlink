@@ -382,6 +382,7 @@ export type Database = {
         Returns: undefined
       }
       increment_short_click: { Args: { _code: string }; Returns: undefined }
+      resolve_short_link: { Args: { _code: string }; Returns: string }
     }
     Enums: {
       app_role: "free" | "pro" | "admin"
