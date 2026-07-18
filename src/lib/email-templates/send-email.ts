@@ -31,13 +31,7 @@ export interface EmailSettings {
 }
 
 type SettingsClient = {
-  from: (table: 'platform_settings') => {
-    select: (columns: string) => {
-      eq: (column: string, value: string) => {
-        maybeSingle: () => Promise<{ data: { value: unknown } | null; error: { message: string } | null }>
-      }
-    }
-  }
+  from: (table: string) => any
 }
 
 async function loadSettings(settingsClient?: SettingsClient): Promise<EmailSettings> {

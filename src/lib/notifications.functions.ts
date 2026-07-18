@@ -11,7 +11,7 @@ export const sendWelcomeEmail = createServerFn({ method: 'POST' })
     const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
 
     const ctx = context as {
-      supabase: typeof context.supabase
+      supabase: any
       userId: string
       claims?: { email?: string }
       accessToken?: string
