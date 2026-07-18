@@ -11,13 +11,24 @@ async function assertAdmin(context: { supabase: any; userId: string }) {
   if (!isAdmin) throw new Error('Acesso restrito a administradores')
 }
 
+async function loadApiKey(): Promise<string> {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const { data } = await supabaseAdmin
+    .from('platform_settings')
+    .select('value')
+    .eq('key', 'email')
+    .maybeSingle()
+  const cfg = (data?.value ?? {}) as { api_key?: string }
+  return (cfg.api_key ?? process.env.RESEND_API_KEY ?? '').trim()
+}
+
 /** Status da configuração (chave presente? valida na API do Resend?). */
 export const getResendStatus = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context as never)
-    const apiKey = process.env.RESEND_API_KEY?.trim()
-    if (!apiKey) return { ok: false, hasKey: false, message: 'RESEND_API_KEY não configurada' }
+    const apiKey = await loadApiKey()
+    if (!apiKey) return { ok: false, hasKey: false, message: 'Chave da Resend não configurada' }
 
     try {
       const res = await fetch('https://api.resend.com/domains', {
