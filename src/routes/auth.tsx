@@ -43,6 +43,8 @@ function AuthPage() {
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const navigate = useNavigate();
   const { session } = useAuth();
 
