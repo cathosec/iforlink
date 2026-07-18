@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Users, Link2, BadgeCheck, ExternalLink, DollarSign, CreditCard,
   Settings2, ShieldAlert, ShieldCheck, TrendingUp, Trash2, Search, Activity,
-  FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone, Scissors, Copy, MousePointerClick,
+  FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone, Scissors, Copy, MousePointerClick, Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -92,6 +92,7 @@ function Admin() {
               ["subscriptions", CreditCard, "Assinaturas"],
               ["gateways", DollarSign, "Pagamentos"],
               ["ads", Megaphone, "Anúncios"],
+              ["emails", Mail, "E-mails"],
               ["settings", Settings2, "Plataforma"],
               ["audit", Activity, "Auditoria"],
             ].map(([v, Icon, label]) => {
@@ -118,6 +119,7 @@ function Admin() {
             <TabsContent value="subscriptions" className="mt-0"><SubscriptionsTab logAction={logAction} /></TabsContent>
             <TabsContent value="gateways" className="mt-0"><GatewaysTab logAction={logAction} /></TabsContent>
             <TabsContent value="ads" className="mt-0"><AdsTab logAction={logAction} /></TabsContent>
+            <TabsContent value="emails" className="mt-0"><EmailsTab logAction={logAction} /></TabsContent>
             <TabsContent value="settings" className="mt-0"><SettingsTab logAction={logAction} /></TabsContent>
             <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
           </div>
@@ -1411,5 +1413,204 @@ function ShortenerTab({ logAction }: { logAction: (a: string, tt?: string, tid?:
     </div>
   );
 }
+
+/* ─────────── E-mails (Resend) ─────────── */
+type EmailCfg = {
+  enabled?: boolean;
+  from_name?: string;
+  from_address?: string;
+  reply_to?: string;
+};
+
+function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["setting", "email"],
+    queryFn: async () =>
+      (await supabase.from("platform_settings").select("*").eq("key", "email").maybeSingle()).data as SettingRow | null,
+  });
+  const cfg: EmailCfg = (q.data?.value ?? {}) as EmailCfg;
+
+  const status = useQuery({
+    queryKey: ["resend-status"],
+    queryFn: async () => {
+      const { getResendStatus } = await import("@/lib/email-admin.functions");
+      return await getResendStatus();
+    },
+  });
+
+  const [testTo, setTestTo] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  const save = async (patch: Partial<EmailCfg>) => {
+    const next = { ...cfg, ...patch };
+    const { error } = await supabase
+      .from("platform_settings")
+      .upsert({ key: "email", value: next as never, description: "Configuração de envio (Resend)" });
+    if (error) return toast.error(error.message);
+    toast.success("Configuração salva");
+    await logAction("email.update", "setting", "email", patch as Record<string, unknown>);
+    qc.invalidateQueries({ queryKey: ["setting", "email"] });
+  };
+
+  const runTest = async () => {
+    if (!testTo.trim()) return toast.error("Informe um destinatário");
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const { sendResendTest } = await import("@/lib/email-admin.functions");
+      const r = await sendResendTest({ data: { to: testTo.trim() } });
+      if (r.sent) {
+        setTestResult({ ok: true, message: `Enviado com sucesso${r.id ? " · id " + r.id : ""}` });
+        toast.success("E-mail de teste enviado");
+      } else {
+        setTestResult({ ok: false, message: `Não enviado — ${r.reason}` });
+        toast.error(r.reason);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro desconhecido";
+      setTestResult({ ok: false, message: msg });
+      toast.error(msg);
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const s = status.data;
+  const domains = s && "domains" in s ? s.domains ?? [] : [];
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-brand" />
+              <h3 className="font-semibold">Provedor de envio · Resend</h3>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Todos os e-mails transacionais (boas-vindas, confirmação, pagamento, assinatura) são enviados via Resend.
+              A chave <code>RESEND_API_KEY</code> fica armazenada com segurança nos Secrets do projeto.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Label className="text-xs">Envio ativo</Label>
+            <Switch checked={cfg.enabled !== false} onCheckedChange={(v) => save({ enabled: v })} />
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-md border p-3 text-xs">
+          {status.isLoading ? (
+            <span className="text-muted-foreground">Verificando conexão com Resend…</span>
+          ) : s?.ok ? (
+            <div className="space-y-2">
+              <div className="text-emerald-700 dark:text-emerald-400">
+                ✓ Conectado — {domains.length} domínio(s) na conta
+              </div>
+              {domains.length > 0 && (
+                <ul className="space-y-1">
+                  {domains.map((d) => (
+                    <li key={d.name} className="flex items-center gap-2">
+                      <Badge variant={d.status === "verified" ? "default" : "secondary"}>{d.status}</Badge>
+                      <span className="font-mono">{d.name}</span>
+                      {d.region && <span className="text-muted-foreground">· {d.region}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <div className="text-destructive">
+              ✗ {s?.message ?? "Falha ao consultar Resend"}
+              {!s?.hasKey && (
+                <div className="mt-1 text-muted-foreground">
+                  Adicione a chave em Project Settings → Secrets como <code>RESEND_API_KEY</code>.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="mb-4 font-semibold">Remetente</h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <Label className="text-xs">Nome do remetente</Label>
+            <Input
+              placeholder="ForLink"
+              defaultValue={cfg.from_name ?? "ForLink"}
+              onBlur={(e) => e.target.value !== (cfg.from_name ?? "") && save({ from_name: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">E-mail (from) · domínio verificado na Resend</Label>
+            <Input
+              placeholder="noreply@forlink.app"
+              defaultValue={cfg.from_address ?? ""}
+              onBlur={(e) => e.target.value !== (cfg.from_address ?? "") && save({ from_address: e.target.value })}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label className="text-xs">Reply-To (opcional)</Label>
+            <Input
+              placeholder="contato@forlink.app"
+              defaultValue={cfg.reply_to ?? ""}
+              onBlur={(e) => e.target.value !== (cfg.reply_to ?? "") && save({ reply_to: e.target.value })}
+            />
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          O domínio do e-mail precisa aparecer como <strong>verified</strong> na lista acima. Caso contrário, a Resend rejeita o envio.
+        </p>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="mb-2 font-semibold">Teste de envio</h3>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Dispara o template <code>welcome</code> para o endereço abaixo usando as configurações atuais.
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            type="email"
+            placeholder="seu-email@dominio.com"
+            value={testTo}
+            onChange={(e) => setTestTo(e.target.value)}
+            className="sm:flex-1"
+          />
+          <Button onClick={runTest} disabled={testing || !s?.ok}>
+            {testing ? "Enviando…" : "Enviar teste"}
+          </Button>
+        </div>
+        {testResult && (
+          <div className={`mt-3 rounded-md border p-3 text-xs ${testResult.ok ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400" : "border-destructive/40 bg-destructive/5 text-destructive"}`}>
+            {testResult.ok ? "✓" : "✗"} {testResult.message}
+          </div>
+        )}
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="mb-2 font-semibold">Templates disparados automaticamente</h3>
+        <ul className="grid gap-2 text-sm sm:grid-cols-2">
+          {[
+            ["welcome", "Boas-vindas após primeiro login"],
+            ["email-confirmation", "Confirmação de e-mail"],
+            ["payment-confirmed", "Pagamento aprovado"],
+            ["pro-activated", "Plano Pro ativado"],
+            ["subscription-expiring", "Assinatura vence em 3 dias"],
+            ["subscription-expired", "Assinatura expirada"],
+          ].map(([code, desc]) => (
+            <li key={code} className="rounded-md border p-3">
+              <code className="text-xs font-medium">{code}</code>
+              <div className="text-xs text-muted-foreground">{desc}</div>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
 
 
