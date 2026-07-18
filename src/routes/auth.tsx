@@ -105,18 +105,37 @@ function AuthPage() {
             console.warn("Falha ao reservar username:", upErr.message);
           }
         }
-        toast.success("Conta criada! Bem-vindo à ForLink.");
+        setShowConfirm(true);
+        toast.success("Conta criada! Verifique seu e-mail para ativar.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Bem-vindo de volta!");
+        navigate({ to: "/dashboard" });
       }
-      navigate({ to: "/dashboard" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao autenticar";
       toast.error(msg.includes("Invalid login") ? "E-mail ou senha inválidos." : msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendConfirmation = async () => {
+    setResendLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      });
+      if (error) throw error;
+      toast.success("E-mail de confirmação reenviado!");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao reenviar";
+      toast.error(msg);
+    } finally {
+      setResendLoading(false);
     }
   };
 
