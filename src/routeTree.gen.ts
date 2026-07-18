@@ -25,6 +25,7 @@ import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
+import { Route as ApiPublicCronSubscriptionsCheckRouteImport } from './routes/api/public/cron/subscriptions-check'
 import { Route as ApiPublicAvatarFileRouteImport } from './routes/api/public/avatar/$file'
 
 const TermosRoute = TermosRouteImport.update({
@@ -108,6 +109,12 @@ const ApiPublicWebhooksMercadopagoRoute =
     path: '/api/public/webhooks/mercadopago',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronSubscriptionsCheckRoute =
+  ApiPublicCronSubscriptionsCheckRouteImport.update({
+    id: '/api/public/cron/subscriptions-check',
+    path: '/api/public/cron/subscriptions-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAvatarFileRoute = ApiPublicAvatarFileRouteImport.update({
   id: '/api/public/avatar/$file',
   path: '/api/public/avatar/$file',
@@ -129,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
+  '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -147,6 +155,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
+  '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -167,6 +176,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
+  '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/s/$code'
     | '/api/public/avatar/$file'
+    | '/api/public/cron/subscriptions-check'
     | '/api/public/webhooks/mercadopago'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/s/$code'
     | '/api/public/avatar/$file'
+    | '/api/public/cron/subscriptions-check'
     | '/api/public/webhooks/mercadopago'
     | '/lovable/email/transactional/preview'
   id:
@@ -224,6 +236,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/s/$code'
     | '/api/public/avatar/$file'
+    | '/api/public/cron/subscriptions-check'
     | '/api/public/webhooks/mercadopago'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -238,6 +251,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   SCodeRoute: typeof SCodeRoute
   ApiPublicAvatarFileRoute: typeof ApiPublicAvatarFileRoute
+  ApiPublicCronSubscriptionsCheckRoute: typeof ApiPublicCronSubscriptionsCheckRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -356,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksMercadopagoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/subscriptions-check': {
+      id: '/api/public/cron/subscriptions-check'
+      path: '/api/public/cron/subscriptions-check'
+      fullPath: '/api/public/cron/subscriptions-check'
+      preLoaderRoute: typeof ApiPublicCronSubscriptionsCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/avatar/$file': {
       id: '/api/public/avatar/$file'
       path: '/api/public/avatar/$file'
@@ -397,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   SCodeRoute: SCodeRoute,
   ApiPublicAvatarFileRoute: ApiPublicAvatarFileRoute,
+  ApiPublicCronSubscriptionsCheckRoute: ApiPublicCronSubscriptionsCheckRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
