@@ -49,8 +49,8 @@ function AuthPage() {
   const { session } = useAuth();
 
   useEffect(() => {
-    if (session) navigate({ to: "/dashboard" });
-  }, [session, navigate]);
+    if (session && !showConfirm) navigate({ to: "/dashboard" });
+  }, [session, navigate, showConfirm]);
 
   const cleanUname = useMemo(() => normalizeUsername(username), [username]);
   const unameValid = cleanUname.length >= 3;
