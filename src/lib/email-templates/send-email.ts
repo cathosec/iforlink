@@ -1,92 +1,121 @@
 import * as React from 'react'
 import { render } from '@react-email/render'
-import { EmailAPIError, sendLovableEmail } from '@lovable.dev/email-js'
 import { TEMPLATES } from './registry'
 
-// Server-only: reads LOVABLE_API_KEY. Never import from client components.
+// Server-only: uses Resend (https://resend.com). Configured via:
+//   - env RESEND_API_KEY (secret)
+//   - platform_settings key = 'email' (from address, reply-to, enabled) — managed at /admin.
 
-// Configuration baked in at scaffold time
-const SITE_NAME = "iforlink"
-// SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
-// It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
-const SENDER_DOMAIN = "notify.forlink.app"
-// FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
-// Can be the root domain when display_from_root is enabled — this is cosmetic only.
-const FROM_DOMAIN = "forlink.app"
+const SITE_NAME_FALLBACK = 'ForLink'
+const FROM_FALLBACK = 'ForLink <noreply@forlink.app>'
 
 export type SendTemplateEmailResult =
-  | { sent: true }
-  | { sent: false; reason: 'recipient_suppressed' }
+  | { sent: true; id?: string }
+  | { sent: false; reason: 'disabled' | 'no_api_key' | 'recipient_suppressed' }
 
 export interface SendTemplateEmailOptions {
-  templateData?: Record<string, any>
-  /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
+  templateData?: Record<string, unknown>
+  /** Dedupes retries of the same logical send (Resend Idempotency-Key). */
   idempotencyKey?: string
   replyTo?: string
 }
 
+interface EmailSettings {
+  enabled?: boolean
+  from_name?: string
+  from_address?: string
+  reply_to?: string
+}
+
+async function loadSettings(): Promise<EmailSettings> {
+  try {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+    const { data } = await supabaseAdmin
+      .from('platform_settings')
+      .select('value')
+      .eq('key', 'email')
+      .maybeSingle()
+    return ((data?.value ?? {}) as EmailSettings) || {}
+  } catch {
+    return {}
+  }
+}
+
+function resolveFrom(s: EmailSettings): string {
+  const addr = (s.from_address ?? '').trim()
+  const name = (s.from_name ?? SITE_NAME_FALLBACK).trim() || SITE_NAME_FALLBACK
+  if (!addr) return FROM_FALLBACK
+  return addr.includes('<') ? addr : `${name} <${addr}>`
+}
+
 /**
- * Renders a registered template and sends it through Lovable's managed email
- * API. Suppression, retries, and rate limits are enforced by Lovable
- * server-side. A suppressed recipient is an expected outcome
- * ({ sent: false }); any other failure throws — EmailAPIError exposes
- * .code and .status for branching.
+ * Envia um template pelo Resend. Falhas HTTP viram Error com o corpo da API.
  */
 export async function sendTemplateEmail(
   templateName: string,
   to: string,
-  options: SendTemplateEmailOptions = {}
+  options: SendTemplateEmailOptions = {},
 ): Promise<SendTemplateEmailResult> {
-  const apiKey = process.env.LOVABLE_API_KEY
+  const apiKey = process.env.RESEND_API_KEY?.trim()
   if (!apiKey) {
-    throw new Error('LOVABLE_API_KEY is not configured')
+    console.warn('[email] RESEND_API_KEY não configurada — envio ignorado')
+    return { sent: false, reason: 'no_api_key' }
+  }
+
+  const settings = await loadSettings()
+  if (settings.enabled === false) {
+    return { sent: false, reason: 'disabled' }
   }
 
   const template = TEMPLATES[templateName]
   if (!template) {
     throw new Error(
-      `Template '${templateName}' not found. Available: ${Object.keys(TEMPLATES).join(', ')}`
+      `Template '${templateName}' não encontrado. Disponíveis: ${Object.keys(TEMPLATES).join(', ')}`,
     )
   }
 
-  // Template-level `to` takes precedence — notification templates always
-  // send to their fixed address.
   const recipient = template.to || to
-  if (!recipient) {
-    throw new Error('Recipient is required (the template defines no fixed recipient)')
-  }
+  if (!recipient) throw new Error('Destinatário obrigatório')
 
   const templateData = options.templateData ?? {}
-  const element = React.createElement(template.component, templateData)
+  const element = React.createElement(
+    template.component as React.ComponentType<Record<string, unknown>>,
+    templateData,
+  )
   const html = await render(element)
   const text = await render(element, { plainText: true })
   const subject =
     typeof template.subject === 'function'
-      ? template.subject(templateData)
+      ? (template.subject as (d: Record<string, unknown>) => string)(templateData)
       : template.subject
 
-  try {
-    await sendLovableEmail(
-      {
-        to: recipient,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-        sender_domain: SENDER_DOMAIN,
-        subject,
-        html,
-        text,
-        purpose: 'transactional',
-        label: templateName,
-        idempotency_key: options.idempotencyKey || crypto.randomUUID(),
-        reply_to: options.replyTo,
-      },
-      { apiKey, sendUrl: process.env.LOVABLE_SEND_URL }
-    )
-  } catch (error) {
-    if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
-      return { sent: false, reason: 'recipient_suppressed' }
-    }
-    throw error
+  const payload: Record<string, unknown> = {
+    from: resolveFrom(settings),
+    to: [recipient],
+    subject,
+    html,
+    text,
+    tags: [{ name: 'template', value: templateName.replace(/[^a-zA-Z0-9_-]/g, '_') }],
   }
+  const replyTo = options.replyTo ?? settings.reply_to
+  if (replyTo) payload.reply_to = replyTo
 
-  return { sent: true }
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
+  }
+  if (options.idempotencyKey) headers['Idempotency-Key'] = options.idempotencyKey
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  })
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`Resend ${res.status}: ${body || res.statusText}`)
+  }
+  const json = (await res.json().catch(() => ({}))) as { id?: string }
+  return { sent: true, id: json.id }
 }
