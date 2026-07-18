@@ -31,16 +31,22 @@ interface EmailSettings {
 async function loadSettings(): Promise<EmailSettings> {
   try {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
-    const { data } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('platform_settings')
       .select('value')
       .eq('key', 'email')
       .maybeSingle()
+    if (error) {
+      console.error('[email] loadSettings error:', error.message)
+      return {}
+    }
     return ((data?.value ?? {}) as EmailSettings) || {}
-  } catch {
+  } catch (e) {
+    console.error('[email] loadSettings exception:', e instanceof Error ? e.message : String(e))
     return {}
   }
 }
+
 
 function resolveFrom(s: EmailSettings): string {
   const addr = (s.from_address ?? '').trim()
