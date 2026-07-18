@@ -1420,7 +1420,9 @@ type EmailCfg = {
   from_name?: string;
   from_address?: string;
   reply_to?: string;
+  api_key?: string;
 };
+
 
 function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
   const qc = useQueryClient();
@@ -1491,12 +1493,44 @@ function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: stri
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Todos os e-mails transacionais (boas-vindas, confirmação, pagamento, assinatura) são enviados via Resend.
-              A chave <code>RESEND_API_KEY</code> fica armazenada com segurança nos Secrets do projeto.
+              Configure sua chave da API abaixo — ela fica salva com segurança e restrita a administradores.
             </p>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Label className="text-xs">Envio ativo</Label>
             <Switch checked={cfg.enabled !== false} onCheckedChange={(v) => save({ enabled: v })} />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <Label className="text-xs">Resend API Key</Label>
+          <Input
+            type="password"
+            placeholder={cfg.api_key ? "•••••••••••••••• (salva)" : "re_xxxxxxxxxxxxxxxxxxxxxxxx"}
+            defaultValue=""
+            autoComplete="off"
+            onBlur={(e) => {
+              const v = e.target.value.trim();
+              if (v && v !== cfg.api_key) {
+                save({ api_key: v });
+                e.target.value = "";
+                status.refetch();
+              }
+            }}
+          />
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">
+              Obtenha em <a href="https://resend.com/api-keys" target="_blank" rel="noreferrer" className="underline">resend.com/api-keys</a>. Comece com <code>re_</code>.
+            </p>
+            {cfg.api_key && (
+              <button
+                type="button"
+                className="text-xs text-destructive underline"
+                onClick={() => { save({ api_key: "" }); status.refetch(); }}
+              >
+                Remover chave
+              </button>
+            )}
           </div>
         </div>
 
@@ -1525,12 +1559,13 @@ function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: stri
               ✗ {s?.message ?? "Falha ao consultar Resend"}
               {!s?.hasKey && (
                 <div className="mt-1 text-muted-foreground">
-                  Adicione a chave em Project Settings → Secrets como <code>RESEND_API_KEY</code>.
+                  Preencha a Resend API Key acima para ativar o envio.
                 </div>
               )}
             </div>
           )}
         </div>
+
       </Card>
 
       <Card className="p-6">

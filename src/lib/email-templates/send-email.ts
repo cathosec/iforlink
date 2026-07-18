@@ -25,6 +25,7 @@ interface EmailSettings {
   from_name?: string
   from_address?: string
   reply_to?: string
+  api_key?: string
 }
 
 async function loadSettings(): Promise<EmailSettings> {
@@ -56,16 +57,17 @@ export async function sendTemplateEmail(
   to: string,
   options: SendTemplateEmailOptions = {},
 ): Promise<SendTemplateEmailResult> {
-  const apiKey = process.env.RESEND_API_KEY?.trim()
+  const settings = await loadSettings()
+  const apiKey = (settings.api_key ?? process.env.RESEND_API_KEY ?? '').trim()
   if (!apiKey) {
-    console.warn('[email] RESEND_API_KEY não configurada — envio ignorado')
+    console.warn('[email] Resend API key não configurada — envio ignorado')
     return { sent: false, reason: 'no_api_key' }
   }
 
-  const settings = await loadSettings()
   if (settings.enabled === false) {
     return { sent: false, reason: 'disabled' }
   }
+
 
   const template = TEMPLATES[templateName]
   if (!template) {
