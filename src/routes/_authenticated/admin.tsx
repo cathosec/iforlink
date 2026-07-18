@@ -92,6 +92,7 @@ function Admin() {
               ["subscriptions", CreditCard, "Assinaturas"],
               ["gateways", DollarSign, "Pagamentos"],
               ["ads", Megaphone, "Anúncios"],
+              ["emails", Mail, "E-mails"],
               ["settings", Settings2, "Plataforma"],
               ["audit", Activity, "Auditoria"],
             ].map(([v, Icon, label]) => {
