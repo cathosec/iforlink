@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Check, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
+import { Check, ArrowLeft, Loader2, ShieldCheck, Mail, Inbox, RefreshCw } from "lucide-react";
 
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
@@ -43,6 +43,8 @@ function AuthPage() {
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const navigate = useNavigate();
   const { session } = useAuth();
 
@@ -103,18 +105,37 @@ function AuthPage() {
             console.warn("Falha ao reservar username:", upErr.message);
           }
         }
-        toast.success("Conta criada! Bem-vindo à ForLink.");
+        setShowConfirm(true);
+        toast.success("Conta criada! Verifique seu e-mail para ativar.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Bem-vindo de volta!");
+        navigate({ to: "/dashboard" });
       }
-      navigate({ to: "/dashboard" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao autenticar";
       toast.error(msg.includes("Invalid login") ? "E-mail ou senha inválidos." : msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendConfirmation = async () => {
+    setResendLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      });
+      if (error) throw error;
+      toast.success("E-mail de confirmação reenviado!");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao reenviar";
+      toast.error(msg);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -139,143 +160,209 @@ function AuthPage() {
         </div>
 
         <div className="grid flex-1 items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
-          {/* Left · form */}
+          {/* Left · form or confirmation */}
           <div className="mx-auto w-full max-w-md lg:mx-0">
-            {/* Tabs */}
-            <div className="mb-6 inline-flex rounded-md border bg-card p-1 text-sm">
-              {(["signup", "signin"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMode(m)}
-                  className={`rounded-[0.35rem] px-3 py-1.5 font-medium transition ${
-                    mode === m
-                      ? "bg-brand text-brand-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {m === "signup" ? "Criar conta" : "Entrar"}
-                </button>
-              ))}
-            </div>
+            {showConfirm ? (
+              <Card className="p-6 sm:p-8">
+                <div className="flex flex-col items-center text-center">
+                  <div className="grid h-16 w-16 place-items-center rounded-2xl bg-brand-soft text-brand">
+                    <Mail className="h-8 w-8" />
+                  </div>
+                  <h1 className="mt-5 text-2xl font-semibold tracking-tight">
+                    Confirme seu e-mail
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Enviamos um link de ativação para{" "}
+                    <span className="font-medium text-foreground">{email}</span>.
+                  </p>
 
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              {mode === "signin" ? "Bem-vindo de volta" : "Crie sua conta em segundos"}
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {mode === "signin"
-                ? "Acesse seu painel e continue de onde parou."
-                : "Grátis, para sempre. Sem cartão de crédito."}
-            </p>
-
-            <Card className="mt-6 p-6">
-              <form onSubmit={submit} className="space-y-4">
-                {mode === "signup" && (
-                  <>
-                    <div>
-                      <Label htmlFor="uname">Seu link</Label>
-                      <div className="mt-1.5 flex items-stretch overflow-hidden rounded-md border bg-background ring-brand/20 transition focus-within:border-brand focus-within:ring-2">
-                        <span className="flex items-center whitespace-nowrap border-r bg-muted/50 px-3 text-sm text-muted-foreground">
-                          forlink.app/
-                        </span>
-                        <Input
-                          id="uname"
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          placeholder="seu-usuario"
-                          autoComplete="off"
-                          spellCheck={false}
-                          className="h-10 flex-1 border-0 bg-transparent px-3 shadow-none focus-visible:ring-0"
-                        />
-                        <span className="flex w-9 items-center justify-center border-l bg-muted/30">
-                          {checking && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                          {!checking && available === true && <Check className="h-4 w-4 text-brand" />}
-                          {!checking && available === false && <span className="text-xs font-semibold text-destructive">×</span>}
-                        </span>
+                  <div className="mt-6 w-full rounded-lg border bg-muted/30 p-4 text-left">
+                    <div className="flex items-start gap-3">
+                      <Inbox className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Não recebeu?</p>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                          Verifique a pasta <strong>Spam</strong>, <strong>Lixo Eletrônico</strong>{" "}
+                          ou <strong>Promoções</strong>. Alguns provedores de e-mail podem
+                          classificar o link de ativação como promoção.
+                        </p>
                       </div>
-                      <p className="mt-1.5 min-h-[1.1rem] text-xs">
-                        {!unameValid && username && <span className="text-muted-foreground">Mínimo 3 caracteres. Use letras, números e hífen.</span>}
-                        {unameValid && available === false && <span className="text-destructive">Este usuário já está em uso.</span>}
-                        {unameValid && available === true && <span className="text-brand">Disponível — será reservado após criar a conta.</span>}
-                      </p>
                     </div>
+                  </div>
+
+                  <div className="mt-6 flex w-full flex-col gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={resendConfirmation}
+                      disabled={resendLoading}
+                      className="w-full"
+                    >
+                      {resendLoading ? (
+                        <span className="inline-flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Reenviando…
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2">
+                          <RefreshCw className="h-4 w-4" /> Reenviar e-mail
+                        </span>
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setShowConfirm(false);
+                        setMode("signin");
+                      }}
+                      className="w-full"
+                    >
+                      Já confirmou? Fazer login
+                    </Button>
+                  </div>
+
+                  <p className="mt-6 text-xs text-muted-foreground">
+                    O link expira em 24 horas. Se o e-mail estiver incorreto, crie uma nova conta.
+                  </p>
+                </div>
+              </Card>
+            ) : (
+              <>
+                {/* Tabs */}
+                <div className="mb-6 inline-flex rounded-md border bg-card p-1 text-sm">
+                  {(["signup", "signin"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setMode(m)}
+                      className={`rounded-[0.35rem] px-3 py-1.5 font-medium transition ${
+                        mode === m
+                          ? "bg-brand text-brand-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {m === "signup" ? "Criar conta" : "Entrar"}
+                    </button>
+                  ))}
+                </div>
+
+                <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                  {mode === "signin" ? "Bem-vindo de volta" : "Crie sua conta em segundos"}
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {mode === "signin"
+                    ? "Acesse seu painel e continue de onde parou."
+                    : "Grátis, para sempre. Sem cartão de crédito."}
+                </p>
+
+                <Card className="mt-6 p-6">
+                  <form onSubmit={submit} className="space-y-4">
+                    {mode === "signup" && (
+                      <>
+                        <div>
+                          <Label htmlFor="uname">Seu link</Label>
+                          <div className="mt-1.5 flex items-stretch overflow-hidden rounded-md border bg-background ring-brand/20 transition focus-within:border-brand focus-within:ring-2">
+                            <span className="flex items-center whitespace-nowrap border-r bg-muted/50 px-3 text-sm text-muted-foreground">
+                              forlink.app/
+                            </span>
+                            <Input
+                              id="uname"
+                              value={username}
+                              onChange={(e) => setUsername(e.target.value)}
+                              placeholder="seu-usuario"
+                              autoComplete="off"
+                              spellCheck={false}
+                              className="h-10 flex-1 border-0 bg-transparent px-3 shadow-none focus-visible:ring-0"
+                            />
+                            <span className="flex w-9 items-center justify-center border-l bg-muted/30">
+                              {checking && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                              {!checking && available === true && <Check className="h-4 w-4 text-brand" />}
+                              {!checking && available === false && <span className="text-xs font-semibold text-destructive">×</span>}
+                            </span>
+                          </div>
+                          <p className="mt-1.5 min-h-[1.1rem] text-xs">
+                            {!unameValid && username && <span className="text-muted-foreground">Mínimo 3 caracteres. Use letras, números e hífen.</span>}
+                            {unameValid && available === false && <span className="text-destructive">Este usuário já está em uso.</span>}
+                            {unameValid && available === true && <span className="text-brand">Disponível — será reservado após criar a conta.</span>}
+                          </p>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="name">Nome de exibição <span className="text-muted-foreground">(opcional)</span></Label>
+                          <Input
+                            id="name"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            placeholder="Ana Ribeiro"
+                            className="mt-1.5"
+                          />
+                        </div>
+                      </>
+                    )}
 
                     <div>
-                      <Label htmlFor="name">Nome de exibição <span className="text-muted-foreground">(opcional)</span></Label>
+                      <Label htmlFor="email">E-mail</Label>
                       <Input
-                        id="name"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="Ana Ribeiro"
+                        id="email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="voce@email.com"
                         className="mt-1.5"
                       />
                     </div>
-                  </>
-                )}
+                    <div>
+                      <Label htmlFor="pw">Senha</Label>
+                      <Input
+                        id="pw"
+                        type="password"
+                        required
+                        minLength={6}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Mínimo 6 caracteres"
+                        className="mt-1.5"
+                      />
+                    </div>
 
-                <div>
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="voce@email.com"
-                    className="mt-1.5"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pw">Senha</Label>
-                  <Input
-                    id="pw"
-                    type="password"
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    className="mt-1.5"
-                  />
-                </div>
+                    {mode === "signup" && (
+                      <label className="flex cursor-pointer items-start gap-2 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          checked={acceptedTerms}
+                          onChange={(e) => setAcceptedTerms(e.target.checked)}
+                          className="mt-0.5 h-4 w-4 shrink-0 accent-[hsl(var(--brand))]"
+                        />
+                        <span>
+                          Li e concordo com os{" "}
+                          <Link to="/termos" className="text-brand underline hover:no-underline">Termos de Uso</Link>{" "}
+                          e a{" "}
+                          <Link to="/privacidade" className="text-brand underline hover:no-underline">Política de Privacidade</Link>{" "}
+                          da ForLink (LGPD).
+                        </span>
+                      </label>
+                    )}
 
-                {mode === "signup" && (
-                  <label className="flex cursor-pointer items-start gap-2 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={acceptedTerms}
-                      onChange={(e) => setAcceptedTerms(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-[hsl(var(--brand))]"
-                    />
-                    <span>
-                      Li e concordo com os{" "}
-                      <Link to="/termos" className="text-brand underline hover:no-underline">Termos de Uso</Link>{" "}
-                      e a{" "}
-                      <Link to="/privacidade" className="text-brand underline hover:no-underline">Política de Privacidade</Link>{" "}
-                      da ForLink (LGPD).
-                    </span>
-                  </label>
-                )}
+                    <Button
+                      type="submit"
+                      disabled={loading || (mode === "signup" && (!unameValid || available === false || !acceptedTerms))}
+                      className="w-full bg-brand text-brand-foreground hover:bg-brand/90"
+                    >
+                      {loading ? (
+                        <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Aguarde…</span>
+                      ) : mode === "signin" ? (
+                        "Entrar"
+                      ) : (
+                        "Criar conta grátis"
+                      )}
+                    </Button>
 
-                <Button
-                  type="submit"
-                  disabled={loading || (mode === "signup" && (!unameValid || available === false || !acceptedTerms))}
-                  className="w-full bg-brand text-brand-foreground hover:bg-brand/90"
-                >
-                  {loading ? (
-                    <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Aguarde…</span>
-                  ) : mode === "signin" ? (
-                    "Entrar"
-                  ) : (
-                    "Criar conta grátis"
-                  )}
-                </Button>
-
-                <p className="pt-1 text-center text-xs text-muted-foreground">
-                  Protegido pela LGPD · Lei nº 13.709/2018
-                </p>
-              </form>
-            </Card>
+                    <p className="pt-1 text-center text-xs text-muted-foreground">
+                      Protegido pela LGPD · Lei nº 13.709/2018
+                    </p>
+                  </form>
+                </Card>
+              </>
+            )}
           </div>
 
           {/* Right · benefits */}
