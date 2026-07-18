@@ -229,6 +229,37 @@ export async function applyPaymentUpdate(pixId: string, mpPayment: Record<string
     // Promote role to Pro
     await supabaseAdmin.from("user_roles").delete().eq("user_id", pix.user_id);
     await supabaseAdmin.from("user_roles").insert({ user_id: pix.user_id, role: "pro" });
+
+    // Fire confirmation e-mails (best-effort — never break payment flow)
+    try {
+      const { data: userRow } = await supabaseAdmin.auth.admin.getUserById(pix.user_id);
+      const email = userRow?.user?.email;
+      if (email) {
+        const { data: profile } = await supabaseAdmin
+          .from("profiles").select("display_name").eq("id", pix.user_id).maybeSingle();
+        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+        await sendTemplateEmail("payment-confirmed", email, {
+          idempotencyKey: `pay-confirmed-${pix.id}`,
+          templateData: {
+            displayName: profile?.display_name ?? undefined,
+            amountCents: pix.amount_cents,
+            interval: pix.interval,
+            paidAt: patch.paid_at,
+            paymentId: pix.mp_payment_id ?? undefined,
+          },
+        });
+        await sendTemplateEmail("pro-activated", email, {
+          idempotencyKey: `pro-activated-${pix.id}`,
+          templateData: {
+            displayName: profile?.display_name ?? undefined,
+            interval: pix.interval,
+            periodEnd: end.toISOString(),
+          },
+        });
+      }
+    } catch (err) {
+      console.error("[applyPaymentUpdate] email send failed", err);
+    }
   }
   await supabaseAdmin.from("pix_payments").update(patch as never).eq("id", pixId);
 }
