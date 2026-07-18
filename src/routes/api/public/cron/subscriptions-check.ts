@@ -22,14 +22,28 @@ export const Route = createFileRoute('/api/public/cron/subscriptions-check')({
 
 async function handle(request: Request) {
   const url = new URL(request.url)
-  const expected = process.env.CRON_SECRET
+  const expected = process.env.CRON_SECRET?.trim()
   if (!expected) return new Response('cron not configured', { status: 500 })
 
   const auth = request.headers.get('authorization') ?? ''
-  const bearer = auth.startsWith('Bearer ') ? auth.slice(7) : ''
-  const querySecret = url.searchParams.get('secret') ?? ''
-  if (bearer !== expected && querySecret !== expected) {
-    return new Response('unauthorized', { status: 401 })
+  const bearer = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  const basicPassword = getBasicAuthPassword(auth)
+  const headerSecret = request.headers.get('x-cron-secret')?.trim() ?? ''
+  const querySecret = (url.searchParams.get('secret') ?? url.searchParams.get('token') ?? '').trim()
+  if (
+    bearer !== expected &&
+    basicPassword !== expected &&
+    headerSecret !== expected &&
+    querySecret !== expected
+  ) {
+    return Response.json(
+      {
+        ok: false,
+        error: 'unauthorized',
+        accepted_auth: ['?secret=CRON_SECRET', 'Authorization: Bearer CRON_SECRET', 'Basic Auth password = CRON_SECRET'],
+      },
+      { status: 401 },
+    )
   }
 
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
@@ -126,4 +140,16 @@ async function handle(request: Request) {
   }
 
   return Response.json({ ok: true, ...results })
+}
+
+function getBasicAuthPassword(authorizationHeader: string) {
+  if (!authorizationHeader.startsWith('Basic ')) return ''
+
+  try {
+    const decoded = atob(authorizationHeader.slice(6))
+    const [, password = ''] = decoded.split(':')
+    return password.trim()
+  } catch {
+    return ''
+  }
 }
