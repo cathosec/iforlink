@@ -68,7 +68,7 @@ function NotFoundComponent() {
             <ul className="mt-3 divide-y">
               <li>
                 <Link to="/" className="flex items-center justify-between py-2 text-sm hover:text-brand">
-                  <span>Diretório de perfis</span>
+                  <span>Página inicial</span>
                   <span className="text-muted-foreground">/</span>
                 </Link>
               </li>
