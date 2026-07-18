@@ -1420,7 +1420,9 @@ type EmailCfg = {
   from_name?: string;
   from_address?: string;
   reply_to?: string;
+  api_key?: string;
 };
+
 
 function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
   const qc = useQueryClient();
