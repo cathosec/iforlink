@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { sendWelcomeEmail } from "@/lib/notifications.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,9 +50,14 @@ function AuthPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
 
+  const fireWelcome = useServerFn(sendWelcomeEmail);
   useEffect(() => {
-    if (session && !showConfirm) navigate({ to: "/dashboard" });
-  }, [session, navigate, showConfirm]);
+    if (session && !showConfirm) {
+      // Best-effort welcome e-mail — Lovable dedupes via idempotency key.
+      fireWelcome().catch(() => {});
+      navigate({ to: "/dashboard" });
+    }
+  }, [session, navigate, showConfirm, fireWelcome]);
 
   const cleanUname = useMemo(() => normalizeUsername(username), [username]);
   const unameValid = cleanUname.length >= 3;
