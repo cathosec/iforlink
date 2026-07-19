@@ -21,11 +21,14 @@ const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", c
 
 function Assinar() {
   const cfgQ = useQuery({
-    queryKey: ["mp-config"],
+    queryKey: ["mp-config-public"],
     queryFn: async () => {
-      const { data } = await supabase.from("platform_settings").select("value").eq("key", "mercadopago").maybeSingle();
-      return (data?.value ?? {}) as {
+      const { data, error } = await supabase.rpc("get_pricing_public");
+      if (error) throw error;
+      return (data ?? {}) as {
         enabled?: boolean;
+        mode?: string;
+        pix_expiration_minutes?: number;
         prices?: { month_cents?: number; quarter_cents?: number; year_cents?: number };
       };
     },
