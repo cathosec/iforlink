@@ -162,7 +162,7 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
             const { data: adminEmail } = await supabase.rpc(
               "get_admin_notify_email" as never,
             );
-            const adminTo = typeof adminEmail === "string" ? adminEmail.trim() : "";
+            const adminTo = typeof adminEmail === "string" ? (adminEmail as string).trim() : "";
             if (adminTo) {
               await sendTemplateEmail("admin-new-subscriber", adminTo, {
                 idempotencyKey: `admin-new-sub-${externalRef}`,
