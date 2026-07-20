@@ -266,18 +266,35 @@ function Dashboard() {
               <div className="text-xs text-muted-foreground">
                 {isFree
                   ? `${cats.length}/${FREE_MAX_CATS} categorias · ${links.length}/${FREE_MAX_LINKS} links`
+                  : activeSub?.current_period_end
+                  ? `Renova em ${new Date(activeSub.current_period_end).toLocaleDateString("pt-BR")}`
                   : "Categorias e links ilimitados"}
               </div>
             </div>
           </div>
-          {role !== "admin" && (
-            <Link to="/assinar"><Button variant={role === "pro" ? "outline" : "default"} size="sm">
-              {role === "pro" ? "Renovar assinatura" : "Fazer upgrade para Pro"}
-            </Button></Link>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <Link to="/assinatura">
+              <Button variant="outline" size="sm">
+                <CreditCard className="mr-2 h-3.5 w-3.5" /> Minha assinatura
+              </Button>
+            </Link>
+            {role !== "admin" && (
+              <Link to="/assinar">
+                <Button variant={role === "pro" ? "outline" : "default"} size="sm">
+                  {role === "pro" ? "Renovar" : "Fazer upgrade para Pro"}
+                </Button>
+              </Link>
+            )}
+          </div>
         </Card>
 
-        {user?.id && <SubscriptionCard userId={user.id} />}
+        {/* Visão geral */}
+        <OverviewSection
+          links={links}
+          cats={cats}
+          profileViews={profileViews}
+        />
+
 
 
         {/* Nova categoria */}
