@@ -21,6 +21,7 @@ export const Route = createFileRoute("/")({
         { title },
         { name: "description", content: description },
         { name: "keywords", content: "bio link, agregador de links, link na bio, linktree brasileiro, perfil de links, forlink" },
+        { name: "google-adsense-account", content: "ca-pub-4849075700232419" },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
