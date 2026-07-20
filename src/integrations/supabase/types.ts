@@ -365,6 +365,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_mercadopago_payment_update: {
+        Args: {
+          _mp_payment: Json
+          _payment_id?: string
+          _pix_id: string
+          _request_id?: string
+          _signature?: string
+        }
+        Returns: undefined
+      }
+      get_mercadopago_webhook_access_token: {
+        Args: { _payment_id: string; _request_id: string; _signature: string }
+        Returns: string
+      }
       get_pricing_public: { Args: never; Returns: Json }
       get_public_setting: { Args: { _key: string }; Returns: Json }
       get_user_role: {
