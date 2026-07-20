@@ -82,15 +82,23 @@ function Assinar() {
         <h1 className="font-display text-4xl tracking-tight">Assine o ForLink Pro</h1>
         <p className="mt-2 text-muted-foreground">Pagamento via PIX processado pelo Mercado Pago. Aprovação automática.</p>
 
-        {!cfgQ.data?.enabled && (
+        {cfgQ.isLoading && (
+          <Card className="mt-6 p-5 text-sm text-muted-foreground">Carregando planos…</Card>
+        )}
+        {!cfgQ.isLoading && !cfgQ.data?.enabled && (
           <Card className="mt-6 border-amber-500/40 bg-amber-500/5 p-5 text-sm">
             Pagamentos Mercado Pago ainda não foram ativados pelo administrador.
+          </Card>
+        )}
+        {!cfgQ.isLoading && cfgQ.data?.enabled && plans.every(p => p.cents <= 0) && (
+          <Card className="mt-6 border-amber-500/40 bg-amber-500/5 p-5 text-sm">
+            Os valores dos planos ainda não foram configurados pelo administrador.
           </Card>
         )}
 
         {!pix ? (
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {plans.map(p => (
+            {plans.filter(p => p.cents > 0).map(p => (
               <Card key={p.interval} className="flex flex-col p-6">
                 <div className="flex items-center justify-between">
                   <div className="font-semibold">{p.label}</div>
@@ -98,9 +106,9 @@ function Assinar() {
                 </div>
                 <div className="mt-3 text-3xl font-semibold">{brl(p.cents)}</div>
                 <div className="text-xs text-muted-foreground">
-                  {p.interval === "month" ? "por mês" : p.interval === "quarter" ? "por trimestre" : "por ano"}
+                  {p.interval === "month" ? "por mês" : p.interval === "quarter" ? "por 3 meses" : "por ano"}
                 </div>
-                <Button className="mt-6" disabled={!cfgQ.data?.enabled || loading !== null || p.cents <= 0}
+                <Button className="mt-6" disabled={!cfgQ.data?.enabled || loading !== null}
                         onClick={() => start(p.interval)}>
                   {loading === p.interval ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gerar PIX"}
                 </Button>

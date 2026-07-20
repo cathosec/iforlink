@@ -724,20 +724,43 @@ function MercadoPagoCard({ logAction }: { logAction: (a: string, t?: string, id?
       </div>
 
       <div className="mt-5">
-        <div className="text-xs font-medium text-muted-foreground">Planos PIX (valor em centavos)</div>
-        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">Planos ForLink Pro</div>
+            <p className="text-xs text-muted-foreground">Valores em reais (R$). Deixe 0 para ocultar o plano na página de assinatura.</p>
+          </div>
+          <Button size="sm" variant="outline"
+            onClick={() => savePrices({ month_cents: 990, quarter_cents: 2490, year_cents: 8990 })}>
+            Usar valores sugeridos
+          </Button>
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {([
-            ["month_cents", "Mensal"],
-            ["quarter_cents", "Trimestral"],
-            ["year_cents", "Anual"],
-          ] as const).map(([k, label]) => (
-            <div key={k}>
-              <Label className="text-xs">{label}</Label>
-              <Input type="number" defaultValue={prices[k] ?? 0}
-                     onBlur={(e) => savePrices({ [k]: +e.target.value } as Partial<NonNullable<MPCfg["prices"]>>)} />
-              <div className="mt-1 text-[10px] text-muted-foreground">= {brl(prices[k] ?? 0)}</div>
-            </div>
-          ))}
+            ["month_cents", "Mensal", "por mês"],
+            ["quarter_cents", "Trimestral", "a cada 3 meses"],
+            ["year_cents", "Anual", "por ano"],
+          ] as const).map(([k, label, hint]) => {
+            const reais = ((prices[k] ?? 0) / 100).toFixed(2);
+            return (
+              <div key={k} className="rounded-lg border bg-muted/30 p-3">
+                <Label className="text-xs font-medium">{label}</Label>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">R$</span>
+                  <Input
+                    type="number" step="0.01" min={0} defaultValue={reais}
+                    onBlur={(e) => {
+                      const cents = Math.max(0, Math.round(parseFloat(e.target.value || "0") * 100));
+                      if (cents !== (prices[k] ?? 0)) savePrices({ [k]: cents } as Partial<NonNullable<MPCfg["prices"]>>);
+                    }}
+                  />
+                </div>
+                <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span>{hint}</span>
+                  <span>{(prices[k] ?? 0) > 0 ? brl(prices[k] ?? 0) : "oculto"}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </Card>
