@@ -86,7 +86,7 @@ function Contato() {
           </Card>
         </div>
 
-        <AdSlot slot="content_top" label="Publicidade" />
+        <AdSlot slot="top" label="Publicidade" />
 
         <section className="mt-10 space-y-4">
           <h2 className="text-2xl font-semibold tracking-tight">Antes de nos escrever, dê uma olhada aqui</h2>
@@ -125,7 +125,7 @@ function Contato() {
           </Card>
         </section>
 
-        <AdSlot slot="content_bottom" label="Publicidade" />
+        <AdSlot slot="feed" label="Publicidade" />
 
         <section className="mt-10 space-y-4">
           <h2 className="text-2xl font-semibold tracking-tight">Denúncias e conteúdo abusivo</h2>

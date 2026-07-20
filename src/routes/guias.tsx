@@ -76,7 +76,7 @@ function Guias() {
           <a href="#seguranca" className="text-sm text-brand hover:underline">6. Segurança e boas práticas</a>
         </nav>
 
-        <AdSlot slot="content_top" label="Publicidade" />
+        <AdSlot slot="top" label="Publicidade" />
 
         <Section id="organizar-links" icon={Lightbulb} title="1. Como organizar seus links por categorias">
           <p>
@@ -120,7 +120,7 @@ function Guias() {
           </p>
         </Section>
 
-        <AdSlot slot="content_middle" label="Publicidade" />
+        <AdSlot slot="feed" label="Publicidade" />
 
         <Section id="seo-bio-link" icon={Search} title="4. SEO para bio link: como aparecer no Google">
           <p>
@@ -165,7 +165,7 @@ function Guias() {
           </ul>
         </Section>
 
-        <AdSlot slot="content_bottom" label="Publicidade" />
+        <AdSlot slot="feed" label="Publicidade" />
 
         <section className="mt-12 grid gap-4 sm:grid-cols-3">
           <Card className="p-5">

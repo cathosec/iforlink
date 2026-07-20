@@ -46,7 +46,7 @@ function Sobre() {
           </p>
         </header>
 
-        <AdSlot slot="content_top" label="Publicidade" />
+        <AdSlot slot="top" label="Publicidade" />
 
         <section className="mt-10 space-y-4">
           <h2 className="text-2xl font-semibold tracking-tight">Nossa missão</h2>
@@ -116,7 +116,7 @@ function Sobre() {
           </p>
         </section>
 
-        <AdSlot slot="content_bottom" label="Publicidade" />
+        <AdSlot slot="feed" label="Publicidade" />
 
         <section className="mt-12 rounded-xl border bg-secondary/30 p-6 sm:p-8">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
