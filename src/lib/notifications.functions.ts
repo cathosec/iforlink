@@ -2,8 +2,12 @@ import { createServerFn } from '@tanstack/react-start'
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
 
 /**
- * Envia o e-mail de boas-vindas para o usuário autenticado.
- * Idempotente por user_id (Lovable dedupa via idempotency_key).
+ * Fires:
+ *  - `welcome`  → to the newly signed-up user (once, gated by recent auth.users.created_at)
+ *  - `admin-new-signup` → to the admin address configured in platform_settings.email.admin_notify_to
+ *
+ * Idempotency keys guarantee that Resend never sends the same welcome/notification twice
+ * for the same user, even if the client fires this multiple times.
  */
 export const sendWelcomeEmail = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
@@ -16,12 +20,25 @@ export const sendWelcomeEmail = createServerFn({ method: 'POST' })
       claims?: { email?: string }
       accessToken?: string
     }
+
     let email = ctx.claims?.email
-    if (!email && ctx.accessToken) {
+    let createdAtIso: string | undefined
+    if (ctx.accessToken) {
       const { data } = await ctx.supabase.auth.getUser(ctx.accessToken)
-      email = data.user?.email
+      email = email || data.user?.email
+      createdAtIso = data.user?.created_at
     }
     if (!email) return { sent: false, reason: 'no_email' as const }
+
+    // Gate: only send welcome + admin-new-signup for genuinely new accounts
+    // (created within the last 24h). Prevents admins/old users from getting a
+    // welcome every time they sign in and prevents duplicate admin alerts.
+    if (createdAtIso) {
+      const ageMs = Date.now() - new Date(createdAtIso).getTime()
+      if (ageMs > 24 * 60 * 60 * 1000) {
+        return { sent: false, reason: 'not_new_user' as const }
+      }
+    }
 
     const { data: profile } = await ctx.supabase
       .from('profiles')
@@ -29,8 +46,9 @@ export const sendWelcomeEmail = createServerFn({ method: 'POST' })
       .eq('id', ctx.userId)
       .maybeSingle()
 
+    // 1) Welcome to the subscriber themselves.
     try {
-      const res = await sendTemplateEmail('welcome', email, {
+      await sendTemplateEmail('welcome', email, {
         idempotencyKey: `welcome-${ctx.userId}`,
         settingsClient: ctx.supabase,
         templateData: {
@@ -38,9 +56,29 @@ export const sendWelcomeEmail = createServerFn({ method: 'POST' })
           username: profile?.username ?? undefined,
         },
       })
-      return res
     } catch (err) {
-      console.error('[sendWelcomeEmail] failed', err)
-      return { sent: false, reason: 'error' as const }
+      console.error('[sendWelcomeEmail] welcome failed', err)
     }
+
+    // 2) Admin notification: new signup.
+    try {
+      const { data: adminEmail } = await ctx.supabase.rpc('get_admin_notify_email' as never)
+      const adminTo = typeof adminEmail === 'string' ? adminEmail.trim() : ''
+      if (adminTo) {
+        await sendTemplateEmail('admin-new-signup', adminTo, {
+          idempotencyKey: `admin-new-signup-${ctx.userId}`,
+          settingsClient: ctx.supabase,
+          templateData: {
+            email,
+            displayName: profile?.display_name ?? undefined,
+            username: profile?.username ?? undefined,
+            createdAt: createdAtIso ?? new Date().toISOString(),
+          },
+        })
+      }
+    } catch (err) {
+      console.error('[sendWelcomeEmail] admin notify failed', err)
+    }
+
+    return { sent: true as const }
   })

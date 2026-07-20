@@ -108,6 +108,71 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
           return new Response("apply failed", { status: 500 });
         }
 
+        // Best-effort e-mail dispatch. Never breaks the webhook contract
+        // (Mercado Pago retries the whole callback if we return 5xx).
+        try {
+          const { data: ctxRow } = await supabase.rpc(
+            "get_pix_payment_context" as never,
+            { _pix_id: externalRef } as never,
+          );
+          const row = Array.isArray(ctxRow) ? ctxRow[0] : ctxRow;
+          if (row && row.status === "approved" && row.email) {
+            const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+            const displayName = row.display_name ?? undefined;
+            const username = row.username ?? undefined;
+            const paidAt = row.paid_at ?? new Date().toISOString();
+            const amountCents = Number(row.amount_cents ?? 0);
+            const interval = String(row.billing_interval ?? "month");
+
+            // 1) Subscriber → payment confirmation
+            await sendTemplateEmail("payment-confirmed", row.email, {
+              idempotencyKey: `pay-confirmed-${externalRef}`,
+              settingsClient: supabase,
+              templateData: {
+                displayName,
+                amountCents,
+                interval,
+                paidAt,
+                paymentId,
+              },
+            }).catch((e) => console.error("[MP webhook] payment-confirmed", e));
+
+            // 2) Subscriber → Pro activated
+            await sendTemplateEmail("pro-activated", row.email, {
+              idempotencyKey: `pro-activated-${externalRef}`,
+              settingsClient: supabase,
+              templateData: {
+                displayName,
+                interval,
+                periodEnd: undefined,
+              },
+            }).catch((e) => console.error("[MP webhook] pro-activated", e));
+
+            // 3) Admin → new subscriber notice
+            const { data: adminEmail } = await supabase.rpc(
+              "get_admin_notify_email" as never,
+            );
+            const adminTo = typeof adminEmail === "string" ? adminEmail.trim() : "";
+            if (adminTo) {
+              await sendTemplateEmail("admin-new-subscriber", adminTo, {
+                idempotencyKey: `admin-new-sub-${externalRef}`,
+                settingsClient: supabase,
+                templateData: {
+                  email: row.email,
+                  displayName,
+                  username,
+                  amountCents,
+                  interval,
+                  paidAt,
+                  paymentId,
+                },
+              }).catch((e) => console.error("[MP webhook] admin-new-sub", e));
+            }
+          }
+        } catch (mailErr) {
+          console.error("[MP webhook] email dispatch failed", mailErr);
+        }
+
         return new Response("ok", { status: 200 });
       },
     },
