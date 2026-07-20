@@ -70,9 +70,34 @@ function Dashboard() {
       return (data as LinkRow[]) ?? [];
     },
   });
+  const profileStatsQ = useQuery({
+    queryKey: ["dash-profile-stats", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("views_count").eq("id", user!.id).maybeSingle();
+      return (data?.views_count as number | undefined) ?? 0;
+    },
+  });
+  const activeSubQ = useQuery({
+    queryKey: ["dash-active-sub", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("current_period_end,interval,amount_cents")
+        .eq("user_id", user!.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
 
   const cats = catsQ.data ?? [];
   const links = linksQ.data ?? [];
+  const profileViews = profileStatsQ.data ?? 0;
+  const activeSub = activeSubQ.data;
   const isFree = role === "free";
 
   const refresh = () => {
