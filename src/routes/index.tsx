@@ -375,9 +375,11 @@ function Home() {
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} ForLink · forlink.app</span>
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link to="/sobre" className="hover:text-foreground">Sobre</Link>
+            <Link to="/guias" className="hover:text-foreground">Guias</Link>
+            <Link to="/contato" className="hover:text-foreground">Contato</Link>
             <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
             <Link to="/termos" className="hover:text-foreground">Termos</Link>
-            <a href="mailto:contato@forlink.app" className="hover:text-foreground">Contato</a>
           </nav>
         </div>
       </footer>
