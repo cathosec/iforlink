@@ -1444,6 +1444,7 @@ type EmailCfg = {
   from_address?: string;
   reply_to?: string;
   api_key?: string;
+  admin_notify_to?: string;
 };
 
 
@@ -1633,6 +1634,22 @@ function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: stri
       </Card>
 
       <Card className="p-6">
+        <h3 className="mb-2 font-semibold">Notificações do administrador</h3>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Endereço que receberá avisos automáticos de <strong>novo cadastro</strong> e <strong>nova assinatura Pro</strong>. Deixe em branco para desativar.
+        </p>
+        <div>
+          <Label className="text-xs">E-mail do admin</Label>
+          <Input
+            type="email"
+            placeholder="admin@forlink.app"
+            defaultValue={cfg.admin_notify_to ?? ""}
+            onBlur={(e) => e.target.value !== (cfg.admin_notify_to ?? "") && save({ admin_notify_to: e.target.value.trim() })}
+          />
+        </div>
+      </Card>
+
+      <Card className="p-6">
         <h3 className="mb-2 font-semibold">Teste de envio</h3>
         <p className="mb-4 text-xs text-muted-foreground">
           Dispara o template <code>welcome</code> para o endereço abaixo usando as configurações atuais.
@@ -1660,10 +1677,12 @@ function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: stri
         <h3 className="mb-2 font-semibold">Templates disparados automaticamente</h3>
         <ul className="grid gap-2 text-sm sm:grid-cols-2">
           {[
-            ["welcome", "Boas-vindas após primeiro login"],
+            ["welcome", "Boas-vindas ao novo usuário (após cadastro)"],
             ["email-confirmation", "Confirmação de e-mail"],
-            ["payment-confirmed", "Pagamento aprovado"],
-            ["pro-activated", "Plano Pro ativado"],
+            ["payment-confirmed", "Pagamento aprovado (para o assinante)"],
+            ["pro-activated", "Plano Pro ativado (para o assinante)"],
+            ["admin-new-signup", "Admin · Novo cadastro"],
+            ["admin-new-subscriber", "Admin · Nova assinatura Pro"],
             ["subscription-expiring", "Assinatura vence em 3 dias"],
             ["subscription-expired", "Assinatura expirada"],
           ].map(([code, desc]) => (

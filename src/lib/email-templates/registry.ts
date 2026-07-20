@@ -4,6 +4,8 @@ import { template as welcomeTemplate } from './welcome'
 import { template as emailConfirmationTemplate } from './email-confirmation'
 import { template as paymentConfirmedTemplate } from './payment-confirmed'
 import { template as proActivatedTemplate } from './pro-activated'
+import { template as adminNewSignupTemplate } from './admin-new-signup'
+import { template as adminNewSubscriberTemplate } from './admin-new-subscriber'
 import { template as subscriptionExpiringTemplate } from './subscription-expiring'
 import { template as subscriptionExpiredTemplate } from './subscription-expired'
 
@@ -24,6 +26,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'email-confirmation': emailConfirmationTemplate,
   'payment-confirmed': paymentConfirmedTemplate,
   'pro-activated': proActivatedTemplate,
+  'admin-new-signup': adminNewSignupTemplate,
+  'admin-new-subscriber': adminNewSubscriberTemplate,
   'subscription-expiring': subscriptionExpiringTemplate,
   'subscription-expired': subscriptionExpiredTemplate,
 }

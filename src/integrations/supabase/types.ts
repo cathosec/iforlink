@@ -375,9 +375,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_admin_notify_email: { Args: never; Returns: string }
       get_mercadopago_webhook_access_token: {
         Args: { _payment_id: string; _request_id: string; _signature: string }
         Returns: string
+      }
+      get_pix_payment_context: {
+        Args: { _pix_id: string }
+        Returns: {
+          amount_cents: number
+          billing_interval: string
+          display_name: string
+          email: string
+          paid_at: string
+          status: string
+          user_id: string
+          username: string
+        }[]
       }
       get_pricing_public: { Args: never; Returns: Json }
       get_public_setting: { Args: { _key: string }; Returns: Json }
