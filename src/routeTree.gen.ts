@@ -22,6 +22,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedObrigadoRouteImport } from './routes/_authenticated/obrigado'
 import { Route as AuthenticatedEncurtarRouteImport } from './routes/_authenticated/encurtar'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAssinaturaRouteImport } from './routes/_authenticated/assinatura'
 import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -93,6 +94,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAssinaturaRoute = AuthenticatedAssinaturaRouteImport.update({
+  id: '/assinatura',
+  path: '/assinatura',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAssinarRoute = AuthenticatedAssinarRouteImport.update({
   id: '/assinar',
   path: '/assinar',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/assinar': typeof AuthenticatedAssinarRoute
+  '/assinatura': typeof AuthenticatedAssinaturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/assinar': typeof AuthenticatedAssinarRoute
+  '/assinatura': typeof AuthenticatedAssinaturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/termos': typeof TermosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
+  '/_authenticated/assinatura': typeof AuthenticatedAssinaturaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/encurtar': typeof AuthenticatedEncurtarRoute
   '/_authenticated/obrigado': typeof AuthenticatedObrigadoRoute
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/admin'
     | '/assinar'
+    | '/assinatura'
     | '/dashboard'
     | '/encurtar'
     | '/obrigado'
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/admin'
     | '/assinar'
+    | '/assinatura'
     | '/dashboard'
     | '/encurtar'
     | '/obrigado'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/_authenticated/admin'
     | '/_authenticated/assinar'
+    | '/_authenticated/assinatura'
     | '/_authenticated/dashboard'
     | '/_authenticated/encurtar'
     | '/_authenticated/obrigado'
@@ -362,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/assinatura': {
+      id: '/_authenticated/assinatura'
+      path: '/assinatura'
+      fullPath: '/assinatura'
+      preLoaderRoute: typeof AuthenticatedAssinaturaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/assinar': {
       id: '/_authenticated/assinar'
       path: '/assinar'
@@ -410,6 +429,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAssinarRoute: typeof AuthenticatedAssinarRoute
+  AuthenticatedAssinaturaRoute: typeof AuthenticatedAssinaturaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEncurtarRoute: typeof AuthenticatedEncurtarRoute
   AuthenticatedObrigadoRoute: typeof AuthenticatedObrigadoRoute
@@ -419,6 +439,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAssinarRoute: AuthenticatedAssinarRoute,
+  AuthenticatedAssinaturaRoute: AuthenticatedAssinaturaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEncurtarRoute: AuthenticatedEncurtarRoute,
   AuthenticatedObrigadoRoute: AuthenticatedObrigadoRoute,

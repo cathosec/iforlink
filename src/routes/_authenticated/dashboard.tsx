@@ -21,7 +21,12 @@ import { toast } from "sonner";
 import { getFaviconUrl, normalizeUrl } from "@/lib/favicon";
 import {
   Plus, Pencil, Trash2, ChevronUp, ChevronDown, ExternalLink, FolderPlus, Sparkles, Eye, EyeOff, Link2, Lock, GripVertical, Scissors,
+  MousePointerClick, BarChart3, TrendingUp, Layers, Trophy, CreditCard,
 } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie,
+} from "recharts";
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -65,9 +70,34 @@ function Dashboard() {
       return (data as LinkRow[]) ?? [];
     },
   });
+  const profileStatsQ = useQuery({
+    queryKey: ["dash-profile-stats", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("views_count").eq("id", user!.id).maybeSingle();
+      return (data?.views_count as number | undefined) ?? 0;
+    },
+  });
+  const activeSubQ = useQuery({
+    queryKey: ["dash-active-sub", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("current_period_end,interval,amount_cents")
+        .eq("user_id", user!.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
 
   const cats = catsQ.data ?? [];
   const links = linksQ.data ?? [];
+  const profileViews = profileStatsQ.data ?? 0;
+  const activeSub = activeSubQ.data;
   const isFree = role === "free";
 
   const refresh = () => {
@@ -236,18 +266,35 @@ function Dashboard() {
               <div className="text-xs text-muted-foreground">
                 {isFree
                   ? `${cats.length}/${FREE_MAX_CATS} categorias · ${links.length}/${FREE_MAX_LINKS} links`
+                  : activeSub?.current_period_end
+                  ? `Renova em ${new Date(activeSub.current_period_end).toLocaleDateString("pt-BR")}`
                   : "Categorias e links ilimitados"}
               </div>
             </div>
           </div>
-          {role !== "admin" && (
-            <Link to="/assinar"><Button variant={role === "pro" ? "outline" : "default"} size="sm">
-              {role === "pro" ? "Renovar assinatura" : "Fazer upgrade para Pro"}
-            </Button></Link>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <Link to="/assinatura">
+              <Button variant="outline" size="sm">
+                <CreditCard className="mr-2 h-3.5 w-3.5" /> Minha assinatura
+              </Button>
+            </Link>
+            {role !== "admin" && (
+              <Link to="/assinar">
+                <Button variant={role === "pro" ? "outline" : "default"} size="sm">
+                  {role === "pro" ? "Renovar" : "Fazer upgrade para Pro"}
+                </Button>
+              </Link>
+            )}
+          </div>
         </Card>
 
-        {user?.id && <SubscriptionCard userId={user.id} />}
+        {/* Visão geral */}
+        <OverviewSection
+          links={links}
+          cats={cats}
+          profileViews={profileViews}
+        />
+
 
 
         {/* Nova categoria */}
@@ -634,41 +681,174 @@ function NewLinkDialog({
   );
 }
 
-function SubscriptionCard({ userId }: { userId: string }) {
-  const q = useQuery({
-    queryKey: ["my-sub", userId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-  });
-  const sub = q.data;
-  if (!sub) return null;
-  const end = sub.current_period_end ? new Date(sub.current_period_end) : null;
-  const daysLeft = end ? Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400_000)) : null;
-  const intervalLabel = sub.interval === "month" ? "Mensal" : sub.interval === "quarter" ? "Trimestral" : sub.interval === "year" ? "Anual" : sub.interval;
-  const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100);
+/* -------------------------- Visão geral (stats) -------------------------- */
+
+const CHART_COLORS = ["#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe", "#e0e7ff", "#3730a3", "#4338ca"];
+
+function OverviewSection({
+  links, cats, profileViews,
+}: { links: LinkRow[]; cats: Category[]; profileViews: number }) {
+  const totalLinks = links.length;
+  const totalClicks = links.reduce((s, l) => s + (l.clicks_count ?? 0), 0);
+  const visibleLinks = links.filter((l) => l.is_visible).length;
+  const visibleCats = cats.filter((c) => c.is_visible).length;
+  const avgClicks = totalLinks ? totalClicks / totalLinks : 0;
+  const ctr = profileViews > 0 ? (totalClicks / profileViews) * 100 : 0;
+
+  const topLinks = [...links]
+    .sort((a, b) => (b.clicks_count ?? 0) - (a.clicks_count ?? 0))
+    .slice(0, 5)
+    .map((l) => ({ name: l.title.length > 22 ? l.title.slice(0, 22) + "…" : l.title, clicks: l.clicks_count ?? 0 }));
+
+  const byCategory = cats
+    .map((c) => ({
+      name: c.name,
+      clicks: links.filter((l) => l.category_id === c.id).reduce((s, l) => s + (l.clicks_count ?? 0), 0),
+      count: links.filter((l) => l.category_id === c.id).length,
+    }))
+    .filter((c) => c.count > 0);
+
+  const catsWithClicks = byCategory.filter((c) => c.clicks > 0);
+
   return (
-    <Card className="mt-4 flex flex-wrap items-center justify-between gap-4 border-brand/30 bg-brand-soft/40 p-5">
-      <div>
-        <div className="flex items-center gap-2">
-          <Badge className="bg-brand text-brand-foreground">Pro {intervalLabel}</Badge>
-          <span className="text-sm text-muted-foreground">via {sub.gateway}</span>
-        </div>
-        <div className="mt-1 text-sm">
-          {brl(sub.amount_cents)} · Vence em{" "}
-          <strong>{end ? end.toLocaleDateString("pt-BR") : "—"}</strong>
-          {daysLeft !== null && <span className="ml-1 text-muted-foreground">({daysLeft} dias)</span>}
-        </div>
+    <section className="mt-6 space-y-4">
+      <div className="flex items-center gap-2">
+        <BarChart3 className="h-4 w-4 text-brand" />
+        <h2 className="text-lg font-semibold">Visão geral</h2>
       </div>
-      <Link to="/assinar"><Button size="sm" variant="outline">Renovar</Button></Link>
+
+      {/* KPI grid */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          icon={<Eye className="h-4 w-4" />}
+          label="Visualizações do perfil"
+          value={profileViews.toLocaleString("pt-BR")}
+          hint="Únicas por sessão"
+        />
+        <KpiCard
+          icon={<MousePointerClick className="h-4 w-4" />}
+          label="Cliques totais"
+          value={totalClicks.toLocaleString("pt-BR")}
+          hint={`Média de ${avgClicks.toFixed(1)} por link`}
+          accent
+        />
+        <KpiCard
+          icon={<TrendingUp className="h-4 w-4" />}
+          label="Taxa de conversão"
+          value={`${ctr.toFixed(1)}%`}
+          hint="Cliques / visualizações"
+        />
+        <KpiCard
+          icon={<Layers className="h-4 w-4" />}
+          label="Conteúdo publicado"
+          value={`${visibleLinks} / ${totalLinks}`}
+          hint={`${visibleCats} categoria${visibleCats === 1 ? "" : "s"} visível${visibleCats === 1 ? "" : "eis"}`}
+        />
+      </div>
+
+      {/* Charts */}
+      {totalLinks > 0 && (
+        <div className="grid gap-4 lg:grid-cols-5">
+          <Card className="lg:col-span-3 p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-brand" />
+              <h3 className="text-sm font-semibold">Top 5 links por cliques</h3>
+            </div>
+            {topLinks.some((l) => l.clicks > 0) ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topLinks} layout="vertical" margin={{ left: 8, right: 12, top: 4, bottom: 4 }}>
+                    <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis type="category" dataKey="name" width={130} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <Tooltip
+                      cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
+                      contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", fontSize: 12 }}
+                      formatter={(v: number) => [`${v} cliques`, ""]}
+                    />
+                    <Bar dataKey="clicks" radius={[0, 6, 6, 0]}>
+                      {topLinks.map((_, i) => (
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <EmptyChart label="Nenhum clique registrado ainda" />
+            )}
+          </Card>
+
+          <Card className="lg:col-span-2 p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <Layers className="h-4 w-4 text-brand" />
+              <h3 className="text-sm font-semibold">Cliques por categoria</h3>
+            </div>
+            {catsWithClicks.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Tooltip
+                      contentStyle={{ borderRadius: 8, border: "1px solid hsl(var(--border))", fontSize: 12 }}
+                      formatter={(v: number, _n, item: any) => [`${v} cliques`, item?.payload?.name]}
+                    />
+                    <Pie
+                      data={catsWithClicks}
+                      dataKey="clicks"
+                      nameKey="name"
+                      innerRadius={45}
+                      outerRadius={80}
+                      paddingAngle={2}
+                    >
+                      {catsWithClicks.map((_, i) => (
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <EmptyChart label="Sem cliques por categoria" />
+            )}
+            {catsWithClicks.length > 0 && (
+              <ul className="mt-2 space-y-1 text-xs">
+                {catsWithClicks.slice(0, 5).map((c, i) => (
+                  <li key={c.name} className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 truncate">
+                      <span className="h-2 w-2 flex-none rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                      <span className="truncate">{c.name}</span>
+                    </span>
+                    <span className="tabular-nums text-muted-foreground">{c.clicks}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function KpiCard({
+  icon, label, value, hint, accent,
+}: { icon: React.ReactNode; label: string; value: string; hint?: string; accent?: boolean }) {
+  return (
+    <Card className={`p-4 ${accent ? "border-brand/40 bg-brand-soft/40" : ""}`}>
+      <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
+        <span className={accent ? "text-brand" : ""}>{icon}</span>
+        {label}
+      </div>
+      <div className="mt-1 text-2xl font-semibold tabular-nums">{value}</div>
+      {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
     </Card>
   );
 }
+
+function EmptyChart({ label }: { label: string }) {
+  return (
+    <div className="grid h-64 place-items-center rounded-md border border-dashed text-sm text-muted-foreground">
+      {label}
+    </div>
+  );
+}
+

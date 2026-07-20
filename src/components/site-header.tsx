@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, LogOut, User as UserIcon, Shield, Scissors } from "lucide-react";
+import { LayoutDashboard, LogOut, User as UserIcon, Shield, Scissors, CreditCard } from "lucide-react";
 import { LogoWordmark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -59,6 +59,9 @@ export function SiteHeader() {
                         <Badge variant="outline" className="ml-auto text-[9px] uppercase">Pro</Badge>
                       )}
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/assinatura"><CreditCard className="mr-2 h-4 w-4" /> Assinatura</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/settings"><UserIcon className="mr-2 h-4 w-4" /> Perfil</Link>
