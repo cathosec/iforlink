@@ -18,7 +18,7 @@ function resolveToken(cfg: MpCfg): string {
   return token.trim();
 }
 
-async function loadMercadoPagoConfig(supabase?: { rpc: (fn: string) => Promise<{ data: unknown; error: { message: string } | null }> }): Promise<MpCfg> {
+async function loadMercadoPagoConfig(supabase?: { rpc: (fn: "get_pricing_public") => PromiseLike<{ data: unknown; error: { message: string } | null }> }): Promise<MpCfg> {
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
