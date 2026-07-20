@@ -18,6 +18,31 @@ function resolveToken(cfg: MpCfg): string {
   return token.trim();
 }
 
+async function loadMercadoPagoConfig(supabase?: { rpc: (fn: string) => Promise<{ data: unknown; error: { message: string } | null }> }): Promise<MpCfg> {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: setting, error } = await supabaseAdmin
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "mercadopago")
+        .maybeSingle();
+      if (!error && setting?.value) return setting.value as MpCfg;
+      if (error) console.warn("[MP] leitura admin das configurações falhou:", error.message);
+    } catch (err) {
+      console.warn("[MP] service role indisponível; usando configuração pública + token de ambiente", err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  if (supabase) {
+    const { data, error } = await supabase.rpc("get_pricing_public");
+    if (!error && data) return data as MpCfg;
+    if (error) console.warn("[MP] leitura pública dos planos falhou:", error.message);
+  }
+
+  return {};
+}
+
 type Interval = "month" | "quarter" | "year";
 
 const INTERVAL_LABEL: Record<Interval, string> = {
@@ -44,15 +69,7 @@ export const createPixSubscription = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    // Fetch config
-    const { data: setting } = await supabaseAdmin
-      .from("platform_settings")
-      .select("value")
-      .eq("key", "mercadopago")
-      .maybeSingle();
-    const cfg = (setting?.value ?? {}) as MpCfg;
+    const cfg = await loadMercadoPagoConfig(context.supabase);
     if (!cfg.enabled) throw new Error("Pagamentos Mercado Pago desativados pelo administrador.");
 
     const token = resolveToken(cfg);
@@ -62,10 +79,30 @@ export const createPixSubscription = createServerFn({ method: "POST" })
     const amountCents = cfg.prices?.[priceKey] ?? 0;
     if (amountCents <= 0) throw new Error("Preço não configurado para esse intervalo.");
 
-    // Fetch profile/email
-    const { data: userRow } = await supabaseAdmin.auth.admin.getUserById(context.userId);
-    const email = userRow?.user?.email ?? "sem-email@forlink.app";
-    const displayName = (userRow?.user?.user_metadata?.display_name as string | undefined) ?? email.split("@")[0];
+    // Fetch profile/email with the authenticated user client, not the service role.
+    const claims = context.claims as Record<string, unknown>;
+    let email = typeof claims.email === "string" ? claims.email : "";
+    let displayName = typeof claims.user_metadata === "object" && claims.user_metadata
+      ? ((claims.user_metadata as Record<string, unknown>).display_name as string | undefined)
+      : undefined;
+
+    try {
+      const { data: authUser } = await context.supabase.auth.getUser(context.accessToken);
+      email = authUser.user?.email ?? email;
+      displayName = (authUser.user?.user_metadata?.display_name as string | undefined) ?? displayName;
+    } catch { /* noop */ }
+
+    try {
+      const { data: profile } = await context.supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", context.userId)
+        .maybeSingle();
+      displayName = profile?.display_name ?? displayName;
+    } catch { /* noop */ }
+
+    if (!email) throw new Error("Não foi possível identificar o e-mail da sua conta para gerar o PIX.");
+    displayName = displayName ?? email.split("@")[0];
 
     const expMin = cfg.pix_expiration_minutes ?? 30;
     const expiresAt = new Date(Date.now() + expMin * 60_000);
@@ -79,7 +116,7 @@ export const createPixSubscription = createServerFn({ method: "POST" })
     const notificationUrl = host ? `https://${host}/api/public/webhooks/mercadopago` : undefined;
 
     // Create pending pix_payments row
-    const { data: pix, error: pixErr } = await supabaseAdmin
+    const { data: pix, error: pixErr } = await context.supabase
       .from("pix_payments")
       .insert({
         user_id: context.userId,
@@ -120,13 +157,13 @@ export const createPixSubscription = createServerFn({ method: "POST" })
     });
     const json = await resp.json().catch(() => ({}));
     if (!resp.ok) {
-      await supabaseAdmin.from("pix_payments").update({ status: "rejected", raw: json }).eq("id", pix.id);
+      await context.supabase.from("pix_payments").update({ status: "rejected", raw: json }).eq("id", pix.id);
       console.error("[MP] create payment failed", resp.status, json);
       throw new Error(json?.message ?? "Falha ao criar PIX no Mercado Pago");
     }
 
     const txn = json?.point_of_interaction?.transaction_data ?? {};
-    await supabaseAdmin.from("pix_payments").update({
+    await context.supabase.from("pix_payments").update({
       mp_payment_id: String(json.id),
       qr_code: txn.qr_code ?? null,
       qr_code_base64: txn.qr_code_base64 ?? null,
@@ -154,8 +191,7 @@ export const getPixStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { paymentId: string }) => data)
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
+    const { data: row } = await context.supabase
       .from("pix_payments")
       .select("*")
       .eq("id", data.paymentId)
@@ -165,8 +201,8 @@ export const getPixStatus = createServerFn({ method: "POST" })
 
     // Se ainda pendente, consulta Mercado Pago
     if (row.status === "pending" && row.mp_payment_id) {
-      const { data: setting } = await supabaseAdmin.from("platform_settings").select("value").eq("key", "mercadopago").maybeSingle();
-      const token = resolveToken((setting?.value ?? {}) as MpCfg);
+      const cfg = await loadMercadoPagoConfig(context.supabase);
+      const token = resolveToken(cfg);
       if (token) {
         const resp = await fetch(`https://api.mercadopago.com/v1/payments/${row.mp_payment_id}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -174,8 +210,18 @@ export const getPixStatus = createServerFn({ method: "POST" })
         if (resp.ok) {
           const json = await resp.json();
           if (json.status && json.status !== row.status) {
-            await applyPaymentUpdate(row.id, json);
-            row.status = json.status;
+            if (json.status === "approved") {
+              if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+                await applyPaymentUpdate(row.id, json);
+                row.status = json.status;
+                row.paid_at = new Date().toISOString();
+              } else {
+                console.error("[MP] pagamento aprovado, mas SUPABASE_SERVICE_ROLE_KEY não está configurada para ativar a assinatura automaticamente.");
+              }
+            } else {
+              await context.supabase.from("pix_payments").update({ status: json.status, raw: json }).eq("id", row.id);
+              row.status = json.status;
+            }
           }
         }
       }
