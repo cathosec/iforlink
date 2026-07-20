@@ -17,6 +17,7 @@ import { Route as UsernameRouteImport } from './routes/$username'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SCodeRouteImport } from './routes/s.$code'
+import { Route as PublicSplatRouteImport } from './routes/public.$'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedObrigadoRouteImport } from './routes/_authenticated/obrigado'
 import { Route as AuthenticatedEncurtarRouteImport } from './routes/_authenticated/encurtar'
@@ -65,6 +66,11 @@ const IndexRoute = IndexRouteImport.update({
 const SCodeRoute = SCodeRouteImport.update({
   id: '/s/$code',
   path: '/s/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicSplatRoute = PublicSplatRouteImport.update({
+  id: '/public/$',
+  path: '/public/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/_authenticated/encurtar': typeof AuthenticatedEncurtarRoute
   '/_authenticated/obrigado': typeof AuthenticatedObrigadoRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/encurtar'
     | '/obrigado'
     | '/settings'
+    | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
     | '/api/public/cron/subscriptions-check'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/encurtar'
     | '/obrigado'
     | '/settings'
+    | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
     | '/api/public/cron/subscriptions-check'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/_authenticated/encurtar'
     | '/_authenticated/obrigado'
     | '/_authenticated/settings'
+    | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
     | '/api/public/cron/subscriptions-check'
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermosRoute: typeof TermosRoute
+  PublicSplatRoute: typeof PublicSplatRoute
   SCodeRoute: typeof SCodeRoute
   ApiPublicAvatarFileRoute: typeof ApiPublicAvatarFileRoute
   ApiPublicCronSubscriptionsCheckRoute: typeof ApiPublicCronSubscriptionsCheckRoute
@@ -312,6 +325,13 @@ declare module '@tanstack/react-router' {
       path: '/s/$code'
       fullPath: '/s/$code'
       preLoaderRoute: typeof SCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/public/$': {
+      id: '/public/$'
+      path: '/public/$'
+      fullPath: '/public/$'
+      preLoaderRoute: typeof PublicSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings': {
@@ -416,6 +436,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermosRoute: TermosRoute,
+  PublicSplatRoute: PublicSplatRoute,
   SCodeRoute: SCodeRoute,
   ApiPublicAvatarFileRoute: ApiPublicAvatarFileRoute,
   ApiPublicCronSubscriptionsCheckRoute: ApiPublicCronSubscriptionsCheckRoute,
