@@ -115,7 +115,17 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
             "get_pix_payment_context" as never,
             { _pix_id: externalRef } as never,
           );
-          const row = Array.isArray(ctxRow) ? ctxRow[0] : ctxRow;
+          const row = (Array.isArray(ctxRow) ? ctxRow[0] : ctxRow) as
+            | {
+                email?: string | null;
+                display_name?: string | null;
+                username?: string | null;
+                amount_cents?: number | null;
+                billing_interval?: string | null;
+                paid_at?: string | null;
+                status?: string | null;
+              }
+            | null;
           if (row && row.status === "approved" && row.email) {
             const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
             const displayName = row.display_name ?? undefined;
