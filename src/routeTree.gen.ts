@@ -10,8 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as GuiasRouteImport } from './routes/guias'
+import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as UsernameRouteImport } from './routes/$username'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -35,6 +38,11 @@ const TermosRoute = TermosRouteImport.update({
   path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -43,6 +51,16 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuiasRoute = GuiasRouteImport.update({
+  id: '/guias',
+  path: '/guias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -137,8 +155,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$username': typeof UsernameRoute
   '/auth': typeof AuthRoute
+  '/contato': typeof ContatoRoute
+  '/guias': typeof GuiasRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/assinar': typeof AuthenticatedAssinarRoute
@@ -158,8 +179,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$username': typeof UsernameRoute
   '/auth': typeof AuthRoute
+  '/contato': typeof ContatoRoute
+  '/guias': typeof GuiasRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/assinar': typeof AuthenticatedAssinarRoute
@@ -181,8 +205,11 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$username': typeof UsernameRoute
   '/auth': typeof AuthRoute
+  '/contato': typeof ContatoRoute
+  '/guias': typeof GuiasRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
@@ -204,8 +231,11 @@ export interface FileRouteTypes {
     | '/'
     | '/$username'
     | '/auth'
+    | '/contato'
+    | '/guias'
     | '/privacidade'
     | '/sitemap.xml'
+    | '/sobre'
     | '/termos'
     | '/admin'
     | '/assinar'
@@ -225,8 +255,11 @@ export interface FileRouteTypes {
     | '/'
     | '/$username'
     | '/auth'
+    | '/contato'
+    | '/guias'
     | '/privacidade'
     | '/sitemap.xml'
+    | '/sobre'
     | '/termos'
     | '/admin'
     | '/assinar'
@@ -247,8 +280,11 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/$username'
     | '/auth'
+    | '/contato'
+    | '/guias'
     | '/privacidade'
     | '/sitemap.xml'
+    | '/sobre'
     | '/termos'
     | '/_authenticated/admin'
     | '/_authenticated/assinar'
@@ -270,8 +306,11 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   UsernameRoute: typeof UsernameRoute
   AuthRoute: typeof AuthRoute
+  ContatoRoute: typeof ContatoRoute
+  GuiasRoute: typeof GuiasRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
   PublicSplatRoute: typeof PublicSplatRoute
   SCodeRoute: typeof SCodeRoute
@@ -290,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -302,6 +348,20 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guias': {
+      id: '/guias'
+      path: '/guias'
+      fullPath: '/guias'
+      preLoaderRoute: typeof GuiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -454,8 +514,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   UsernameRoute: UsernameRoute,
   AuthRoute: AuthRoute,
+  ContatoRoute: ContatoRoute,
+  GuiasRoute: GuiasRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
   PublicSplatRoute: PublicSplatRoute,
   SCodeRoute: SCodeRoute,
