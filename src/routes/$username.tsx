@@ -62,10 +62,16 @@ export const Route = createFileRoute("/$username")({
       };
     }
     const title = `${p.display_name} (@${p.username}) · ForLink`;
-    const description = (p.bio && p.bio.trim().length > 0
-      ? p.bio.trim()
-      : `Confira os links favoritos de ${p.display_name} no ForLink.`
-    ).slice(0, 300);
+    function truncate(str: string, max: number) {
+      if (str.length <= max) return str;
+      return str.slice(0, max - 3).trimEnd() + "...";
+    }
+    const rawDescription =
+      p.bio && p.bio.trim().length > 0
+        ? p.bio.trim()
+        : `Confira os links favoritos de ${p.display_name} no ForLink.`;
+    const metaDescription = truncate(rawDescription, 160);
+    const ogDescription = truncate(rawDescription, 125);
     // og:image must be an absolute http(s) URL. Avatars podem estar como:
     //  - URL absoluta http(s) → usar direto
     //  - caminho relativo (/api/public/avatar/...) → prefixar com o domínio

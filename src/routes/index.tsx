@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
   head: () => {
     const title = "ForLink — Bio link e agregador de links profissional";
     const description =
-      "Crie seu perfil ForLink em forlink.app/seu-usuario. Organize seus links favoritos em categorias, compartilhe em um único endereço e acompanhe cliques. Grátis para começar.";
+      "Crie seu perfil ForLink em forlink.app/seu-usuario. Organize seus links em categorias, compartilhe tudo em um endereço e acompanhe cliques. Grátis.";
     const url = "https://forlink.app/";
     return {
       meta: [
