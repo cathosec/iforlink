@@ -118,6 +118,73 @@ function Contato() {
           </Card>
         </div>
 
+        <section className="mt-10">
+          <Card className="p-6 sm:p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold tracking-tight">Envie uma mensagem</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Preencha o formulário abaixo e nossa equipe responderá no e-mail informado. Todas as mensagens chegam diretamente à caixa de entrada oficial da ForLink.
+              </p>
+            </div>
+
+            {sent ? (
+              <div className="flex items-start gap-3 rounded-lg border border-brand/30 bg-brand/5 p-4">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 text-brand" />
+                <div>
+                  <p className="font-medium">Mensagem enviada com sucesso.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Retornaremos em até 48h úteis. Verifique também sua caixa de spam.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSent(false)}
+                    className="mt-3 text-sm font-medium text-brand hover:underline"
+                  >
+                    Enviar outra mensagem
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={onSubmit} className="space-y-4" noValidate>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="c-name">Nome</Label>
+                    <Input id="c-name" required minLength={2} maxLength={100} value={form.name} onChange={update("name")} placeholder="Seu nome completo" autoComplete="name" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="c-email">E-mail</Label>
+                    <Input id="c-email" type="email" required maxLength={200} value={form.email} onChange={update("email")} placeholder="voce@exemplo.com" autoComplete="email" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="c-subject">Assunto</Label>
+                  <Input id="c-subject" required minLength={3} maxLength={150} value={form.subject} onChange={update("subject")} placeholder="Sobre o que você quer falar?" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="c-message">Mensagem</Label>
+                  <Textarea id="c-message" required minLength={10} maxLength={4000} rows={6} value={form.message} onChange={update("message")} placeholder="Descreva sua dúvida, sugestão ou solicitação com o máximo de detalhes possível." />
+                  <p className="text-xs text-muted-foreground">{form.message.length}/4000 caracteres</p>
+                </div>
+                {/* Honeypot */}
+                <div className="hidden" aria-hidden="true">
+                  <label>
+                    Website
+                    <input tabIndex={-1} autoComplete="off" value={form.website} onChange={update("website")} />
+                  </label>
+                </div>
+                <div className="flex items-center justify-between gap-4 pt-2">
+                  <p className="text-xs text-muted-foreground">
+                    Ao enviar, você concorda com a nossa <Link to="/privacidade" className="text-brand hover:underline">política de privacidade</Link>.
+                  </p>
+                  <Button type="submit" disabled={loading} className="min-w-[140px]">
+                    {loading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando…</>) : (<><Send className="mr-2 h-4 w-4" />Enviar mensagem</>)}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </Card>
+        </section>
+
         <AdSlot slot="top" label="Publicidade" />
 
         <section className="mt-10 space-y-4">
