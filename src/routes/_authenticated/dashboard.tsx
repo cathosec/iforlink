@@ -384,7 +384,7 @@ type SortableCategoryCardProps = {
 function SortableCategoryCard(props: SortableCategoryCardProps) {
   const {
     cat, index, total, catLinks, cats, isFree, totalLinks, sensors,
-    onMoveCategory, onRenameCategory, onToggleCategoryVisible, onToggleCategoryPublic,
+    onMoveCategory, onRenameCategory, onSetCategoryIcon, onToggleCategoryVisible, onToggleCategoryPublic,
     onDeleteCategory, onSaveLink, onMoveLink, onDeleteLink, onToggleLinkVisible, onPersistLinkOrder,
   } = props;
   const sortable = useSortable({ id: cat.id });
