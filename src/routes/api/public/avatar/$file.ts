@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 // GET /api/public/avatar/{userId}.jpg
-// Streams an avatar from the private "avatars" storage bucket so social
-// crawlers (WhatsApp, X, Facebook, LinkedIn, Google) can fetch og:image
-// without exposing the bucket publicly.
+// Streams an avatar from the "avatars" storage bucket using the publishable
+// key + a public SELECT policy on storage.objects. Works on Cloudflare
+// Workers without SUPABASE_SERVICE_ROLE_KEY.
 export const Route = createFileRoute("/api/public/avatar/$file")({
   server: {
     handlers: {
@@ -14,10 +16,26 @@ export const Route = createFileRoute("/api/public/avatar/$file")({
           return new Response("Not found", { status: 404 });
         }
         try {
-          const { supabaseAdmin } = await import(
-            "@/integrations/supabase/client.server"
-          );
-          const { data, error } = await supabaseAdmin.storage
+          const url =
+            process.env.SUPABASE_URL ??
+            process.env.VITE_SUPABASE_URL ??
+            "";
+          const key =
+            process.env.SUPABASE_PUBLISHABLE_KEY ??
+            process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+            process.env.VITE_SUPABASE_ANON_KEY ??
+            "";
+          if (!url || !key) {
+            return new Response("Not configured", { status: 500 });
+          }
+          const client = createClient<Database>(url, key, {
+            auth: {
+              storage: undefined,
+              persistSession: false,
+              autoRefreshToken: false,
+            },
+          });
+          const { data, error } = await client.storage
             .from("avatars")
             .download(file);
           if (error || !data) {
