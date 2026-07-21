@@ -214,34 +214,7 @@ function PublicProfile() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [profileQ.data, isOwner]);
 
-  // Analytics — visualização de categorias/seções via IntersectionObserver.
   const sectionsRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!profileQ.data || isOwner) return;
-    if (!sectionsRef.current || typeof IntersectionObserver === "undefined") return;
-    const seen = new Set<string>();
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue;
-          const el = e.target as HTMLElement;
-          const catId = el.dataset.catId;
-          const catName = el.dataset.catName;
-          if (!catId || seen.has(catId)) continue;
-          seen.add(catId);
-          trackEvent("section_view", {
-            category_id: catId,
-            category_name: catName,
-            profile_username: profileQ.data!.username,
-          });
-        }
-      },
-      { threshold: 0.5 },
-    );
-    const nodes = sectionsRef.current.querySelectorAll<HTMLElement>("[data-cat-id]");
-    nodes.forEach((n) => io.observe(n));
-    return () => io.disconnect();
-  }, [profileQ.data, isOwner, catsQ.data]);
 
   const catsQ = useQuery({
     queryKey: ["cats", profileQ.data?.id, isOwner],
