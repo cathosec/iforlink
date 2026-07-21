@@ -339,6 +339,7 @@ function Dashboard() {
                         sensors={dndSensors}
                         onMoveCategory={moveCategory}
                         onRenameCategory={renameCategory}
+                        onSetCategoryIcon={setCategoryIcon}
                         onToggleCategoryVisible={toggleCategoryVisible}
                         onToggleCategoryPublic={toggleCategoryPublic}
                         onDeleteCategory={deleteCategory}
