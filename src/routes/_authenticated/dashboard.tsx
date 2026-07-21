@@ -371,6 +371,7 @@ type SortableCategoryCardProps = {
   sensors: ReturnType<typeof useSensors>;
   onMoveCategory: (id: string, dir: -1 | 1) => void;
   onRenameCategory: (id: string, name: string) => void;
+  onSetCategoryIcon: (id: string, icon: string) => void;
   onToggleCategoryVisible: (id: string, v: boolean) => void;
   onToggleCategoryPublic: (id: string, v: boolean) => void;
   onDeleteCategory: (id: string) => void;
