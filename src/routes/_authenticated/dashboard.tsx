@@ -35,13 +35,15 @@ import {
   SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { CategoryIconPicker } from "@/components/category-icon-picker";
+import { CategoryIcon, DEFAULT_CATEGORY_ICON } from "@/lib/category-icons";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
   head: () => ({ meta: [{ title: "Painel · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
-interface Category { id: string; name: string; display_order: number; is_visible: boolean; is_public: boolean; }
+interface Category { id: string; name: string; display_order: number; is_visible: boolean; is_public: boolean; icon: string | null; }
 interface LinkRow {
   id: string; category_id: string; title: string; description: string | null;
   url: string; favicon_url: string | null; clicks_count: number; is_visible: boolean; display_order: number;
@@ -105,13 +107,13 @@ function Dashboard() {
     qc.invalidateQueries({ queryKey: ["dash-links", user?.id] });
   };
 
-  const addCategory = async (name: string) => {
+  const addCategory = async (name: string, icon: string) => {
     if (isFree && cats.length >= FREE_MAX_CATS) {
       toast.error(`Plano Free permite ${FREE_MAX_CATS} categorias.`);
       return false;
     }
     const { error } = await supabase.from("user_categories").insert({
-      user_id: user!.id, name, display_order: cats.length,
+      user_id: user!.id, name, icon, display_order: cats.length,
     });
     if (error) { toast.error(error.message); return false; }
     toast.success("Categoria criada");
@@ -121,6 +123,11 @@ function Dashboard() {
 
   const renameCategory = async (id: string, name: string) => {
     const { error } = await supabase.from("user_categories").update({ name }).eq("id", id);
+    if (error) return toast.error(error.message);
+    refresh();
+  };
+  const setCategoryIcon = async (id: string, icon: string) => {
+    const { error } = await supabase.from("user_categories").update({ icon }).eq("id", id);
     if (error) return toast.error(error.message);
     refresh();
   };
@@ -334,6 +341,7 @@ function Dashboard() {
                         sensors={dndSensors}
                         onMoveCategory={moveCategory}
                         onRenameCategory={renameCategory}
+                        onSetCategoryIcon={setCategoryIcon}
                         onToggleCategoryVisible={toggleCategoryVisible}
                         onToggleCategoryPublic={toggleCategoryPublic}
                         onDeleteCategory={deleteCategory}
@@ -366,6 +374,7 @@ type SortableCategoryCardProps = {
   sensors: ReturnType<typeof useSensors>;
   onMoveCategory: (id: string, dir: -1 | 1) => void;
   onRenameCategory: (id: string, name: string) => void;
+  onSetCategoryIcon: (id: string, icon: string) => void;
   onToggleCategoryVisible: (id: string, v: boolean) => void;
   onToggleCategoryPublic: (id: string, v: boolean) => void;
   onDeleteCategory: (id: string) => void;
@@ -379,7 +388,7 @@ type SortableCategoryCardProps = {
 function SortableCategoryCard(props: SortableCategoryCardProps) {
   const {
     cat, index, total, catLinks, cats, isFree, totalLinks, sensors,
-    onMoveCategory, onRenameCategory, onToggleCategoryVisible, onToggleCategoryPublic,
+    onMoveCategory, onRenameCategory, onSetCategoryIcon, onToggleCategoryVisible, onToggleCategoryPublic,
     onDeleteCategory, onSaveLink, onMoveLink, onDeleteLink, onToggleLinkVisible, onPersistLinkOrder,
   } = props;
   const sortable = useSortable({ id: cat.id });
@@ -420,6 +429,11 @@ function SortableCategoryCard(props: SortableCategoryCardProps) {
                 <ChevronDown className="h-3.5 w-3.5" />
               </button>
             </div>
+            <CategoryIconPicker
+              value={cat.icon}
+              onChange={(k) => onSetCategoryIcon(cat.id, k)}
+              size="sm"
+            />
             <RenameableTitle name={cat.name} onSave={(n) => onRenameCategory(cat.id, n)} />
             {!cat.is_visible && <Badge variant="outline" className="text-[10px]"><EyeOff className="mr-1 h-3 w-3" /> Rascunho</Badge>}
             {cat.is_visible && !cat.is_public && <Badge variant="secondary" className="text-[10px]"><Lock className="mr-1 h-3 w-3" /> Privada</Badge>}
@@ -558,11 +572,12 @@ function RenameableTitle({ name, onSave }: { name: string; onSave: (n: string) =
   );
 }
 
-function NewCategoryDialog({ onCreate, disabled }: { onCreate: (n: string) => Promise<boolean>; disabled?: boolean }) {
+function NewCategoryDialog({ onCreate, disabled }: { onCreate: (n: string, icon: string) => Promise<boolean>; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [icon, setIcon] = useState<string>(DEFAULT_CATEGORY_ICON);
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setName(""); setIcon(DEFAULT_CATEGORY_ICON); } }}>
       <DialogTrigger asChild>
         <Button disabled={disabled} className="bg-brand text-brand-foreground hover:bg-brand/90">
           <Plus className="mr-1.5 h-4 w-4" /> Nova categoria
@@ -570,17 +585,26 @@ function NewCategoryDialog({ onCreate, disabled }: { onCreate: (n: string) => Pr
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Nova categoria</DialogTitle></DialogHeader>
-        <div>
-          <Label>Nome</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Redes sociais" className="mt-1.5" />
+        <div className="space-y-3">
+          <div>
+            <Label>Ícone</Label>
+            <div className="mt-1.5 flex items-center gap-2">
+              <CategoryIconPicker value={icon} onChange={setIcon} />
+              <span className="text-xs text-muted-foreground">Toque para escolher um ícone profissional.</span>
+            </div>
+          </div>
+          <div>
+            <Label>Nome</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Redes sociais" className="mt-1.5" />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button
             onClick={async () => {
               if (!name.trim()) return;
-              const ok = await onCreate(name.trim());
-              if (ok) { setName(""); setOpen(false); }
+              const ok = await onCreate(name.trim(), icon);
+              if (ok) { setName(""); setIcon(DEFAULT_CATEGORY_ICON); setOpen(false); }
             }}
             className="bg-brand text-brand-foreground hover:bg-brand/90"
           >

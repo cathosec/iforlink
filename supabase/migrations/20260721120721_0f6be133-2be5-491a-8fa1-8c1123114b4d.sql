@@ -1,0 +1,1 @@
+ALTER TABLE public.user_categories ADD COLUMN IF NOT EXISTS icon TEXT NOT NULL DEFAULT 'folder';

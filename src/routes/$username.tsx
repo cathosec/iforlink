@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { BadgeCheck, Copy, Link2, ExternalLink, Lock, Search, Share2, Eye, MousePointerClick, Folder } from "lucide-react";
+import { BadgeCheck, Copy, Link2, ExternalLink, Lock, Search, Share2, Eye, MousePointerClick } from "lucide-react";
+import { CategoryIcon } from "@/lib/category-icons";
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import { getFaviconUrl } from "@/lib/favicon";
@@ -144,7 +145,7 @@ interface LinkItem {
   id: string; title: string; description: string | null; url: string;
   favicon_url: string | null; clicks_count: number; display_order: number; is_visible: boolean;
 }
-interface CatRow { id: string; name: string; display_order: number; is_public: boolean; links: LinkItem[] }
+interface CatRow { id: string; name: string; display_order: number; is_public: boolean; icon: string | null; links: LinkItem[] }
 
 function PublicProfile() {
   const { username } = Route.useParams();
@@ -190,7 +191,7 @@ function PublicProfile() {
       // Anyone else only gets public + visible (RLS also enforces this).
       let q = supabase
         .from("user_categories")
-        .select("id,name,display_order,is_public,links(id,title,description,url,favicon_url,clicks_count,display_order,is_visible)")
+        .select("id,name,display_order,is_public,icon,links(id,title,description,url,favicon_url,clicks_count,display_order,is_visible)")
         .eq("user_id", profileQ.data!.id)
         .eq("is_visible", true)
         .order("display_order");
@@ -376,7 +377,7 @@ function PublicProfile() {
                     <div className="flex w-full items-center justify-between gap-3">
                       <span className="flex min-w-0 items-center gap-2.5">
                         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-accent text-brand">
-                          <Folder className="h-3.5 w-3.5" />
+                          <CategoryIcon name={cat.icon} className="h-3.5 w-3.5" />
                         </span>
                         <span className="truncate text-sm font-semibold text-foreground">
                           {cat.name}
