@@ -801,6 +801,30 @@ function SettingsTab({ logAction }: { logAction: (a: string, t?: string, id?: st
 
   const [ann, setAnn] = useState("");
 
+  const analyticsQ = useQuery({
+    queryKey: ["setting", "analytics"],
+    queryFn: async () => (await supabase.from("platform_settings").select("*").eq("key", "analytics").maybeSingle()).data as SettingRow | null,
+  });
+  const [gaId, setGaId] = useState("");
+  useEffect(() => {
+    const v = (analyticsQ.data?.value ?? {}) as { ga_measurement_id?: string };
+    setGaId(v.ga_measurement_id ?? "");
+  }, [analyticsQ.data]);
+  const saveAnalytics = async () => {
+    const id = gaId.trim();
+    if (id && !/^(G-[A-Z0-9]+|UA-\d+-\d+|GT-[A-Z0-9]+)$/i.test(id)) {
+      return toast.error("ID inválido. Use o formato G-XXXXXXX, GT-XXXXXXX ou UA-XXXXX-Y");
+    }
+    const { error } = await supabase
+      .from("platform_settings")
+      .upsert({ key: "analytics", value: { ga_measurement_id: id }, description: "Google Analytics" });
+    if (error) return toast.error(error.message);
+    toast.success("Google Analytics salvo");
+    await logAction("analytics.update", "setting", "analytics", { ga_measurement_id: id });
+    qc.invalidateQueries({ queryKey: ["setting", "analytics"] });
+    qc.invalidateQueries({ queryKey: ["platform_setting", "analytics"] });
+  };
+
   return (
     <div className="space-y-4">
       <Card className="p-6">
@@ -843,6 +867,28 @@ function SettingsTab({ logAction }: { logAction: (a: string, t?: string, id?: st
           toast.success("Anúncio salvo");
           await logAction("announcement.update", "setting", "announcement", { message: ann });
         }}>Salvar anúncio</Button>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="font-semibold">Google Analytics</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Cole o ID de medição do GA4 (formato <code>G-XXXXXXX</code>) ou Tag do Google (<code>GT-XXXXXXX</code>).
+          O script é carregado em todo o site assim que salvo.
+        </p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Input
+            value={gaId}
+            onChange={(e) => setGaId(e.target.value)}
+            placeholder="G-XXXXXXXXXX"
+            className="font-mono"
+          />
+          <Button onClick={saveAnalytics}>Salvar</Button>
+        </div>
+        {gaId && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Ativo: <span className="font-mono">{gaId}</span>. Aguarde alguns minutos para ver o tráfego no painel do Google Analytics.
+          </p>
+        )}
       </Card>
     </div>
   );

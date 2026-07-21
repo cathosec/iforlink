@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { LogoWordmark } from "@/components/logo";
 import { CookieConsent } from "@/components/cookie-consent";
 import { AdSlot } from "@/components/ad-slot";
+import { GoogleAnalytics } from "@/components/google-analytics";
 
 function NotFoundComponent() {
   return (
@@ -216,6 +217,7 @@ function RootComponent() {
       <AuthProvider>
         <Outlet />
         <AdSlot slot="mobile_sticky" label="Publicidade" />
+        <GoogleAnalytics />
         <CookieConsent />
         <Toaster position="top-center" richColors />
       </AuthProvider>
