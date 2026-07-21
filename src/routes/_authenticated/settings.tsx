@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Perfil · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
-const PUBLIC_ORIGIN = "https://forlink.app";
+
 
 async function fileToSquareBlob(file: File, size = 512): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
