@@ -8,6 +8,7 @@ import { template as adminNewSignupTemplate } from './admin-new-signup'
 import { template as adminNewSubscriberTemplate } from './admin-new-subscriber'
 import { template as subscriptionExpiringTemplate } from './subscription-expiring'
 import { template as subscriptionExpiredTemplate } from './subscription-expired'
+import { template as contactMessageTemplate } from './contact-message'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -30,4 +31,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'admin-new-subscriber': adminNewSubscriberTemplate,
   'subscription-expiring': subscriptionExpiringTemplate,
   'subscription-expired': subscriptionExpiredTemplate,
+  'contact-message': contactMessageTemplate,
 }
