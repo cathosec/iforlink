@@ -26,6 +26,9 @@ export const Route = createFileRoute("/")({
         { property: "og:description", content: description },
         { property: "og:url", content: url },
         { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "ForLink" },
+        { property: "og:locale", content: "pt_BR" },
+
         { property: "og:image", content: "https://forlink.app/brand/og-image.png" },
         { property: "og:image:width", content: "1200" },
         { property: "og:image:height", content: "630" },
