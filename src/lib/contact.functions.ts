@@ -33,11 +33,18 @@ export const sendContactMessage = createServerFn({ method: 'POST' })
         },
       })
       if (!result.sent) {
-        return { sent: false as const, reason: result.reason }
+        console.error('[sendContactMessage] not sent, reason:', result.reason)
+        const messages: Record<string, string> = {
+          no_api_key: 'Sistema de e-mails não configurado. Avise o administrador.',
+          disabled: 'O envio de e-mails está temporariamente desativado.',
+          recipient_suppressed: 'Não foi possível enviar sua mensagem (destinatário bloqueado).',
+        }
+        throw new Error(messages[result.reason] ?? 'Não foi possível enviar sua mensagem agora.')
       }
       return { sent: true as const }
     } catch (err) {
       console.error('[sendContactMessage] failed', err)
-      throw new Error('Falha ao enviar a mensagem. Tente novamente em instantes.')
+      const raw = err instanceof Error ? err.message : String(err)
+      throw new Error(raw || 'Falha ao enviar a mensagem. Tente novamente em instantes.')
     }
   })

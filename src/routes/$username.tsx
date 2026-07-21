@@ -190,6 +190,32 @@ function PublicProfile() {
     supabase.rpc("increment_profile_view", { _username: profileQ.data.username }).then(() => {});
   }, [profileQ.data, isOwner]);
 
+  // Analytics — profundidade de scroll (marcos 25/50/75/100%).
+  useEffect(() => {
+    if (!profileQ.data || isOwner) return;
+    const reached = new Set<number>();
+    const milestones = [25, 50, 75, 100];
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const total = Math.max(1, doc.scrollHeight - window.innerHeight);
+      const pct = Math.min(100, Math.round(((window.scrollY || doc.scrollTop) / total) * 100));
+      for (const m of milestones) {
+        if (pct >= m && !reached.has(m)) {
+          reached.add(m);
+          trackEvent("scroll_depth", {
+            percent: m,
+            profile_username: profileQ.data!.username,
+          });
+        }
+      }
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [profileQ.data, isOwner]);
+
+  const sectionsRef = useRef<HTMLDivElement | null>(null);
+
   const catsQ = useQuery({
     queryKey: ["cats", profileQ.data?.id, isOwner],
     enabled: !!profileQ.data?.id,
@@ -225,6 +251,34 @@ function PublicProfile() {
       return { isPro: roles.includes("pro") || roles.includes("admin") };
     },
   });
+
+  // Analytics — visualização de categorias/seções via IntersectionObserver.
+  useEffect(() => {
+    if (!profileQ.data || isOwner) return;
+    if (!sectionsRef.current || typeof IntersectionObserver === "undefined") return;
+    const seen = new Set<string>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const el = e.target as HTMLElement;
+          const catId = el.dataset.catId;
+          const catName = el.dataset.catName;
+          if (!catId || seen.has(catId)) continue;
+          seen.add(catId);
+          trackEvent("section_view", {
+            category_id: catId,
+            category_name: catName,
+            profile_username: profileQ.data!.username,
+          });
+        }
+      },
+      { threshold: 0.5 },
+    );
+    const nodes = sectionsRef.current.querySelectorAll<HTMLElement>("[data-cat-id]");
+    nodes.forEach((n) => io.observe(n));
+    return () => io.disconnect();
+  }, [profileQ.data, isOwner, catsQ.data]);
   const hideAds = roleQ.data?.isPro === true;
 
   if (profileQ.isLoading) {
@@ -369,7 +423,7 @@ function PublicProfile() {
         )}
 
         {/* Links */}
-        <div>
+        <div ref={sectionsRef}>
           {filteredCats.length === 0 ? (
             <div className="rounded-xl border border-dashed p-12 text-center">
               <Link2 className="mx-auto h-7 w-7 text-muted-foreground/60" />
@@ -383,6 +437,8 @@ function PublicProfile() {
                 <AccordionItem
                   key={cat.id}
                   value={cat.id}
+                  data-cat-id={cat.id}
+                  data-cat-name={cat.name}
                   className="overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
                 >
                   <AccordionTrigger className="px-4 py-3 text-left hover:no-underline">
