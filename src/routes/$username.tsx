@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
 import { LogoWordmark } from "@/components/logo";
+import { trackEvent } from "@/lib/analytics";
 
 interface HeadProfile {
   username: string;
