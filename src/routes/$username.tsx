@@ -423,7 +423,7 @@ function PublicProfile() {
         )}
 
         {/* Links */}
-        <div>
+        <div ref={sectionsRef}>
           {filteredCats.length === 0 ? (
             <div className="rounded-xl border border-dashed p-12 text-center">
               <Link2 className="mx-auto h-7 w-7 text-muted-foreground/60" />
@@ -437,6 +437,8 @@ function PublicProfile() {
                 <AccordionItem
                   key={cat.id}
                   value={cat.id}
+                  data-cat-id={cat.id}
+                  data-cat-name={cat.name}
                   className="overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
                 >
                   <AccordionTrigger className="px-4 py-3 text-left hover:no-underline">
