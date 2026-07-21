@@ -41,7 +41,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Painel · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
-interface Category { id: string; name: string; display_order: number; is_visible: boolean; is_public: boolean; }
+interface Category { id: string; name: string; display_order: number; is_visible: boolean; is_public: boolean; icon: string | null; }
 interface LinkRow {
   id: string; category_id: string; title: string; description: string | null;
   url: string; favicon_url: string | null; clicks_count: number; is_visible: boolean; display_order: number;

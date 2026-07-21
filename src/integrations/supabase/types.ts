@@ -310,6 +310,7 @@ export type Database = {
         Row: {
           created_at: string
           display_order: number
+          icon: string
           id: string
           is_public: boolean
           is_visible: boolean
@@ -320,6 +321,7 @@ export type Database = {
         Insert: {
           created_at?: string
           display_order?: number
+          icon?: string
           id?: string
           is_public?: boolean
           is_visible?: boolean
@@ -330,6 +332,7 @@ export type Database = {
         Update: {
           created_at?: string
           display_order?: number
+          icon?: string
           id?: string
           is_public?: boolean
           is_visible?: boolean
