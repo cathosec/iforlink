@@ -1,8 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { Card } from "@/components/ui/card";
-import { Mail, MessageCircle, LifeBuoy, Clock, MapPin, Building2, ShieldCheck } from "lucide-react";
+import { Mail, MessageCircle, LifeBuoy, Clock, MapPin, Building2, ShieldCheck, Send, Loader2, CheckCircle2 } from "lucide-react";
 import { AdSlot } from "@/components/ad-slot";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { sendContactMessage } from "@/lib/contact.functions";
 
 export const Route = createFileRoute("/contato")({
   component: Contato,
