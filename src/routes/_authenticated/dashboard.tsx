@@ -429,6 +429,11 @@ function SortableCategoryCard(props: SortableCategoryCardProps) {
                 <ChevronDown className="h-3.5 w-3.5" />
               </button>
             </div>
+            <CategoryIconPicker
+              value={cat.icon}
+              onChange={(k) => onSetCategoryIcon(cat.id, k)}
+              size="sm"
+            />
             <RenameableTitle name={cat.name} onSave={(n) => onRenameCategory(cat.id, n)} />
             {!cat.is_visible && <Badge variant="outline" className="text-[10px]"><EyeOff className="mr-1 h-3 w-3" /> Rascunho</Badge>}
             {cat.is_visible && !cat.is_public && <Badge variant="secondary" className="text-[10px]"><Lock className="mr-1 h-3 w-3" /> Privada</Badge>}
