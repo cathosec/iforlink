@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Perfil · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
-const PUBLIC_ORIGIN = "https://forlink.app";
+
 
 async function fileToSquareBlob(file: File, size = 512): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
@@ -76,9 +76,16 @@ function Settings() {
           cacheControl: "3600",
         });
       if (upErr) throw upErr;
-      const publicUrl = `${PUBLIC_ORIGIN}/api/public/avatar/${user.id}.jpg?v=${Date.now()}`;
+      const publicUrl = `/api/public/avatar/${user.id}.jpg?v=${Date.now()}`;
+      // Persiste imediatamente para não perder ao sair sem clicar em Salvar
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", user.id);
+      if (updErr) throw updErr;
       setAvatarUrl(publicUrl);
-      toast.success("Foto enviada — clique em Salvar.");
+      await refresh();
+      toast.success("Foto atualizada");
     } catch (err) {
       console.error(err);
       toast.error("Não foi possível enviar a imagem.");
