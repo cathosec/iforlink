@@ -217,6 +217,7 @@ function RootComponent() {
       <AuthProvider>
         <Outlet />
         <AdSlot slot="mobile_sticky" label="Publicidade" />
+        <GoogleAnalytics />
         <CookieConsent />
         <Toaster position="top-center" richColors />
       </AuthProvider>
