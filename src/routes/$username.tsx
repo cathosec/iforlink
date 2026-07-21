@@ -242,6 +242,11 @@ function PublicProfile() {
 
   const handleClick = async (linkId: string, url: string) => {
     supabase.rpc("increment_link_click", { _link_id: linkId }).then(() => {});
+    trackEvent("link_click", {
+      link_id: linkId,
+      link_url: url,
+      profile_username: p.username,
+    });
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
