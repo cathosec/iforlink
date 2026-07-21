@@ -190,7 +190,7 @@ function PublicProfile() {
       // Anyone else only gets public + visible (RLS also enforces this).
       let q = supabase
         .from("user_categories")
-        .select("id,name,display_order,is_public,links(id,title,description,url,favicon_url,clicks_count,display_order,is_visible)")
+        .select("id,name,display_order,is_public,icon,links(id,title,description,url,favicon_url,clicks_count,display_order,is_visible)")
         .eq("user_id", profileQ.data!.id)
         .eq("is_visible", true)
         .order("display_order");
