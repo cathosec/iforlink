@@ -439,14 +439,6 @@ function PublicProfile() {
             </Accordion>
           )}
 
-          {totalClicks > 0 && !query && (
-            <p className="mt-4 text-center text-[11px] text-muted-foreground">
-              <span className="font-medium tabular-nums text-foreground/80">
-                {totalClicks.toLocaleString("pt-BR")}
-              </span>{" "}
-              cliques totais nos links
-            </p>
-          )}
         </div>
 
         {!hideAds && <AdSlot slot="profile" label="Publicidade" />}
