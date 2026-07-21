@@ -223,7 +223,7 @@ function PublicProfile() {
   const p = profileQ.data!;
 
   const handleClick = async (linkId: string, url: string) => {
-    void supabase.rpc("increment_link_click", { _link_id: linkId });
+    supabase.rpc("increment_link_click", { _link_id: linkId }).then(() => {});
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
