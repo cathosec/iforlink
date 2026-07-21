@@ -13,6 +13,7 @@ export const Route = createFileRoute("/privacidade")({
           "Política de Privacidade da ForLink em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei 13.709/2018).",
       },
       { property: "og:title", content: "Política de Privacidade · ForLink" },
+      { property: "og:description", content: "Política de Privacidade da ForLink em conformidade com a LGPD. Saiba como tratamos seus dados e exercite seus direitos." },
       { property: "og:url", content: "https://forlink.app/privacidade" },
     ],
     links: [{ rel: "canonical", href: "https://forlink.app/privacidade" }],

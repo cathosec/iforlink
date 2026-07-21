@@ -9,7 +9,7 @@ export const Route = createFileRoute("/guias")({
   head: () => {
     const title = "Guias ForLink — Como usar bio link para crescer online";
     const description =
-      "Aprenda a organizar seus links, escolher a estrutura ideal do seu bio link, aumentar a taxa de cliques, personalizar o visual e usar métricas para crescer nas redes sociais. Guias práticos em português.";
+      "Aprenda a organizar seus links, aumentar a taxa de cliques, personalizar o visual e usar métricas para crescer nas redes sociais. Guias em português.";
     const url = "https://forlink.app/guias";
     return {
       meta: [

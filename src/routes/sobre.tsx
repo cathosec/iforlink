@@ -10,7 +10,7 @@ export const Route = createFileRoute("/sobre")({
   head: () => {
     const title = "Sobre a ForLink — Nossa história, missão e valores";
     const description =
-      "Conheça a ForLink: a plataforma brasileira de bio link e agregador de links criada para simplificar a presença digital de criadores, empresas e profissionais. Descubra nossa missão, história e o time por trás.";
+      "Conheça a ForLink: plataforma brasileira de bio link e agregador de links para criadores, empresas e profissionais. Missão, história e valores.";
     const url = "https://forlink.app/sobre";
     return {
       meta: [

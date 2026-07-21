@@ -9,7 +9,7 @@ export const Route = createFileRoute("/contato")({
   head: () => {
     const title = "Contato — Fale com a ForLink";
     const description =
-      "Canais oficiais de contato da ForLink: suporte por e-mail, dúvidas comerciais, parcerias e imprensa. Atendimento em português, com prioridade para assinantes do plano Pro.";
+      "Canais oficiais de contato da ForLink: suporte por e-mail, dúvidas comerciais, parcerias e imprensa. Atendimento em português, com prioridade Pro.";
     const url = "https://forlink.app/contato";
     return {
       meta: [
