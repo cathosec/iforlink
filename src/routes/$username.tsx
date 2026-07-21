@@ -377,7 +377,7 @@ function PublicProfile() {
                     <div className="flex w-full items-center justify-between gap-3">
                       <span className="flex min-w-0 items-center gap-2.5">
                         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-accent text-brand">
-                          <Folder className="h-3.5 w-3.5" />
+                          <CategoryIcon name={cat.icon} className="h-3.5 w-3.5" />
                         </span>
                         <span className="truncate text-sm font-semibold text-foreground">
                           {cat.name}
