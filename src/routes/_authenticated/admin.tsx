@@ -801,6 +801,30 @@ function SettingsTab({ logAction }: { logAction: (a: string, t?: string, id?: st
 
   const [ann, setAnn] = useState("");
 
+  const analyticsQ = useQuery({
+    queryKey: ["setting", "analytics"],
+    queryFn: async () => (await supabase.from("platform_settings").select("*").eq("key", "analytics").maybeSingle()).data as SettingRow | null,
+  });
+  const [gaId, setGaId] = useState("");
+  useEffect(() => {
+    const v = (analyticsQ.data?.value ?? {}) as { ga_measurement_id?: string };
+    setGaId(v.ga_measurement_id ?? "");
+  }, [analyticsQ.data]);
+  const saveAnalytics = async () => {
+    const id = gaId.trim();
+    if (id && !/^(G-[A-Z0-9]+|UA-\d+-\d+|GT-[A-Z0-9]+)$/i.test(id)) {
+      return toast.error("ID inválido. Use o formato G-XXXXXXX, GT-XXXXXXX ou UA-XXXXX-Y");
+    }
+    const { error } = await supabase
+      .from("platform_settings")
+      .upsert({ key: "analytics", value: { ga_measurement_id: id }, description: "Google Analytics" });
+    if (error) return toast.error(error.message);
+    toast.success("Google Analytics salvo");
+    await logAction("analytics.update", "setting", "analytics", { ga_measurement_id: id });
+    qc.invalidateQueries({ queryKey: ["setting", "analytics"] });
+    qc.invalidateQueries({ queryKey: ["platform_setting", "analytics"] });
+  };
+
   return (
     <div className="space-y-4">
       <Card className="p-6">
