@@ -31,4 +31,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'admin-new-subscriber': adminNewSubscriberTemplate,
   'subscription-expiring': subscriptionExpiringTemplate,
   'subscription-expired': subscriptionExpiredTemplate,
+  'contact-message': contactMessageTemplate,
 }
