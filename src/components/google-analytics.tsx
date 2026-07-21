@@ -41,10 +41,10 @@ export function GoogleAnalytics() {
   useEffect(() => {
     if (!id) return;
     // Initial page view
-    trackPageView(router.state.location.pathname + router.state.location.search);
+    trackPageView(router.state.location.href);
 
     const unsub = router.subscribe("onResolved", ({ toLocation }) => {
-      trackPageView(toLocation.pathname + toLocation.search);
+      trackPageView(toLocation.href);
     });
     return unsub;
   }, [id, router]);
