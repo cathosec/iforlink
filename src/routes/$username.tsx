@@ -281,72 +281,53 @@ function PublicProfile() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
-      {/* Cabeçalho editorial */}
-      <div className="relative overflow-hidden border-b bg-gradient-to-b from-accent/30 via-background to-background">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(55%_55%_at_50%_0%,color-mix(in_oklab,var(--brand)_10%,transparent),transparent_70%)]"
-        />
-        <div className="relative mx-auto max-w-2xl px-4 pb-6 pt-10 sm:pt-14">
-          <header className="flex flex-col items-center text-center">
-            <div className="relative">
-              <div
-                aria-hidden
-                className="absolute -inset-1 rounded-full bg-gradient-to-br from-brand/30 via-brand/10 to-transparent blur-md"
-              />
-              <Avatar className="relative h-24 w-24 shrink-0 border-[3px] border-background shadow-xl ring-1 ring-border/60">
-                <AvatarImage src={p.avatar_url ?? undefined} alt={p.display_name} />
-                <AvatarFallback className="text-2xl font-semibold">
-                  {p.display_name.slice(0, 1)}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+      {/* Cabeçalho compacto */}
+      <div className="border-b bg-gradient-to-b from-accent/20 to-background">
+        <div className="mx-auto max-w-2xl px-4 py-4">
+          <header className="flex items-center gap-3">
+            <Avatar className="h-14 w-14 shrink-0 border-2 border-background shadow-sm ring-1 ring-border/60">
+              <AvatarImage src={p.avatar_url ?? undefined} alt={p.display_name} />
+              <AvatarFallback className="text-base font-semibold">
+                {p.display_name.slice(0, 1)}
+              </AvatarFallback>
+            </Avatar>
 
-            <div className="mt-5 flex items-center justify-center gap-1.5">
-              <h1 className="font-display text-[26px] font-semibold tracking-tight sm:text-[28px]">
-                {p.display_name}
-              </h1>
-              {p.is_verified && (
-                <BadgeCheck className="h-5 w-5 shrink-0 text-brand" aria-label="Verificado" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <h1 className="truncate font-display text-base font-semibold tracking-tight sm:text-lg">
+                  {p.display_name}
+                </h1>
+                {p.is_verified && (
+                  <BadgeCheck className="h-4 w-4 shrink-0 text-brand" aria-label="Verificado" />
+                )}
+              </div>
+              <p className="truncate text-xs text-muted-foreground">@{p.username}</p>
+              {p.bio && (
+                <p className="mt-1 line-clamp-2 text-xs leading-snug text-foreground/70">
+                  {p.bio}
+                </p>
               )}
+              <dl className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
+                <span className="tabular-nums"><b className="font-semibold text-foreground">{totalLinks}</b> links</span>
+                <span aria-hidden>·</span>
+                <span className="tabular-nums"><b className="font-semibold text-foreground">{cats.length}</b> cat.</span>
+                <span aria-hidden>·</span>
+                <span className="tabular-nums"><b className="font-semibold text-foreground">{p.views_count.toLocaleString("pt-BR")}</b> views</span>
+              </dl>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">@{p.username}</p>
 
-            {p.bio && (
-              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-foreground/80">
-                {p.bio}
-              </p>
-            )}
-
-            {/* Estatísticas inline elegantes */}
-            <dl className="mt-6 flex items-center justify-center divide-x divide-border/70 rounded-full border bg-card/60 px-1 py-1 shadow-sm backdrop-blur">
-              <div className="flex items-baseline gap-1.5 px-4 py-1">
-                <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Links</dt>
-                <dd className="font-display text-sm font-semibold tabular-nums">{totalLinks}</dd>
-              </div>
-              <div className="flex items-baseline gap-1.5 px-4 py-1">
-                <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Categorias</dt>
-                <dd className="font-display text-sm font-semibold tabular-nums">{cats.length}</dd>
-              </div>
-              <div className="flex items-baseline gap-1.5 px-4 py-1">
-                <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Views</dt>
-                <dd className="font-display text-sm font-semibold tabular-nums">
-                  {p.views_count.toLocaleString("pt-BR")}
-                </dd>
-              </div>
-            </dl>
-
-            <div className="mt-5 flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={copyProfile} className="h-9 rounded-full px-4">
-                <Copy className="mr-2 h-3.5 w-3.5" /> Copiar link
+            <div className="flex shrink-0 flex-col gap-1.5">
+              <Button variant="outline" size="sm" onClick={copyProfile} className="h-8 rounded-full px-3" aria-label="Copiar link">
+                <Copy className="h-3.5 w-3.5" />
               </Button>
-              <Button size="sm" onClick={shareProfile} className="h-9 rounded-full px-4 shadow-sm">
-                <Share2 className="mr-2 h-3.5 w-3.5" /> Compartilhar
+              <Button size="sm" onClick={shareProfile} className="h-8 rounded-full px-3 shadow-sm" aria-label="Compartilhar">
+                <Share2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           </header>
         </div>
       </div>
+
 
       <main className="mx-auto max-w-2xl px-4 pb-20 pt-8">
         {/* Busca (só aparece com volume) */}
