@@ -868,6 +868,28 @@ function SettingsTab({ logAction }: { logAction: (a: string, t?: string, id?: st
           await logAction("announcement.update", "setting", "announcement", { message: ann });
         }}>Salvar anúncio</Button>
       </Card>
+
+      <Card className="p-6">
+        <h3 className="font-semibold">Google Analytics</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Cole o ID de medição do GA4 (formato <code>G-XXXXXXX</code>) ou Tag do Google (<code>GT-XXXXXXX</code>).
+          O script é carregado em todo o site assim que salvo.
+        </p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Input
+            value={gaId}
+            onChange={(e) => setGaId(e.target.value)}
+            placeholder="G-XXXXXXXXXX"
+            className="font-mono"
+          />
+          <Button onClick={saveAnalytics}>Salvar</Button>
+        </div>
+        {gaId && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Ativo: <span className="font-mono">{gaId}</span>. Aguarde alguns minutos para ver o tráfego no painel do Google Analytics.
+          </p>
+        )}
+      </Card>
     </div>
   );
 }
