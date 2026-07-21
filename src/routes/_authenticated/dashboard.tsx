@@ -567,11 +567,12 @@ function RenameableTitle({ name, onSave }: { name: string; onSave: (n: string) =
   );
 }
 
-function NewCategoryDialog({ onCreate, disabled }: { onCreate: (n: string) => Promise<boolean>; disabled?: boolean }) {
+function NewCategoryDialog({ onCreate, disabled }: { onCreate: (n: string, icon: string) => Promise<boolean>; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [icon, setIcon] = useState<string>(DEFAULT_CATEGORY_ICON);
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setName(""); setIcon(DEFAULT_CATEGORY_ICON); } }}>
       <DialogTrigger asChild>
         <Button disabled={disabled} className="bg-brand text-brand-foreground hover:bg-brand/90">
           <Plus className="mr-1.5 h-4 w-4" /> Nova categoria
@@ -579,17 +580,26 @@ function NewCategoryDialog({ onCreate, disabled }: { onCreate: (n: string) => Pr
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Nova categoria</DialogTitle></DialogHeader>
-        <div>
-          <Label>Nome</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Redes sociais" className="mt-1.5" />
+        <div className="space-y-3">
+          <div>
+            <Label>Ícone</Label>
+            <div className="mt-1.5 flex items-center gap-2">
+              <CategoryIconPicker value={icon} onChange={setIcon} />
+              <span className="text-xs text-muted-foreground">Toque para escolher um ícone profissional.</span>
+            </div>
+          </div>
+          <div>
+            <Label>Nome</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Redes sociais" className="mt-1.5" />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
           <Button
             onClick={async () => {
               if (!name.trim()) return;
-              const ok = await onCreate(name.trim());
-              if (ok) { setName(""); setOpen(false); }
+              const ok = await onCreate(name.trim(), icon);
+              if (ok) { setName(""); setIcon(DEFAULT_CATEGORY_ICON); setOpen(false); }
             }}
             className="bg-brand text-brand-foreground hover:bg-brand/90"
           >
