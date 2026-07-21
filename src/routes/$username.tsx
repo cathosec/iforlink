@@ -168,7 +168,7 @@ function PublicProfile() {
       if (last) return;
       sessionStorage.setItem(key, "1");
     } catch { /* storage indisponível — segue registrando */ }
-    void supabase.rpc("increment_profile_view", { _username: profileQ.data.username });
+    supabase.rpc("increment_profile_view", { _username: profileQ.data.username }).then(() => {});
   }, [profileQ.data, isOwner]);
 
   const catsQ = useQuery({
