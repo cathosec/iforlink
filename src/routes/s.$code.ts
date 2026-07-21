@@ -37,8 +37,8 @@ export const Route = createFileRoute("/s/$code")({
         }
 
 
-        // Contador (fire-and-forget)
-        void supabase.rpc("increment_short_click", { _code: params.code });
+        // Contador (aguarda para garantir gravação antes do redirect)
+        await supabase.rpc("increment_short_click", { _code: params.code });
 
         return new Response(null, {
           status: 301,
