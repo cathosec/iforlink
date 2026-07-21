@@ -144,7 +144,7 @@ interface LinkItem {
   id: string; title: string; description: string | null; url: string;
   favicon_url: string | null; clicks_count: number; display_order: number; is_visible: boolean;
 }
-interface CatRow { id: string; name: string; display_order: number; is_public: boolean; links: LinkItem[] }
+interface CatRow { id: string; name: string; display_order: number; is_public: boolean; icon: string | null; links: LinkItem[] }
 
 function PublicProfile() {
   const { username } = Route.useParams();
