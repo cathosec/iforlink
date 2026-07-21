@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { sendContactMessage } from "@/lib/contact.functions";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/contato")({
   component: Contato,
@@ -51,6 +52,7 @@ function Contato() {
     try {
       await send({ data: form });
       setSent(true);
+      trackEvent("contact_form_submit", { subject: form.subject });
       setForm({ name: "", email: "", subject: "", message: "", website: "" });
       toast.success("Mensagem enviada! Responderemos em breve.");
     } catch (err) {
