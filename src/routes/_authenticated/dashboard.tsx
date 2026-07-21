@@ -35,6 +35,8 @@ import {
   SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { CategoryIconPicker } from "@/components/category-icon-picker";
+import { CategoryIcon, DEFAULT_CATEGORY_ICON } from "@/lib/category-icons";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
