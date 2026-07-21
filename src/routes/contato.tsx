@@ -36,6 +36,30 @@ export const Route = createFileRoute("/contato")({
 });
 
 function Contato() {
+  const send = useServerFn(sendContactMessage);
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "", website: "" });
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+    try {
+      await send({ data: form });
+      setSent(true);
+      setForm({ name: "", email: "", subject: "", message: "", website: "" });
+      toast.success("Mensagem enviada! Responderemos em breve.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Falha ao enviar. Tente novamente.";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
