@@ -65,32 +65,43 @@ export const Route = createFileRoute("/$username")({
       ? p.bio.trim()
       : `Confira os links favoritos de ${p.display_name} no ForLink.`
     ).slice(0, 300);
-    // og:image must be an absolute http(s) URL. Legacy avatars were stored as
-    // data: URLs; crawlers can't fetch those, so we fall back to the brand mark.
-    const rawAvatar = p.avatar_url ?? "";
-    const isAbsoluteHttp = /^https?:\/\//i.test(rawAvatar);
-    const image = isAbsoluteHttp
-      ? rawAvatar
-      : "https://forlink.app/brand/mark-color.svg";
+    // og:image must be an absolute http(s) URL. Avatars podem estar como:
+    //  - URL absoluta http(s) → usar direto
+    //  - caminho relativo (/api/public/avatar/...) → prefixar com o domínio
+    //  - data: URL (legado) ou vazio → fallback para a marca
+    const rawAvatar = (p.avatar_url ?? "").trim();
+    let image = "https://forlink.app/brand/og-image.png";
+    if (/^https?:\/\//i.test(rawAvatar)) {
+      image = rawAvatar;
+    } else if (rawAvatar.startsWith("/")) {
+      image = `https://forlink.app${rawAvatar}`;
+    }
+    const isSquareAvatar = image !== "https://forlink.app/brand/og-image.png";
     const imageAlt = `Foto de perfil de ${p.display_name}`;
     return {
       meta: [
         { title },
         { name: "description", content: description },
         { property: "og:type", content: "profile" },
+        { property: "og:site_name", content: "ForLink" },
+        { property: "og:locale", content: "pt_BR" },
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:url", content: url },
         { property: "og:image", content: image },
+        { property: "og:image:secure_url", content: image },
         { property: "og:image:alt", content: imageAlt },
-        { property: "og:image:width", content: "512" },
-        { property: "og:image:height", content: "512" },
+        { property: "og:image:type", content: image.endsWith(".svg") ? "image/svg+xml" : "image/jpeg" },
+        { property: "og:image:width", content: isSquareAvatar ? "512" : "1200" },
+        { property: "og:image:height", content: isSquareAvatar ? "512" : "630" },
         { property: "profile:username", content: p.username },
+        { name: "twitter:card", content: isSquareAvatar ? "summary" : "summary_large_image" },
         { name: "twitter:title", content: title },
         { name: "twitter:description", content: description },
         { name: "twitter:image", content: image },
         { name: "twitter:image:alt", content: imageAlt },
       ],
+
       links: [{ rel: "canonical", href: url }],
       scripts: [
         {
