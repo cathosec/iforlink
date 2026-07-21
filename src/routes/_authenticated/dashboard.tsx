@@ -105,13 +105,13 @@ function Dashboard() {
     qc.invalidateQueries({ queryKey: ["dash-links", user?.id] });
   };
 
-  const addCategory = async (name: string) => {
+  const addCategory = async (name: string, icon: string) => {
     if (isFree && cats.length >= FREE_MAX_CATS) {
       toast.error(`Plano Free permite ${FREE_MAX_CATS} categorias.`);
       return false;
     }
     const { error } = await supabase.from("user_categories").insert({
-      user_id: user!.id, name, display_order: cats.length,
+      user_id: user!.id, name, icon, display_order: cats.length,
     });
     if (error) { toast.error(error.message); return false; }
     toast.success("Categoria criada");
@@ -121,6 +121,11 @@ function Dashboard() {
 
   const renameCategory = async (id: string, name: string) => {
     const { error } = await supabase.from("user_categories").update({ name }).eq("id", id);
+    if (error) return toast.error(error.message);
+    refresh();
+  };
+  const setCategoryIcon = async (id: string, icon: string) => {
+    const { error } = await supabase.from("user_categories").update({ icon }).eq("id", id);
     if (error) return toast.error(error.message);
     refresh();
   };
