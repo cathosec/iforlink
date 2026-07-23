@@ -250,6 +250,79 @@ function Settings() {
             </Button>
           </form>
         </Card>
+
+        <Card className="mt-8 p-6">
+          <h2 className="text-lg font-semibold tracking-tight">Privacidade e dados (LGPD)</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Você é titular dos seus dados. Exercite seus direitos previstos no art. 18 da Lei 13.709/2018.
+            Consulte a <Link to="/privacidade" className="text-brand hover:underline">Política de Privacidade</Link> para
+            detalhes sobre finalidades, bases legais, retenção e compartilhamento.
+          </p>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <Button type="button" variant="outline" onClick={exportData} disabled={exporting}>
+              <Download className="mr-2 h-4 w-4" />
+              {exporting ? "Preparando…" : "Baixar meus dados (JSON)"}
+            </Button>
+            <Button type="button" variant="outline" asChild>
+              <a href="mailto:contato@forlink.app?subject=Solicitação%20LGPD">Falar com o encarregado (DPO)</a>
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="mt-8 border-destructive/40 p-6">
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="mt-0.5 h-5 w-5 text-destructive" />
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold tracking-tight text-destructive">Excluir minha conta</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Ao excluir sua conta, apagamos permanentemente: perfil público, avatar, links,
+                categorias, encurtadores, papel de acesso, assinaturas e histórico de PIX associado a você.
+                Esta ação é <strong>irreversível</strong> e concluída imediatamente. Registros mínimos
+                exigidos por obrigação legal (fiscal/financeira) podem ser retidos pelo prazo legal, de
+                forma segregada e sem uso comercial.
+              </p>
+              <ul className="mt-3 list-disc pl-5 text-xs text-muted-foreground">
+                <li>Sua URL <code>forlink.app/{username || "seu-usuario"}</code> ficará disponível para outros usuários.</li>
+                <li>Assinaturas Pro em curso serão canceladas — reembolsos seguem o CDC (art. 49) quando aplicável.</li>
+                <li>Você receberá confirmação por e-mail caso as notificações estejam ativas.</li>
+              </ul>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" className="mt-4">
+                    <Trash2 className="mr-2 h-4 w-4" /> Excluir conta permanentemente
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar exclusão de conta</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação apagará todos os seus dados pessoais e conteúdos publicados na ForLink e
+                      não poderá ser desfeita. Para confirmar, digite <strong>EXCLUIR</strong> abaixo.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <Input
+                    value={deleteConfirm}
+                    onChange={(e) => setDeleteConfirm(e.target.value)}
+                    placeholder="EXCLUIR"
+                    autoComplete="off"
+                  />
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setDeleteConfirm("")}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={onDelete}
+                      disabled={deleting || deleteConfirm !== "EXCLUIR"}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {deleting ? "Excluindo…" : "Excluir agora"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        </Card>
       </main>
     </div>
   );
