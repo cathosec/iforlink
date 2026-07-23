@@ -139,6 +139,65 @@ function Settings() {
     await refresh();
   };
 
+  const exportData = async () => {
+    if (!user) return;
+    setExporting(true);
+    try {
+      const [profileRes, linksRes, catsRes, rolesRes, subsRes, pixRes, shortRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+        supabase.from("links").select("*").eq("user_id", user.id),
+        supabase.from("user_categories").select("*").eq("user_id", user.id),
+        supabase.from("user_roles").select("*").eq("user_id", user.id),
+        supabase.from("subscriptions").select("*").eq("user_id", user.id),
+        supabase.from("pix_payments").select("*").eq("user_id", user.id),
+        supabase.from("short_links").select("*").eq("user_id", user.id),
+      ]);
+      const bundle = {
+        exported_at: new Date().toISOString(),
+        account: { id: user.id, email: user.email },
+        profile: profileRes.data,
+        roles: rolesRes.data,
+        categories: catsRes.data,
+        links: linksRes.data,
+        subscriptions: subsRes.data,
+        pix_payments: pixRes.data,
+        short_links: shortRes.data,
+      };
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `forlink-meus-dados-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Portabilidade gerada");
+    } catch (err) {
+      console.error(err);
+      toast.error("Não foi possível gerar seus dados.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const onDelete = async () => {
+    if (deleteConfirm !== "EXCLUIR") {
+      toast.error('Digite EXCLUIR para confirmar.');
+      return;
+    }
+    setDeleting(true);
+    try {
+      await runDelete({ data: { confirm: "EXCLUIR" } });
+      toast.success("Conta excluída. Até logo.");
+      await signOut();
+      navigate({ to: "/" });
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Falha ao excluir conta.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const initials = (displayName || username || "U").slice(0, 2).toUpperCase();
 
   return (
