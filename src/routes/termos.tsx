@@ -121,8 +121,17 @@ function TermsPage() {
           <p>
             Podemos suspender ou encerrar contas que violem estes Termos, sem
             aviso prévio, especialmente em casos de risco à segurança da
-            plataforma ou de terceiros. Você pode encerrar sua conta a
-            qualquer momento pelas configurações.
+            plataforma ou de terceiros.
+          </p>
+          <p>
+            Você pode encerrar sua conta a qualquer momento em{" "}
+            <Link to="/settings" className="underline">Meu perfil → Excluir minha conta</Link>.
+            A exclusão é imediata e apaga perfil, avatar, links, categorias,
+            encurtadores, papel de acesso e sessões. Registros exigidos por
+            obrigação legal (fiscal/financeira) podem ser retidos pelo prazo
+            legal aplicável, de forma segregada. Consulte a{" "}
+            <Link to="/privacidade" className="underline">Política de Privacidade</Link>{" "}
+            para detalhes.
           </p>
 
           <h2>8. Isenção de responsabilidade</h2>
