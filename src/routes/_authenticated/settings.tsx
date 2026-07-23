@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -9,8 +9,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Upload, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Upload, Trash2, ShieldAlert, Download } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteMyAccount } from "@/lib/account.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: Settings,
@@ -39,14 +52,19 @@ async function fileToSquareBlob(file: File, size = 512): Promise<Blob> {
 }
 
 function Settings() {
-  const { user, profile, refresh } = useAuth();
+  const { user, profile, refresh, signOut } = useAuth();
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const runDelete = useServerFn(deleteMyAccount);
 
   useEffect(() => {
     if (profile) {
@@ -121,6 +139,65 @@ function Settings() {
     await refresh();
   };
 
+  const exportData = async () => {
+    if (!user) return;
+    setExporting(true);
+    try {
+      const [profileRes, linksRes, catsRes, rolesRes, subsRes, pixRes, shortRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+        supabase.from("links").select("*").eq("user_id", user.id),
+        supabase.from("user_categories").select("*").eq("user_id", user.id),
+        supabase.from("user_roles").select("*").eq("user_id", user.id),
+        supabase.from("subscriptions").select("*").eq("user_id", user.id),
+        supabase.from("pix_payments").select("*").eq("user_id", user.id),
+        supabase.from("short_links").select("*").eq("user_id", user.id),
+      ]);
+      const bundle = {
+        exported_at: new Date().toISOString(),
+        account: { id: user.id, email: user.email },
+        profile: profileRes.data,
+        roles: rolesRes.data,
+        categories: catsRes.data,
+        links: linksRes.data,
+        subscriptions: subsRes.data,
+        pix_payments: pixRes.data,
+        short_links: shortRes.data,
+      };
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `forlink-meus-dados-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Portabilidade gerada");
+    } catch (err) {
+      console.error(err);
+      toast.error("Não foi possível gerar seus dados.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const onDelete = async () => {
+    if (deleteConfirm !== "EXCLUIR") {
+      toast.error('Digite EXCLUIR para confirmar.');
+      return;
+    }
+    setDeleting(true);
+    try {
+      await runDelete({ data: { confirm: "EXCLUIR" } });
+      toast.success("Conta excluída. Até logo.");
+      await signOut();
+      navigate({ to: "/" });
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Falha ao excluir conta.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const initials = (displayName || username || "U").slice(0, 2).toUpperCase();
 
   return (
@@ -172,6 +249,79 @@ function Settings() {
               {saving ? "Salvando…" : "Salvar alterações"}
             </Button>
           </form>
+        </Card>
+
+        <Card className="mt-8 p-6">
+          <h2 className="text-lg font-semibold tracking-tight">Privacidade e dados (LGPD)</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Você é titular dos seus dados. Exercite seus direitos previstos no art. 18 da Lei 13.709/2018.
+            Consulte a <Link to="/privacidade" className="text-brand hover:underline">Política de Privacidade</Link> para
+            detalhes sobre finalidades, bases legais, retenção e compartilhamento.
+          </p>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <Button type="button" variant="outline" onClick={exportData} disabled={exporting}>
+              <Download className="mr-2 h-4 w-4" />
+              {exporting ? "Preparando…" : "Baixar meus dados (JSON)"}
+            </Button>
+            <Button type="button" variant="outline" asChild>
+              <a href="mailto:contato@forlink.app?subject=Solicitação%20LGPD">Falar com o encarregado (DPO)</a>
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="mt-8 border-destructive/40 p-6">
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="mt-0.5 h-5 w-5 text-destructive" />
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold tracking-tight text-destructive">Excluir minha conta</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Ao excluir sua conta, apagamos permanentemente: perfil público, avatar, links,
+                categorias, encurtadores, papel de acesso, assinaturas e histórico de PIX associado a você.
+                Esta ação é <strong>irreversível</strong> e concluída imediatamente. Registros mínimos
+                exigidos por obrigação legal (fiscal/financeira) podem ser retidos pelo prazo legal, de
+                forma segregada e sem uso comercial.
+              </p>
+              <ul className="mt-3 list-disc pl-5 text-xs text-muted-foreground">
+                <li>Sua URL <code>forlink.app/{username || "seu-usuario"}</code> ficará disponível para outros usuários.</li>
+                <li>Assinaturas Pro em curso serão canceladas — reembolsos seguem o CDC (art. 49) quando aplicável.</li>
+                <li>Você receberá confirmação por e-mail caso as notificações estejam ativas.</li>
+              </ul>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" className="mt-4">
+                    <Trash2 className="mr-2 h-4 w-4" /> Excluir conta permanentemente
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar exclusão de conta</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação apagará todos os seus dados pessoais e conteúdos publicados na ForLink e
+                      não poderá ser desfeita. Para confirmar, digite <strong>EXCLUIR</strong> abaixo.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <Input
+                    value={deleteConfirm}
+                    onChange={(e) => setDeleteConfirm(e.target.value)}
+                    placeholder="EXCLUIR"
+                    autoComplete="off"
+                  />
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setDeleteConfirm("")}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={onDelete}
+                      disabled={deleting || deleteConfirm !== "EXCLUIR"}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {deleting ? "Excluindo…" : "Excluir agora"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
         </Card>
       </main>
     </div>

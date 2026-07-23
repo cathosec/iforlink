@@ -57,45 +57,71 @@ function PrivacyPage() {
           <ul>
             <li>
               <strong>Dados de cadastro:</strong> e-mail, nome de exibição,
-              nome de usuário (slug), avatar opcional.
+              nome de usuário (slug) e senha (armazenada de forma criptografada
+              — nunca temos acesso ao texto puro).
             </li>
             <li>
-              <strong>Conteúdo criado por você:</strong> links, categorias,
-              biografia e demais informações que você publica em seu perfil.
+              <strong>Conteúdo criado por você:</strong> avatar, biografia,
+              categorias, links, textos e URLs encurtadas publicadas no seu perfil.
             </li>
             <li>
-              <strong>Dados de uso:</strong> contagem de visualizações e
-              cliques em links, para fins estatísticos agregados.
+              <strong>Dados de uso agregados:</strong> contagem de visualizações
+              do perfil e cliques em links, para métricas próprias e do titular.
             </li>
             <li>
-              <strong>Dados técnicos:</strong> endereço IP, tipo de
-              dispositivo, navegador e cookies estritamente necessários.
+              <strong>Dados técnicos mínimos:</strong> endereço IP (para
+              segurança e prevenção a abusos), tipo de dispositivo, navegador,
+              idioma, e cookies estritamente necessários para autenticação.
             </li>
             <li>
-              <strong>Dados de pagamento (planos Pro):</strong> os dados de
-              pagamento via PIX são processados pelo Mercado Pago; recebemos
-              apenas confirmação e identificador da transação.
+              <strong>Dados de pagamento (Plano Pro):</strong> o pagamento é
+              processado pelo <strong>Mercado Pago</strong>. Recebemos apenas:
+              identificador da transação, status, método (PIX), valor,
+              intervalo e data de confirmação. Nunca recebemos dados bancários
+              ou de cartão.
+            </li>
+            <li>
+              <strong>Comunicações:</strong> mensagens enviadas por{" "}
+              <Link to="/contato" className="underline">Contato</Link> (nome,
+              e-mail, assunto e conteúdo), tratadas apenas para responder à
+              sua solicitação.
             </li>
           </ul>
+          <p>
+            <strong>Não coletamos:</strong> dados sensíveis (art. 5º, II, LGPD),
+            geolocalização precisa, contatos do dispositivo ou histórico de
+            navegação fora da ForLink.
+          </p>
 
-          <h2>3. Bases legais e finalidades</h2>
+          <h2>3. Finalidades e bases legais (arts. 7º e 11 LGPD)</h2>
           <ul>
             <li>
-              <strong>Execução de contrato</strong> — criar e manter sua conta,
-              hospedar seu perfil público, processar assinaturas.
+              <strong>Execução de contrato (art. 7º, V):</strong> criar e manter
+              sua conta, hospedar seu perfil público, processar assinaturas,
+              enviar comunicações operacionais (confirmação de e-mail,
+              redefinição de senha, ativação Pro, aviso de vencimento).
             </li>
             <li>
-              <strong>Legítimo interesse</strong> — prevenir fraudes, garantir
-              a segurança e melhorar a plataforma.
+              <strong>Legítimo interesse (art. 7º, IX):</strong> prevenir
+              fraudes, spam e abusos; auditoria de segurança; melhoria contínua
+              da plataforma com métricas agregadas. Aplicamos teste de
+              proporcionalidade e minimização.
             </li>
             <li>
-              <strong>Consentimento</strong> — cookies de análise e
-              publicidade, que dependem da sua autorização explícita no
-              banner de cookies.
+              <strong>Consentimento (art. 7º, I):</strong> cookies de análise
+              e publicidade, exclusivamente após aceite no banner. Você pode
+              revogar a qualquer momento reabrindo o banner ou apagando o
+              cookie <code>forlink_consent_v1</code>.
             </li>
             <li>
-              <strong>Obrigação legal</strong> — cumprimento de determinações
-              fiscais, regulatórias ou judiciais.
+              <strong>Cumprimento de obrigação legal (art. 7º, II):</strong>
+              guarda de registros fiscais de pagamentos, atendimento a
+              determinações judiciais, requisições da ANPD e do Ministério
+              Público.
+            </li>
+            <li>
+              <strong>Exercício regular de direitos (art. 7º, VI):</strong>
+              defesa em processos administrativos, arbitrais e judiciais.
             </li>
           </ul>
 
@@ -121,43 +147,110 @@ function PrivacyPage() {
             revisitando o banner de consentimento.
           </p>
 
-          <h2>5. Compartilhamento de dados</h2>
+          <h2>5. Compartilhamento com operadores</h2>
           <p>
-            Não vendemos seus dados. Compartilhamos apenas com operadores
-            necessários à prestação do serviço:
+            Não vendemos, alugamos ou cedemos seus dados. Compartilhamos apenas
+            com operadores essenciais à prestação do serviço, vinculados por
+            contrato a padrões equivalentes de proteção:
           </p>
           <ul>
-            <li>Provedor de hospedagem e infraestrutura em nuvem.</li>
-            <li>Supabase (banco de dados e autenticação).</li>
-            <li>Mercado Pago (processamento de pagamentos PIX).</li>
             <li>
-              Redes de anúncios contratadas (somente após seu consentimento
-              para cookies de publicidade).
+              <strong>Cloudflare Inc.</strong> — hospedagem edge/CDN, DNS,
+              proteção contra DDoS. Dados técnicos e conteúdo do site.
+            </li>
+            <li>
+              <strong>Supabase, Inc.</strong> — banco de dados PostgreSQL,
+              autenticação e armazenamento de avatares. Todos os dados de
+              cadastro e conteúdo.
+            </li>
+            <li>
+              <strong>Mercado Pago (Ebazar.com.br Ltda.)</strong> —
+              processamento de PIX para assinaturas Pro. Nome, e-mail, valor.
+            </li>
+            <li>
+              <strong>Resend, Inc.</strong> — envio de e-mails transacionais
+              (confirmação, recuperação de senha, avisos de assinatura,
+              respostas de contato). E-mail e conteúdo da mensagem.
+            </li>
+            <li>
+              <strong>Google LLC — Analytics/AdSense</strong> — apenas se você
+              consentir com cookies de análise/publicidade. Dados anonimizados
+              de uso.
             </li>
           </ul>
-
-          <h2>6. Retenção</h2>
           <p>
-            Mantemos seus dados enquanto sua conta estiver ativa. Ao excluir
-            sua conta, os dados de perfil e links são apagados em até 30 dias.
-            Registros mínimos necessários para cumprimento de obrigações
-            legais (financeiras/fiscais) podem ser retidos pelos prazos
-            exigidos por lei.
+            Compartilhamentos com autoridades ocorrem somente mediante
+            requisição legal formal (ordem judicial, ofício da ANPD, MP ou
+            autoridade fiscal competente).
+          </p>
+
+          <h2>6. Retenção e eliminação</h2>
+          <p>
+            Mantemos seus dados pessoais enquanto sua conta estiver ativa e pelo tempo
+            necessário para cumprir as finalidades desta Política. Você pode solicitar a
+            exclusão a qualquer momento por dois caminhos:
+          </p>
+          <ul>
+            <li>
+              <strong>Autoatendimento (recomendado):</strong> acesse{" "}
+              <Link to="/settings" className="underline">Meu perfil → Excluir minha conta</Link>{" "}
+              e confirme a operação. A exclusão é <strong>imediata e irreversível</strong>.
+            </li>
+            <li>
+              <strong>Solicitação por e-mail:</strong> escreva para{" "}
+              <a href="mailto:contato@forlink.app">contato@forlink.app</a>. Respondemos em
+              até 15 dias corridos.
+            </li>
+          </ul>
+          <p>
+            O que é eliminado: perfil público, avatar, biografia, categorias, links,
+            encurtadores, papéis de acesso, sessões e credenciais. Registros mínimos
+            exigidos por obrigação legal (art. 16 da LGPD) — como comprovantes fiscais
+            de pagamentos — podem ser retidos de forma segregada e apenas pelo prazo
+            legal aplicável (até 5 anos, art. 174 do CTN), sem uso comercial.
           </p>
 
           <h2>7. Direitos do titular (art. 18 LGPD)</h2>
+          <p>Você pode, a qualquer momento, e sem custo:</p>
           <ul>
-            <li>Confirmar a existência de tratamento e acessar seus dados;</li>
+            <li>Confirmar a existência de tratamento;</li>
+            <li>Acessar seus dados (portabilidade em JSON disponível em Meu perfil);</li>
             <li>Corrigir dados incompletos, inexatos ou desatualizados;</li>
-            <li>Solicitar anonimização, bloqueio ou eliminação;</li>
-            <li>Portabilidade dos dados a outro fornecedor;</li>
+            <li>Solicitar anonimização, bloqueio ou eliminação de dados desnecessários, excessivos ou tratados em desconformidade;</li>
+            <li>Solicitar a portabilidade a outro fornecedor;</li>
+            <li>Solicitar a eliminação dos dados tratados com base no seu consentimento;</li>
+            <li>Obter informação sobre entidades públicas e privadas com as quais compartilhamos dados;</li>
+            <li>Ser informado sobre a possibilidade de não fornecer consentimento e sobre suas consequências;</li>
             <li>Revogar o consentimento a qualquer momento;</li>
-            <li>Informação sobre com quem compartilhamos seus dados.</li>
+            <li>Peticionar perante a Autoridade Nacional de Proteção de Dados (ANPD).</li>
           </ul>
           <p>
-            Para exercer qualquer direito, escreva para{" "}
-            <a href="mailto:contato@forlink.app">contato@forlink.app</a>.
-            Responderemos em até 15 dias.
+            Para exercer qualquer direito, use os canais de{" "}
+            <Link to="/settings" className="underline">Meu perfil</Link> ou escreva para{" "}
+            <a href="mailto:contato@forlink.app">contato@forlink.app</a>. Poderemos
+            solicitar informações adicionais para confirmar sua identidade antes de
+            atender à requisição, em cumprimento ao art. 19 da LGPD.
+          </p>
+
+          <h3>7.1. Encarregado pelo Tratamento de Dados (DPO)</h3>
+          <p>
+            Nosso Encarregado responde pelas comunicações com titulares e com a ANPD.
+            Contato: <a href="mailto:contato@forlink.app">contato@forlink.app</a>{" "}
+            (assunto: "LGPD — Encarregado").
+          </p>
+
+          <h3>7.2. Transferência internacional de dados</h3>
+          <p>
+            Alguns operadores (ex.: provedores de nuvem e e-mail transacional) podem
+            processar dados fora do Brasil. Nesses casos, exigimos garantias contratuais
+            de nível de proteção adequado, conforme arts. 33 a 36 da LGPD.
+          </p>
+
+          <h3>7.3. Decisões automatizadas</h3>
+          <p>
+            A ForLink não realiza decisões automatizadas com efeitos jurídicos ou que
+            afetem significativamente os titulares. Caso isso mude, você será informado
+            e poderá solicitar revisão nos termos do art. 20 da LGPD.
           </p>
 
           <h2>8. Segurança</h2>
