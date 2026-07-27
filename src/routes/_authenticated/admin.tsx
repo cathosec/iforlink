@@ -1,7 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { testMpIntegration } from "@/lib/pix.functions";
+import { PixBadge, PIX_BADGE_META, type PixBadgeKey } from "@/components/pix-badges";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader } from "@/components/site-header";
 import { Card } from "@/components/ui/card";
