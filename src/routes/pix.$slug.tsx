@@ -16,6 +16,24 @@ import { createContribution, getContributionStatus } from "@/lib/pix.functions";
 import { LogoWordmark } from "@/components/logo";
 import { PixBadge, PIX_BADGE_META, type PixBadgeKey } from "@/components/pix-badges";
 
+interface CampaignPub {
+  id: string; user_id: string; slug: string; title: string;
+  description: string | null; cover_url: string | null; accent_color: string;
+  goal_cents: number; min_cents: number; suggested_amounts: number[];
+  accepts_card: boolean; pass_fee_to_supporter: boolean; show_supporters: boolean;
+  allow_message: boolean; ends_at: string | null; raised_cents: number;
+  supporters_count: number;
+}
+
+interface Supporter {
+  id: string; supporter_name: string | null; message: string | null;
+  is_anonymous: boolean; amount_cents: number; badge_key: string | null; approved_at: string | null;
+}
+
+const BADGE_KEYS: PixBadgeKey[] = ["bronze", "silver", "gold", "diamond", "legend"];
+const isBadgeKey = (k: string | null | undefined): k is PixBadgeKey =>
+  !!k && (BADGE_KEYS as string[]).includes(k);
+
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100);
 
 export const Route = createFileRoute("/pix/$slug")({
