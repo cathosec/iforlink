@@ -254,6 +254,11 @@ function Dashboard() {
                 {isFree && <span className="ml-2 rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">Pro</span>}
               </Button>
             </Link>
+            <Link to="/pix">
+              <Button variant="outline" size="sm">
+                <CreditCard className="mr-2 h-3.5 w-3.5" /> Módulo PIX
+              </Button>
+            </Link>
             {profile && (
               <Link to="/$username" params={{ username: profile.username }}>
                 <Button variant="outline" size="sm"><ExternalLink className="mr-2 h-3.5 w-3.5" /> Ver perfil público</Button>
