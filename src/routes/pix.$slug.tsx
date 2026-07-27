@@ -11,34 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { QrCode, Copy, ExternalLink, Award, Medal, Trophy, Gem, Crown, Heart, CheckCircle2 } from "lucide-react";
+import { QrCode, Copy, ExternalLink, Heart, CheckCircle2, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { createContribution, getContributionStatus } from "@/lib/pix.functions";
 import { LogoWordmark } from "@/components/logo";
-
-interface CampaignPub {
-  id: string; user_id: string; slug: string; title: string;
-  description: string | null; cover_url: string | null; accent_color: string;
-  goal_cents: number; min_cents: number; suggested_amounts: number[];
-  accepts_card: boolean; pass_fee_to_supporter: boolean; show_supporters: boolean;
-  allow_message: boolean; ends_at: string | null; raised_cents: number;
-  supporters_count: number;
-}
-
-interface Supporter {
-  id: string; supporter_name: string | null; message: string | null;
-  is_anonymous: boolean; amount_cents: number; badge_key: string | null; approved_at: string | null;
-}
-
-const BADGE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
-  bronze: Medal, silver: Award, gold: Trophy, diamond: Gem, legend: Crown,
-};
-const BADGE_LABEL: Record<string, { label: string; color: string }> = {
-  bronze: { label: "Bronze", color: "#a16207" },
-  silver: { label: "Prata", color: "#64748b" },
-  gold: { label: "Ouro", color: "#eab308" },
-  diamond: { label: "Diamante", color: "#38bdf8" },
-  legend: { label: "Lenda", color: "#a855f7" },
-};
+import { PixBadge, PIX_BADGE_META, type PixBadgeKey } from "@/components/pix-badges";
 
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100);
 
