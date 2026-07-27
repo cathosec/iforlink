@@ -97,6 +97,188 @@ export type Database = {
           },
         ]
       }
+      mp_accounts: {
+        Row: {
+          access_token: string
+          connected_at: string
+          expires_at: string | null
+          live_mode: boolean
+          mp_user_id: string
+          public_key: string | null
+          refresh_token: string | null
+          scope: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          connected_at?: string
+          expires_at?: string | null
+          live_mode?: boolean
+          mp_user_id: string
+          public_key?: string | null
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          connected_at?: string
+          expires_at?: string | null
+          live_mode?: boolean
+          mp_user_id?: string
+          public_key?: string | null
+          refresh_token?: string | null
+          scope?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pix_campaigns: {
+        Row: {
+          accent_color: string
+          accepts_card: boolean
+          allow_message: boolean
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          goal_cents: number | null
+          id: string
+          is_active: boolean
+          min_cents: number
+          pass_fee_to_supporter: boolean
+          raised_cents: number
+          show_supporters: boolean
+          slug: string
+          suggested_amounts: number[]
+          supporters_count: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent_color?: string
+          accepts_card?: boolean
+          allow_message?: boolean
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          goal_cents?: number | null
+          id?: string
+          is_active?: boolean
+          min_cents?: number
+          pass_fee_to_supporter?: boolean
+          raised_cents?: number
+          show_supporters?: boolean
+          slug: string
+          suggested_amounts?: number[]
+          supporters_count?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent_color?: string
+          accepts_card?: boolean
+          allow_message?: boolean
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          goal_cents?: number | null
+          id?: string
+          is_active?: boolean
+          min_cents?: number
+          pass_fee_to_supporter?: boolean
+          raised_cents?: number
+          show_supporters?: boolean
+          slug?: string
+          suggested_amounts?: number[]
+          supporters_count?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pix_contributions: {
+        Row: {
+          amount_cents: number
+          approved_at: string | null
+          badge_key: string | null
+          campaign_id: string
+          created_at: string
+          fee_cents: number
+          id: string
+          is_anonymous: boolean
+          message: string | null
+          method: string
+          mp_payment_id: string | null
+          net_cents: number
+          qr_code: string | null
+          qr_code_base64: string | null
+          raw: Json
+          status: string
+          supporter_email: string | null
+          supporter_name: string | null
+          ticket_url: string | null
+        }
+        Insert: {
+          amount_cents: number
+          approved_at?: string | null
+          badge_key?: string | null
+          campaign_id: string
+          created_at?: string
+          fee_cents?: number
+          id?: string
+          is_anonymous?: boolean
+          message?: string | null
+          method?: string
+          mp_payment_id?: string | null
+          net_cents: number
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          raw?: Json
+          status?: string
+          supporter_email?: string | null
+          supporter_name?: string | null
+          ticket_url?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          approved_at?: string | null
+          badge_key?: string | null
+          campaign_id?: string
+          created_at?: string
+          fee_cents?: number
+          id?: string
+          is_anonymous?: boolean
+          message?: string | null
+          method?: string
+          mp_payment_id?: string | null
+          net_cents?: number
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          raw?: Json
+          status?: string
+          supporter_email?: string | null
+          supporter_name?: string | null
+          ticket_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_contributions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "pix_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pix_payments: {
         Row: {
           amount_cents: number
@@ -365,7 +547,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pix_supporters_public: {
+        Row: {
+          amount_cents: number | null
+          approved_at: string | null
+          badge_key: string | null
+          campaign_id: string | null
+          id: string | null
+          message: string | null
+          supporter_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_contributions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "pix_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       apply_mercadopago_payment_update: {
@@ -378,10 +579,49 @@ export type Database = {
         }
         Returns: undefined
       }
+      apply_pix_contribution_update: {
+        Args: { _contribution_id: string; _mp_payment: Json }
+        Returns: undefined
+      }
+      attach_pix_contribution_mp: {
+        Args: {
+          _contribution_id: string
+          _mp_payment_id: string
+          _qr_code: string
+          _qr_code_base64: string
+          _raw: Json
+          _status: string
+          _ticket_url: string
+        }
+        Returns: undefined
+      }
+      calc_pix_badge: { Args: { _amount_cents: number }; Returns: string }
+      create_pending_pix_contribution: {
+        Args: {
+          _amount_cents: number
+          _campaign_id: string
+          _fee_cents: number
+          _is_anonymous: boolean
+          _message: string
+          _method: string
+          _net_cents: number
+          _supporter_email: string
+          _supporter_name: string
+        }
+        Returns: string
+      }
       get_admin_notify_email: { Args: never; Returns: string }
       get_mercadopago_webhook_access_token: {
         Args: { _payment_id: string; _request_id: string; _signature: string }
         Returns: string
+      }
+      get_pix_campaign_owner_token: {
+        Args: { _campaign_id: string }
+        Returns: {
+          access_token: string
+          live_mode: boolean
+          user_id: string
+        }[]
       }
       get_pix_payment_context: {
         Args: { _pix_id: string }
