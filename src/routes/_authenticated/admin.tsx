@@ -2115,7 +2115,7 @@ function MpTestButton() {
   const onClick = async () => {
     setBusy(true); setResult(null);
     try {
-      const r = await runTest({});
+      const r = (await runTest({})) as { ok: boolean; message?: string; latency_ms?: number };
       setResult({ ok: r.ok, message: r.message ?? (r.ok ? "OK" : "Falha"), latency_ms: r.latency_ms });
       if (r.ok) toast.success(`Mercado Pago OK · ${r.latency_ms ?? 0}ms`);
       else toast.error(r.message ?? "Falha ao validar Mercado Pago");
