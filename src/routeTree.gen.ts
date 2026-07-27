@@ -21,7 +21,9 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as PublicSplatRouteImport } from './routes/public.$'
+import { Route as PixSlugRouteImport } from './routes/pix.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedPixRouteImport } from './routes/_authenticated/pix'
 import { Route as AuthenticatedObrigadoRouteImport } from './routes/_authenticated/obrigado'
 import { Route as AuthenticatedEncurtarRouteImport } from './routes/_authenticated/encurtar'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -95,9 +97,19 @@ const PublicSplatRoute = PublicSplatRouteImport.update({
   path: '/public/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PixSlugRoute = PixSlugRouteImport.update({
+  id: '/pix/$slug',
+  path: '/pix/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPixRoute = AuthenticatedPixRouteImport.update({
+  id: '/pix',
+  path: '/pix',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedObrigadoRoute = AuthenticatedObrigadoRouteImport.update({
@@ -186,7 +198,9 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
+  '/pix': typeof AuthenticatedPixRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/pix/$slug': typeof PixSlugRoute
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
@@ -213,7 +227,9 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
+  '/pix': typeof AuthenticatedPixRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/pix/$slug': typeof PixSlugRoute
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
@@ -242,7 +258,9 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/encurtar': typeof AuthenticatedEncurtarRoute
   '/_authenticated/obrigado': typeof AuthenticatedObrigadoRoute
+  '/_authenticated/pix': typeof AuthenticatedPixRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/pix/$slug': typeof PixSlugRoute
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
@@ -271,7 +289,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/encurtar'
     | '/obrigado'
+    | '/pix'
     | '/settings'
+    | '/pix/$slug'
     | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
@@ -298,7 +318,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/encurtar'
     | '/obrigado'
+    | '/pix'
     | '/settings'
+    | '/pix/$slug'
     | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
@@ -326,7 +348,9 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/encurtar'
     | '/_authenticated/obrigado'
+    | '/_authenticated/pix'
     | '/_authenticated/settings'
+    | '/pix/$slug'
     | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
@@ -349,6 +373,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
+  PixSlugRoute: typeof PixSlugRoute
   PublicSplatRoute: typeof PublicSplatRoute
   SCodeRoute: typeof SCodeRoute
   ApiPublicAvatarFileRoute: typeof ApiPublicAvatarFileRoute
@@ -446,11 +471,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pix/$slug': {
+      id: '/pix/$slug'
+      path: '/pix/$slug'
+      fullPath: '/pix/$slug'
+      preLoaderRoute: typeof PixSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pix': {
+      id: '/_authenticated/pix'
+      path: '/pix'
+      fullPath: '/pix'
+      preLoaderRoute: typeof AuthenticatedPixRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/obrigado': {
@@ -554,6 +593,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEncurtarRoute: typeof AuthenticatedEncurtarRoute
   AuthenticatedObrigadoRoute: typeof AuthenticatedObrigadoRoute
+  AuthenticatedPixRoute: typeof AuthenticatedPixRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
@@ -564,6 +604,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEncurtarRoute: AuthenticatedEncurtarRoute,
   AuthenticatedObrigadoRoute: AuthenticatedObrigadoRoute,
+  AuthenticatedPixRoute: AuthenticatedPixRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
@@ -581,6 +622,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
+  PixSlugRoute: PixSlugRoute,
   PublicSplatRoute: PublicSplatRoute,
   SCodeRoute: SCodeRoute,
   ApiPublicAvatarFileRoute: ApiPublicAvatarFileRoute,
