@@ -19,8 +19,13 @@ import {
   Users, Link2, BadgeCheck, ExternalLink, DollarSign, CreditCard,
   Settings2, ShieldAlert, ShieldCheck, TrendingUp, Trash2, Search, Activity,
   FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone, Scissors, Copy, MousePointerClick, Mail,
-  QrCode,
+  QrCode, PlugZap,
 } from "lucide-react";
+import {
+  ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis,
+  Tooltip as RTooltip, Legend as RLegend, Bar, Line,
+  PieChart, Pie, Cell,
+} from "recharts";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
