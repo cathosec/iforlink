@@ -2108,3 +2108,35 @@ function PixTab({ logAction }: { logAction: (a: string, t?: string, id?: string,
   );
 }
 
+function MpTestButton() {
+  const runTest = useServerFn(testMpIntegration);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; message: string; latency_ms?: number } | null>(null);
+  const onClick = async () => {
+    setBusy(true); setResult(null);
+    try {
+      const r = await runTest({});
+      setResult({ ok: r.ok, message: r.message ?? (r.ok ? "OK" : "Falha"), latency_ms: r.latency_ms });
+      if (r.ok) toast.success(`Mercado Pago OK · ${r.latency_ms ?? 0}ms`);
+      else toast.error(r.message ?? "Falha ao validar Mercado Pago");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro inesperado";
+      setResult({ ok: false, message: msg });
+      toast.error(msg);
+    } finally { setBusy(false); }
+  };
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button variant="outline" onClick={() => void onClick()} disabled={busy}>
+        <PlugZap className="mr-2 h-4 w-4" />
+        {busy ? "Testando…" : "Testar integração Mercado Pago"}
+      </Button>
+      {result && (
+        <div className={`text-[11px] ${result.ok ? "text-emerald-600" : "text-destructive"}`}>
+          {result.ok ? "✔" : "✖"} {result.message}{result.latency_ms ? ` (${result.latency_ms}ms)` : ""}
+        </div>
+      )}
+    </div>
+  );
+}
+
