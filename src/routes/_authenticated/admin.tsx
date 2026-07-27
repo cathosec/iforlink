@@ -135,53 +135,196 @@ function Admin() {
 /* ─────────── Overview ─────────── */
 function OverviewTab() {
   const stats = useQuery({
-    queryKey: ["admin-overview"],
+    queryKey: ["admin-overview-v2"],
     queryFn: async () => {
-      const [profiles, links, cats, subs, mrr] = await Promise.all([
+      const since30 = new Date(Date.now() - 30 * 86400_000).toISOString();
+      const since7 = new Date(Date.now() - 7 * 86400_000).toISOString();
+      const [profilesC, links, cats, subs, mrr, newProfiles7, subs30, contribs30, shortsC, campaignsC, mpConnC] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("links").select("id", { count: "exact", head: true }),
+        supabase.from("links").select("id,clicks_count", { count: "exact" }),
         supabase.from("user_categories").select("id", { count: "exact", head: true }),
         supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active"),
         supabase.from("subscriptions").select("amount_cents,interval").eq("status", "active"),
+        supabase.from("profiles").select("id,created_at").gte("created_at", since30).order("created_at", { ascending: true }),
+        supabase.from("subscriptions").select("created_at,amount_cents,interval,status").gte("created_at", since30),
+        supabase.from("pix_contributions").select("created_at,amount_cents,fee_cents,status").gte("created_at", since30),
+        supabase.from("short_links").select("id,clicks_count", { count: "exact" }),
+        supabase.from("pix_campaigns").select("id", { count: "exact", head: true }),
+        supabase.from("mp_accounts").select("user_id", { count: "exact", head: true }),
       ]);
       const mrrCents = (mrr.data ?? []).reduce((sum, s) => {
         const monthly = s.interval === "year" ? s.amount_cents / 12 : s.amount_cents;
         return sum + monthly;
       }, 0);
+
+      // Série temporal 30 dias (novos usuários + novas assinaturas + PIX aprovado)
+      const bucket: Record<string, { day: string; users: number; subs: number; pix_cents: number }> = {};
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400_000);
+        const key = d.toISOString().slice(0, 10);
+        bucket[key] = { day: key.slice(5), users: 0, subs: 0, pix_cents: 0 };
+      }
+      (newProfiles7.data ?? []).forEach((r) => {
+        const k = r.created_at.slice(0, 10);
+        if (bucket[k]) bucket[k].users++;
+      });
+      (subs30.data ?? []).forEach((r) => {
+        const k = String(r.created_at).slice(0, 10);
+        if (bucket[k]) bucket[k].subs++;
+      });
+      (contribs30.data ?? []).filter((r) => r.status === "approved").forEach((r) => {
+        const k = String(r.created_at).slice(0, 10);
+        if (bucket[k]) bucket[k].pix_cents += r.amount_cents ?? 0;
+      });
+      const series = Object.values(bucket);
+
+      const pixApproved = (contribs30.data ?? []).filter((r) => r.status === "approved");
+      const pixGross = pixApproved.reduce((n, r) => n + (r.amount_cents ?? 0), 0);
+      const pixFees = pixApproved.reduce((n, r) => n + (r.fee_cents ?? 0), 0);
+
+      const linkClicks = (links.data ?? []).reduce((n, l) => n + (l.clicks_count ?? 0), 0);
+      const shortClicks = (shortsC.data ?? []).reduce((n, l) => n + (l.clicks_count ?? 0), 0);
+
+      const newProfilesLast7 = (newProfiles7.data ?? []).filter((p) => p.created_at >= since7).length;
+
+      // Distribuição por plano
+      const { data: roles } = await supabase.from("user_roles").select("user_id,role");
+      const roleMap = new Map<string, RoleName>();
+      (roles ?? []).forEach((r: { user_id: string; role: RoleName }) => {
+        const cur = roleMap.get(r.user_id);
+        const rank = (x: RoleName) => (x === "admin" ? 3 : x === "pro" ? 2 : 1);
+        if (!cur || rank(r.role) > rank(cur)) roleMap.set(r.user_id, r.role);
+      });
+      const totalProfiles = profilesC.count ?? 0;
+      const proCount = Array.from(roleMap.values()).filter((r) => r === "pro").length;
+      const adminCount = Array.from(roleMap.values()).filter((r) => r === "admin").length;
+      const freeCount = Math.max(0, totalProfiles - proCount - adminCount);
+      const conversion = totalProfiles > 0 ? (proCount / totalProfiles) * 100 : 0;
+
       return {
-        profiles: profiles.count ?? 0,
+        profiles: totalProfiles,
         links: links.count ?? 0,
         cats: cats.count ?? 0,
         activeSubs: subs.count ?? 0,
         mrr: mrrCents,
+        arr: mrrCents * 12,
+        newLast7: newProfilesLast7,
+        newLast30: (newProfiles7.data ?? []).length,
+        linkClicks,
+        shortLinks: shortsC.count ?? 0,
+        shortClicks,
+        campaigns: campaignsC.count ?? 0,
+        mpConnected: mpConnC.count ?? 0,
+        pixGross,
+        pixFees,
+        pixCount: pixApproved.length,
+        series,
+        planDist: [
+          { name: "Free", value: freeCount, color: "#94a3b8" },
+          { name: "Pro", value: proCount, color: "#2b7fff" },
+          { name: "Admin", value: adminCount, color: "#a855f7" },
+        ],
+        conversion,
       };
     },
   });
+
   const s = stats.data;
-  const items = [
-    { icon: Users, label: "Perfis", value: s?.profiles ?? "—" },
-    { icon: Link2, label: "Links publicados", value: s?.links ?? "—" },
-    { icon: FolderTree, label: "Categorias", value: s?.cats ?? "—" },
-    { icon: CreditCard, label: "Assinaturas ativas", value: s?.activeSubs ?? "—" },
-    { icon: DollarSign, label: "MRR estimado", value: s ? brl(s.mrr) : "—" },
-    { icon: TrendingUp, label: "ARR projetado", value: s ? brl(s.mrr * 12) : "—" },
+  const kpis = [
+    { icon: Users, label: "Perfis totais", value: s?.profiles ?? "—", hint: s ? `+${s.newLast7} nos últimos 7 dias` : undefined },
+    { icon: TrendingUp, label: "Novos (30 dias)", value: s?.newLast30 ?? "—" },
+    { icon: CreditCard, label: "Assinaturas ativas", value: s?.activeSubs ?? "—", hint: s ? `${s.conversion.toFixed(1)}% de conversão` : undefined },
+    { icon: DollarSign, label: "MRR estimado", value: s ? brl(s.mrr) : "—", hint: s ? `ARR ${brl(s.arr)}` : undefined },
+    { icon: Link2, label: "Links publicados", value: s?.links ?? "—", hint: s ? `${s.linkClicks.toLocaleString("pt-BR")} cliques totais` : undefined },
+    { icon: Scissors, label: "URLs encurtadas", value: s?.shortLinks ?? "—", hint: s ? `${s.shortClicks.toLocaleString("pt-BR")} cliques` : undefined },
+    { icon: QrCode, label: "Campanhas PIX", value: s?.campaigns ?? "—", hint: s ? `${s.mpConnected} contas MP conectadas` : undefined },
+    { icon: BadgeCheck, label: "PIX aprovado (30d)", value: s ? brl(s.pixGross) : "—", hint: s ? `Taxa: ${brl(s.pixFees)}` : undefined },
   ];
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((it) => (
-        <Card key={it.label} className="flex items-center gap-4 p-5">
-          <div className="grid h-12 w-12 place-items-center rounded-lg bg-brand-soft text-brand">
-            <it.icon className="h-6 w-6" />
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map((it) => (
+          <Card key={it.label} className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{it.label}</div>
+                <div className="mt-1 truncate text-2xl font-semibold tabular-nums">{it.value}</div>
+                {it.hint && <div className="mt-1 truncate text-[11px] text-muted-foreground">{it.hint}</div>}
+              </div>
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
+                <it.icon className="h-5 w-5" />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="p-5 lg:col-span-2">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <div className="font-semibold">Atividade dos últimos 30 dias</div>
+              <div className="text-xs text-muted-foreground">Novos usuários, novas assinaturas e PIX aprovado por dia.</div>
+            </div>
           </div>
-          <div>
-            <div className="text-2xl font-semibold">{it.value}</div>
-            <div className="text-xs text-muted-foreground">{it.label}</div>
+          <div className="h-64 w-full">
+            <OverviewChart data={s?.series ?? []} />
           </div>
         </Card>
-      ))}
+        <Card className="p-5">
+          <div className="mb-3">
+            <div className="font-semibold">Distribuição por plano</div>
+            <div className="text-xs text-muted-foreground">Base atual da plataforma.</div>
+          </div>
+          <div className="h-64 w-full">
+            <PlanDistribution data={s?.planDist ?? []} />
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
+
+function OverviewChart({ data }: { data: Array<{ day: string; users: number; subs: number; pix_cents: number }> }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+        <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+        <YAxis yAxisId="l" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+        <YAxis yAxisId="r" orientation="right" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))"
+          tickFormatter={(v: number) => `R$${(v / 100).toFixed(0)}`} />
+        <RTooltip
+          formatter={(value: number | string, name: string) => {
+            if (name === "PIX (R$)") return [brl(Number(value)), name];
+            return [value, name];
+          }}
+          contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }}
+        />
+        <RLegend wrapperStyle={{ fontSize: 11 }} />
+        <Bar yAxisId="l" dataKey="users" name="Novos usuários" fill="#2b7fff" radius={[4, 4, 0, 0]} />
+        <Bar yAxisId="l" dataKey="subs" name="Assinaturas" fill="#a855f7" radius={[4, 4, 0, 0]} />
+        <Line yAxisId="r" type="monotone" dataKey="pix_cents" name="PIX (R$)" stroke="#10b981" strokeWidth={2} dot={false} />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
+
+function PlanDistribution({ data }: { data: Array<{ name: string; value: number; color: string }> }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie data={data} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2}>
+          {data.map((d) => (<Cell key={d.name} fill={d.color} />))}
+        </Pie>
+        <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} />
+        <RLegend wrapperStyle={{ fontSize: 11 }} />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
 
 /* ─────────── Users ─────────── */
 function UsersTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
