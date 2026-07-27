@@ -93,92 +93,169 @@ function PublicPixPage() {
     refetchInterval: 15000,
   });
 
+  const accent = c.accent_color || "#2b7fff";
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card/50 backdrop-blur">
+      {/* Faixa colorida decorativa */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[380px] opacity-[0.12]"
+        style={{ background: `radial-gradient(ellipse at 50% 0%, ${accent} 0%, transparent 70%)` }}
+      />
+
+      <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
           <a href="/" className="flex items-center gap-2"><LogoWordmark /></a>
-          <Badge variant="secondary" className="text-[10px]">Pagamento seguro · Mercado Pago</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="hidden gap-1 text-[10px] sm:inline-flex">
+              <ShieldCheck className="h-3 w-3" /> Pagamento seguro
+            </Badge>
+            <Badge variant="outline" className="text-[10px]">Mercado Pago</Badge>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-8">
-        <Card className="overflow-hidden">
-          <div className="h-40 w-full sm:h-56"
+        <Card className="overflow-hidden border-0 shadow-xl ring-1 ring-border/60">
+          <div className="relative h-44 w-full sm:h-64"
             style={{
               backgroundImage: c.cover_url ? `url(${c.cover_url})` : undefined,
-              backgroundColor: c.accent_color,
+              backgroundColor: accent,
               backgroundSize: "cover", backgroundPosition: "center",
             }}
-          />
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="bg-white/95 text-[10px] font-semibold uppercase tracking-wider text-foreground hover:bg-white">
+                  Campanha ForLink
+                </Badge>
+                {c.ends_at && (
+                  <Badge variant="secondary" className="bg-black/50 text-[10px] text-white backdrop-blur">
+                    Encerra em {new Date(c.ends_at).toLocaleDateString("pt-BR")}
+                  </Badge>
+                )}
+              </div>
+              <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white drop-shadow sm:text-4xl">
+                {c.title}
+              </h1>
+            </div>
+          </div>
+
           <div className="p-6 sm:p-8">
-            <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{c.title}</h1>
             {c.description && (
-              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{c.description}</p>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground sm:text-base">
+                {c.description}
+              </p>
             )}
 
-            <div className="mt-6">
-              <div className="h-3 overflow-hidden rounded-full bg-muted">
-                <div className="h-full transition-all"
-                  style={{ width: `${pct}%`, backgroundColor: c.accent_color }} />
-              </div>
-              <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 text-sm">
+            <div className="mt-7 rounded-2xl border bg-gradient-to-br from-muted/30 to-transparent p-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <div>
-                  <span className="font-display text-2xl font-semibold tabular-nums" style={{ color: c.accent_color }}>
+                  <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Arrecadado</div>
+                  <div className="mt-1 font-display text-3xl font-semibold tabular-nums sm:text-4xl" style={{ color: accent }}>
                     {brl(c.raised_cents)}
-                  </span>
-                  <span className="ml-2 text-muted-foreground">arrecadados de {brl(c.goal_cents)}</span>
+                  </div>
+                  {c.goal_cents > 0 && (
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      de <strong className="text-foreground">{brl(c.goal_cents)}</strong> como meta
+                    </div>
+                  )}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  <Heart className="mr-1 inline h-3.5 w-3.5" />
-                  {c.supporters_count} apoiador{c.supporters_count === 1 ? "" : "es"}
+                <div className="flex items-center gap-4 text-right text-xs text-muted-foreground">
+                  <div>
+                    <div className="flex items-center justify-end gap-1 text-foreground">
+                      <Users className="h-3.5 w-3.5" />
+                      <span className="text-lg font-semibold tabular-nums">{c.supporters_count}</span>
+                    </div>
+                    <div>apoiadores</div>
+                  </div>
+                  {c.goal_cents > 0 && (
+                    <div>
+                      <div className="text-lg font-semibold text-foreground tabular-nums">{pct.toFixed(0)}%</div>
+                      <div>da meta</div>
+                    </div>
+                  )}
                 </div>
+              </div>
+              {c.goal_cents > 0 && (
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-background ring-1 ring-inset ring-border">
+                  <div className="h-full rounded-full transition-all"
+                    style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${accent}, ${accent}dd)` }} />
+                </div>
+              )}
+            </div>
+
+            {/* Tiers de selos */}
+            <div className="mt-6 rounded-xl border bg-card p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-brand" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Selos por contribuição</span>
+              </div>
+              <div className="grid grid-cols-5 gap-2 text-center">
+                {BADGE_KEYS.map((k) => (
+                  <div key={k} className="flex flex-col items-center gap-1">
+                    <PixBadge badgeKey={k} size={40} />
+                    <div className="text-[10px] font-medium text-muted-foreground">{PIX_BADGE_META[k].label}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-7">
               <ContributionForm campaign={c} />
             </div>
           </div>
         </Card>
 
         {c.show_supporters && (
-          <section className="mt-8">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Apoiadores recentes
-            </h2>
+          <section className="mt-10">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-lg font-semibold">Mural de apoiadores</h2>
+              <span className="text-xs text-muted-foreground">
+                {(supportersQ.data ?? []).length} confirmado{(supportersQ.data ?? []).length === 1 ? "" : "s"}
+              </span>
+            </div>
             {supportersQ.isLoading ? (
-              <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Carregando...</div>
+              <div className="rounded-xl border p-6 text-center text-sm text-muted-foreground">Carregando…</div>
             ) : (supportersQ.data ?? []).length === 0 ? (
-              <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-                Seja o primeiro a apoiar!
+              <div className="rounded-xl border border-dashed p-10 text-center">
+                <Heart className="mx-auto h-8 w-8 text-muted-foreground/50" />
+                <p className="mt-3 text-sm text-muted-foreground">Seja o primeiro a apoiar esta campanha!</p>
               </div>
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">
                 {(supportersQ.data ?? []).map((s) => {
-                  const Icon = s.badge_key ? BADGE_ICON[s.badge_key] : Heart;
-                  const badge = s.badge_key ? BADGE_LABEL[s.badge_key] : undefined;
+                  const key = isBadgeKey(s.badge_key) ? s.badge_key : null;
+                  const meta = key ? PIX_BADGE_META[key] : undefined;
                   const name = s.is_anonymous ? "Apoiador anônimo" : (s.supporter_name || "Apoiador");
                   return (
-                    <div key={s.id} className="flex items-start gap-3 rounded-lg border bg-card p-3">
-                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
-                        style={{ backgroundColor: `${badge?.color ?? "#94a3b8"}20`, color: badge?.color ?? "#64748b" }}>
-                        <Icon className="h-4 w-4" />
+                    <div key={s.id} className="group flex items-start gap-3 rounded-xl border bg-card p-3 transition hover:shadow-md">
+                      <div className="shrink-0">
+                        {key ? <PixBadge badgeKey={key} size={44} />
+                          : <div className="grid h-11 w-11 place-items-center rounded-full bg-muted text-muted-foreground"><Heart className="h-5 w-5" /></div>}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="truncate text-sm font-medium">{name}</span>
-                          {badge && (
-                            <Badge variant="secondary" className="text-[10px]" style={{ color: badge.color }}>
-                              {badge.label}
-                            </Badge>
+                          <span className="truncate text-sm font-semibold">{name}</span>
+                          {meta && (
+                            <span className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                              style={{ background: `${meta.color}18`, color: meta.color }}>
+                              {meta.label}
+                            </span>
                           )}
-                          <span className="ml-auto text-xs font-semibold tabular-nums text-muted-foreground">
+                          <span className="ml-auto text-sm font-bold tabular-nums" style={{ color: accent }}>
                             {brl(s.amount_cents)}
                           </span>
                         </div>
                         {s.message && (
-                          <p className="mt-1 text-xs italic text-muted-foreground">"{s.message}"</p>
+                          <p className="mt-1 line-clamp-2 text-xs italic text-muted-foreground">"{s.message}"</p>
+                        )}
+                        {s.approved_at && (
+                          <p className="mt-1 text-[10px] text-muted-foreground/70">
+                            {new Date(s.approved_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -189,8 +266,14 @@ function PublicPixPage() {
           </section>
         )}
 
-        <footer className="mt-10 pb-8 text-center text-[11px] text-muted-foreground">
-          Página criada com <a href="/" className="underline">ForLink</a> · Pagamentos processados pelo Mercado Pago
+        <footer className="mt-12 flex flex-col items-center gap-2 pb-10 text-center text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Pagamento processado com segurança pelo Mercado Pago — vai <strong className="text-foreground">direto para o criador</strong>.
+          </div>
+          <div>
+            Página criada com <a href="/" className="font-medium text-brand hover:underline">ForLink</a>
+          </div>
         </footer>
       </main>
     </div>
