@@ -90,6 +90,58 @@ export const getMpStatus = createServerFn({ method: "POST" })
     return { connected: !!data, ...(data ?? {}) };
   });
 
+/** Admin: testa se as credenciais OAuth do Mercado Pago estão válidas. */
+export const testMpIntegration = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId, _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Acesso restrito a administradores");
+    const cfg = await loadPixConfig();
+    const clientId = (cfg.oauth_client_id ?? "").trim();
+    const clientSecret = (cfg.oauth_client_secret ?? "").trim();
+    if (!clientId || !clientSecret) {
+      return { ok: false as const, message: "Client ID e Client Secret ainda não configurados." };
+    }
+    const t0 = Date.now();
+    try {
+      const res = await fetch(MP_TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+          client_id: clientId,
+          client_secret: clientSecret,
+        }),
+      });
+      const latency = Date.now() - t0;
+      const body: Record<string, unknown> = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return {
+          ok: false as const,
+          status: res.status,
+          latency_ms: latency,
+          message: String(body?.message ?? body?.error ?? "Credenciais rejeitadas pelo Mercado Pago"),
+        };
+      }
+      return {
+        ok: true as const,
+        status: res.status,
+        latency_ms: latency,
+        scope: String(body?.scope ?? ""),
+        expires_in: Number(body?.expires_in ?? 0),
+        message: "Conexão com o Mercado Pago validada com sucesso.",
+      };
+    } catch (e) {
+      return {
+        ok: false as const,
+        latency_ms: Date.now() - t0,
+        message: e instanceof Error ? e.message : "Erro de rede ao consultar Mercado Pago",
+      };
+    }
+  });
+
 interface CreateContribInput {
   campaignSlug: string;
   amount_cents: number;
