@@ -21,7 +21,9 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SCodeRouteImport } from './routes/s.$code'
 import { Route as PublicSplatRouteImport } from './routes/public.$'
+import { Route as PixSlugRouteImport } from './routes/pix.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedPixRouteImport } from './routes/_authenticated/pix'
 import { Route as AuthenticatedObrigadoRouteImport } from './routes/_authenticated/obrigado'
 import { Route as AuthenticatedEncurtarRouteImport } from './routes/_authenticated/encurtar'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -29,9 +31,12 @@ import { Route as AuthenticatedAssinaturaRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as ApiPublicWebhooksMpPixRouteImport } from './routes/api/public/webhooks/mp-pix'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
+import { Route as ApiPublicPixCoverFileRouteImport } from './routes/api/public/pix-cover/$file'
 import { Route as ApiPublicCronSubscriptionsCheckRouteImport } from './routes/api/public/cron/subscriptions-check'
 import { Route as ApiPublicAvatarFileRouteImport } from './routes/api/public/avatar/$file'
+import { Route as ApiPublicOauthMercadopagoCallbackRouteImport } from './routes/api/public/oauth/mercadopago/callback'
 
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
@@ -92,9 +97,19 @@ const PublicSplatRoute = PublicSplatRouteImport.update({
   path: '/public/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PixSlugRoute = PixSlugRouteImport.update({
+  id: '/pix/$slug',
+  path: '/pix/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPixRoute = AuthenticatedPixRouteImport.update({
+  id: '/pix',
+  path: '/pix',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedObrigadoRoute = AuthenticatedObrigadoRouteImport.update({
@@ -133,12 +148,22 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWebhooksMpPixRoute = ApiPublicWebhooksMpPixRouteImport.update({
+  id: '/api/public/webhooks/mp-pix',
+  path: '/api/public/webhooks/mp-pix',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksMercadopagoRoute =
   ApiPublicWebhooksMercadopagoRouteImport.update({
     id: '/api/public/webhooks/mercadopago',
     path: '/api/public/webhooks/mercadopago',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPixCoverFileRoute = ApiPublicPixCoverFileRouteImport.update({
+  id: '/api/public/pix-cover/$file',
+  path: '/api/public/pix-cover/$file',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronSubscriptionsCheckRoute =
   ApiPublicCronSubscriptionsCheckRouteImport.update({
     id: '/api/public/cron/subscriptions-check',
@@ -150,6 +175,12 @@ const ApiPublicAvatarFileRoute = ApiPublicAvatarFileRouteImport.update({
   path: '/api/public/avatar/$file',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOauthMercadopagoCallbackRoute =
+  ApiPublicOauthMercadopagoCallbackRouteImport.update({
+    id: '/api/public/oauth/mercadopago/callback',
+    path: '/api/public/oauth/mercadopago/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -167,13 +198,18 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
+  '/pix': typeof AuthenticatedPixRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/pix/$slug': typeof PixSlugRoute
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
+  '/api/public/pix-cover/$file': typeof ApiPublicPixCoverFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/mp-pix': typeof ApiPublicWebhooksMpPixRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/public/oauth/mercadopago/callback': typeof ApiPublicOauthMercadopagoCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -191,13 +227,18 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/encurtar': typeof AuthenticatedEncurtarRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
+  '/pix': typeof AuthenticatedPixRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/pix/$slug': typeof PixSlugRoute
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
+  '/api/public/pix-cover/$file': typeof ApiPublicPixCoverFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/mp-pix': typeof ApiPublicWebhooksMpPixRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/public/oauth/mercadopago/callback': typeof ApiPublicOauthMercadopagoCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -217,13 +258,18 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/encurtar': typeof AuthenticatedEncurtarRoute
   '/_authenticated/obrigado': typeof AuthenticatedObrigadoRoute
+  '/_authenticated/pix': typeof AuthenticatedPixRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/pix/$slug': typeof PixSlugRoute
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
+  '/api/public/pix-cover/$file': typeof ApiPublicPixCoverFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/mp-pix': typeof ApiPublicWebhooksMpPixRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/public/oauth/mercadopago/callback': typeof ApiPublicOauthMercadopagoCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -243,13 +289,18 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/encurtar'
     | '/obrigado'
+    | '/pix'
     | '/settings'
+    | '/pix/$slug'
     | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
     | '/api/public/cron/subscriptions-check'
+    | '/api/public/pix-cover/$file'
     | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/mp-pix'
     | '/lovable/email/transactional/preview'
+    | '/api/public/oauth/mercadopago/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -267,13 +318,18 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/encurtar'
     | '/obrigado'
+    | '/pix'
     | '/settings'
+    | '/pix/$slug'
     | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
     | '/api/public/cron/subscriptions-check'
+    | '/api/public/pix-cover/$file'
     | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/mp-pix'
     | '/lovable/email/transactional/preview'
+    | '/api/public/oauth/mercadopago/callback'
   id:
     | '__root__'
     | '/'
@@ -292,13 +348,18 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/encurtar'
     | '/_authenticated/obrigado'
+    | '/_authenticated/pix'
     | '/_authenticated/settings'
+    | '/pix/$slug'
     | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
     | '/api/public/cron/subscriptions-check'
+    | '/api/public/pix-cover/$file'
     | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/mp-pix'
     | '/lovable/email/transactional/preview'
+    | '/api/public/oauth/mercadopago/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -312,12 +373,16 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
+  PixSlugRoute: typeof PixSlugRoute
   PublicSplatRoute: typeof PublicSplatRoute
   SCodeRoute: typeof SCodeRoute
   ApiPublicAvatarFileRoute: typeof ApiPublicAvatarFileRoute
   ApiPublicCronSubscriptionsCheckRoute: typeof ApiPublicCronSubscriptionsCheckRoute
+  ApiPublicPixCoverFileRoute: typeof ApiPublicPixCoverFileRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
+  ApiPublicWebhooksMpPixRoute: typeof ApiPublicWebhooksMpPixRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  ApiPublicOauthMercadopagoCallbackRoute: typeof ApiPublicOauthMercadopagoCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -406,11 +471,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pix/$slug': {
+      id: '/pix/$slug'
+      path: '/pix/$slug'
+      fullPath: '/pix/$slug'
+      preLoaderRoute: typeof PixSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pix': {
+      id: '/_authenticated/pix'
+      path: '/pix'
+      fullPath: '/pix'
+      preLoaderRoute: typeof AuthenticatedPixRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/obrigado': {
@@ -462,11 +541,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/mp-pix': {
+      id: '/api/public/webhooks/mp-pix'
+      path: '/api/public/webhooks/mp-pix'
+      fullPath: '/api/public/webhooks/mp-pix'
+      preLoaderRoute: typeof ApiPublicWebhooksMpPixRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/mercadopago': {
       id: '/api/public/webhooks/mercadopago'
       path: '/api/public/webhooks/mercadopago'
       fullPath: '/api/public/webhooks/mercadopago'
       preLoaderRoute: typeof ApiPublicWebhooksMercadopagoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pix-cover/$file': {
+      id: '/api/public/pix-cover/$file'
+      path: '/api/public/pix-cover/$file'
+      fullPath: '/api/public/pix-cover/$file'
+      preLoaderRoute: typeof ApiPublicPixCoverFileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/cron/subscriptions-check': {
@@ -483,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAvatarFileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/oauth/mercadopago/callback': {
+      id: '/api/public/oauth/mercadopago/callback'
+      path: '/api/public/oauth/mercadopago/callback'
+      fullPath: '/api/public/oauth/mercadopago/callback'
+      preLoaderRoute: typeof ApiPublicOauthMercadopagoCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -493,6 +593,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEncurtarRoute: typeof AuthenticatedEncurtarRoute
   AuthenticatedObrigadoRoute: typeof AuthenticatedObrigadoRoute
+  AuthenticatedPixRoute: typeof AuthenticatedPixRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
@@ -503,6 +604,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEncurtarRoute: AuthenticatedEncurtarRoute,
   AuthenticatedObrigadoRoute: AuthenticatedObrigadoRoute,
+  AuthenticatedPixRoute: AuthenticatedPixRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
@@ -520,12 +622,17 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
+  PixSlugRoute: PixSlugRoute,
   PublicSplatRoute: PublicSplatRoute,
   SCodeRoute: SCodeRoute,
   ApiPublicAvatarFileRoute: ApiPublicAvatarFileRoute,
   ApiPublicCronSubscriptionsCheckRoute: ApiPublicCronSubscriptionsCheckRoute,
+  ApiPublicPixCoverFileRoute: ApiPublicPixCoverFileRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
+  ApiPublicWebhooksMpPixRoute: ApiPublicWebhooksMpPixRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  ApiPublicOauthMercadopagoCallbackRoute:
+    ApiPublicOauthMercadopagoCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

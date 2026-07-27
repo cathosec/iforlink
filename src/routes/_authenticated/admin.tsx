@@ -19,6 +19,7 @@ import {
   Users, Link2, BadgeCheck, ExternalLink, DollarSign, CreditCard,
   Settings2, ShieldAlert, ShieldCheck, TrendingUp, Trash2, Search, Activity,
   FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone, Scissors, Copy, MousePointerClick, Mail,
+  QrCode,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -91,6 +92,7 @@ function Admin() {
               ["security", ShieldCheck, "Segurança"],
               ["subscriptions", CreditCard, "Assinaturas"],
               ["gateways", DollarSign, "Pagamentos"],
+              ["pix", QrCode, "PIX Marketplace"],
               ["ads", Megaphone, "Anúncios"],
               ["emails", Mail, "E-mails"],
               ["settings", Settings2, "Plataforma"],
@@ -118,6 +120,7 @@ function Admin() {
             <TabsContent value="security" className="mt-0"><SecurityTab logAction={logAction} /></TabsContent>
             <TabsContent value="subscriptions" className="mt-0"><SubscriptionsTab logAction={logAction} /></TabsContent>
             <TabsContent value="gateways" className="mt-0"><GatewaysTab logAction={logAction} /></TabsContent>
+            <TabsContent value="pix" className="mt-0"><PixTab logAction={logAction} /></TabsContent>
             <TabsContent value="ads" className="mt-0"><AdsTab logAction={logAction} /></TabsContent>
             <TabsContent value="emails" className="mt-0"><EmailsTab logAction={logAction} /></TabsContent>
             <TabsContent value="settings" className="mt-0"><SettingsTab logAction={logAction} /></TabsContent>
@@ -1743,5 +1746,194 @@ function EmailsTab({ logAction }: { logAction: (a: string, t?: string, id?: stri
   );
 }
 
+/* ─────────── PIX Marketplace ─────────── */
+interface PixCfg {
+  enabled?: boolean;
+  fee_percent?: number;
+  min_fee_cents?: number;
+  oauth_client_id?: string;
+  oauth_client_secret?: string;
+}
+interface PixBadgeItem { key: string; label: string; min_cents: number; color: string; icon: string }
 
+function PixTab({ logAction }: { logAction: (a: string, t?: string, id?: string, m?: Record<string, unknown>) => Promise<void> }) {
+  const qc = useQueryClient();
+
+  const cfgQ = useQuery({
+    queryKey: ["admin-pix-cfg"],
+    queryFn: async () => {
+      const [{ data: cfg }, { data: badges }] = await Promise.all([
+        supabase.from("platform_settings").select("value").eq("key", "pix_config").maybeSingle(),
+        supabase.from("platform_settings").select("value").eq("key", "pix_badges").maybeSingle(),
+      ]);
+      return {
+        cfg: ((cfg?.value ?? {}) as PixCfg),
+        badges: (((badges?.value as { items?: PixBadgeItem[] } | undefined)?.items) ?? []),
+      };
+    },
+  });
+
+  const statsQ = useQuery({
+    queryKey: ["admin-pix-stats"],
+    queryFn: async () => {
+      const [camps, contribs, connected] = await Promise.all([
+        supabase.from("pix_campaigns").select("id", { count: "exact", head: true }),
+        supabase.from("pix_contributions").select("amount_cents,fee_cents,status").eq("status", "approved"),
+        supabase.from("mp_accounts").select("user_id", { count: "exact", head: true }),
+      ]);
+      const rows = contribs.data ?? [];
+      const gross = rows.reduce((n, r) => n + (r.amount_cents ?? 0), 0);
+      const platformFees = rows.reduce((n, r) => n + (r.fee_cents ?? 0), 0);
+      return {
+        campaigns: camps.count ?? 0,
+        connected: connected.count ?? 0,
+        approved: rows.length,
+        gross, platformFees,
+      };
+    },
+  });
+
+  const [form, setForm] = useState<PixCfg>({});
+  const [badges, setBadges] = useState<PixBadgeItem[]>([]);
+  useEffect(() => {
+    if (cfgQ.data) {
+      setForm(cfgQ.data.cfg);
+      setBadges(cfgQ.data.badges);
+    }
+  }, [cfgQ.data]);
+
+  const saveCfg = async () => {
+    const { error } = await supabase.from("platform_settings").upsert({
+      key: "pix_config", value: form as never, description: "Configurações do módulo PIX marketplace",
+    } as never, { onConflict: "key" });
+    if (error) return toast.error(error.message);
+    toast.success("Configuração PIX salva");
+    void logAction("pix_config_update", "settings", "pix_config", form as never);
+    qc.invalidateQueries({ queryKey: ["admin-pix-cfg"] });
+  };
+
+  const saveBadges = async () => {
+    const { error } = await supabase.from("platform_settings").upsert({
+      key: "pix_badges", value: { items: badges } as never, description: "Selos por valor de contribuição",
+    } as never, { onConflict: "key" });
+    if (error) return toast.error(error.message);
+    toast.success("Selos salvos");
+    void logAction("pix_badges_update");
+    qc.invalidateQueries({ queryKey: ["admin-pix-cfg"] });
+  };
+
+  const s = statsQ.data;
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Campanhas totais", value: s?.campaigns ?? "—" },
+          { label: "Contas MP conectadas", value: s?.connected ?? "—" },
+          { label: "Contribuições aprovadas", value: s?.approved ?? "—" },
+          { label: "Taxa arrecadada (plataforma)", value: s ? brl(s.platformFees) : "—" },
+        ].map((it) => (
+          <Card key={it.label} className="p-4">
+            <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{it.label}</div>
+            <div className="mt-1 text-2xl font-semibold tabular-nums">{it.value}</div>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="p-6">
+        <h3 className="font-display text-lg font-semibold">Configurações do gateway</h3>
+        <p className="text-sm text-muted-foreground">
+          Habilite o módulo, defina a taxa de comissão da plataforma e configure as credenciais OAuth do Mercado Pago Marketplace.
+        </p>
+
+        <div className="mt-5 flex items-center justify-between rounded-md border p-3">
+          <div>
+            <div className="text-sm font-medium">Módulo PIX ativo</div>
+            <div className="text-xs text-muted-foreground">Se desativado, novas contribuições são bloqueadas.</div>
+          </div>
+          <Switch checked={!!form.enabled} onCheckedChange={(v) => setForm({ ...form, enabled: v })} />
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label>Taxa da plataforma (%)</Label>
+            <Input type="number" min={0} max={20} step="0.01"
+              value={form.fee_percent ?? 0}
+              onChange={(e) => setForm({ ...form, fee_percent: Number(e.target.value) })} />
+            <p className="mt-1 text-[11px] text-muted-foreground">Enviada como <code>application_fee</code> ao MP.</p>
+          </div>
+          <div>
+            <Label>Taxa mínima (centavos)</Label>
+            <Input type="number" min={0} step={1}
+              value={form.min_fee_cents ?? 0}
+              onChange={(e) => setForm({ ...form, min_fee_cents: Number(e.target.value) })} />
+            <p className="mt-1 text-[11px] text-muted-foreground">Ex: 50 = R$ 0,50 mínimo.</p>
+          </div>
+          <div>
+            <Label>OAuth Client ID (App ID)</Label>
+            <Input value={form.oauth_client_id ?? ""}
+              onChange={(e) => setForm({ ...form, oauth_client_id: e.target.value })}
+              placeholder="1234567890123456" />
+          </div>
+          <div>
+            <Label>OAuth Client Secret</Label>
+            <Input type="password" value={form.oauth_client_secret ?? ""}
+              onChange={(e) => setForm({ ...form, oauth_client_secret: e.target.value })}
+              placeholder="••••••••" />
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-md border bg-muted/40 p-3 text-[11px] leading-relaxed text-muted-foreground">
+          <strong className="text-foreground">URL de callback OAuth (configure no MP):</strong><br />
+          <code>https://forlink.app/api/public/oauth/mercadopago/callback</code>
+          <br /><strong className="text-foreground">Webhook PIX:</strong> <code>https://forlink.app/api/public/webhooks/mp-pix</code>
+        </div>
+
+        <div className="mt-5 flex justify-end">
+          <Button onClick={() => void saveCfg()}>Salvar configuração</Button>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="font-display text-lg font-semibold">Selos de apoiadores</h3>
+        <p className="text-sm text-muted-foreground">
+          Selos são atribuídos automaticamente quando o pagamento é aprovado, conforme o valor.
+        </p>
+
+        <div className="mt-4 space-y-2">
+          {badges.map((b, i) => (
+            <div key={b.key} className="grid gap-2 rounded-md border p-3 sm:grid-cols-[80px_1fr_120px_80px_1fr_auto]">
+              <Input value={b.key} onChange={(e) => {
+                const arr = [...badges]; arr[i] = { ...b, key: e.target.value }; setBadges(arr);
+              }} placeholder="key" />
+              <Input value={b.label} onChange={(e) => {
+                const arr = [...badges]; arr[i] = { ...b, label: e.target.value }; setBadges(arr);
+              }} placeholder="Rótulo" />
+              <Input type="number" value={b.min_cents} onChange={(e) => {
+                const arr = [...badges]; arr[i] = { ...b, min_cents: Number(e.target.value) }; setBadges(arr);
+              }} placeholder="Valor min (centavos)" />
+              <Input type="color" value={b.color} onChange={(e) => {
+                const arr = [...badges]; arr[i] = { ...b, color: e.target.value }; setBadges(arr);
+              }} />
+              <Input value={b.icon} onChange={(e) => {
+                const arr = [...badges]; arr[i] = { ...b, icon: e.target.value }; setBadges(arr);
+              }} placeholder="Ícone (Lucide)" />
+              <Button variant="ghost" size="sm" onClick={() => setBadges(badges.filter((_, j) => j !== i))}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => setBadges([...badges, { key: `tier-${badges.length + 1}`, label: "Novo", min_cents: 10000, color: "#0ea5e9", icon: "Award" }])}>
+            <Plus className="mr-1 h-4 w-4" /> Adicionar selo
+          </Button>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <Button onClick={() => void saveBadges()}>Salvar selos</Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
 
