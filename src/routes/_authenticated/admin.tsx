@@ -2041,8 +2041,28 @@ function PixTab({ logAction }: { logAction: (a: string, t?: string, id?: string,
           <br /><strong className="text-foreground">Webhook PIX:</strong> <code>https://forlink.app/api/public/webhooks/mp-pix</code>
         </div>
 
-        <div className="mt-5 flex justify-end">
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <MpTestButton />
           <Button onClick={() => void saveCfg()}>Salvar configuração</Button>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="font-display text-lg font-semibold">Selos SVG oficiais</h3>
+        <p className="text-sm text-muted-foreground">
+          Selos exibidos automaticamente para cada apoiador com base no valor da contribuição.
+          Use as chaves abaixo (<code>bronze</code>, <code>silver</code>, <code>gold</code>, <code>diamond</code>, <code>legend</code>) no editor.
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {(["bronze", "silver", "gold", "diamond", "legend"] as PixBadgeKey[]).map((k) => (
+            <div key={k} className="flex flex-col items-center gap-2 rounded-lg border bg-muted/20 p-3">
+              <PixBadge badgeKey={k} size={64} />
+              <div className="text-center">
+                <div className="text-xs font-semibold">{PIX_BADGE_META[k].label}</div>
+                <code className="text-[10px] text-muted-foreground">{k}</code>
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
 
