@@ -292,6 +292,96 @@ function Settings() {
         </Card>
 
         <Card className="mt-8 p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Redes sociais</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Aparecem como ícones oficiais abaixo dos seus links, no seu perfil público.
+              </p>
+            </div>
+          </div>
+
+          {socials.length > 0 && (
+            <div className="mt-5 space-y-2.5">
+              {socials.map((s) => {
+                const p = SOCIAL_MAP[s.key];
+                if (!p) return null;
+                return (
+                  <div
+                    key={s.key}
+                    className="flex items-center gap-2 rounded-lg border bg-background/60 p-2"
+                  >
+                    <span
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-white"
+                      style={{ backgroundColor: p.brand }}
+                    >
+                      <SocialIcon platform={p} className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-medium text-muted-foreground">{p.label}</div>
+                      <Input
+                        value={s.value}
+                        onChange={(e) => updateSocial(s.key, e.target.value)}
+                        placeholder={p.placeholder}
+                        className="mt-0.5 h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeSocial(s.key)}
+                      aria-label={`Remover ${p.label}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-5">
+            <div className="text-xs font-medium text-muted-foreground">Adicionar rede</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {SOCIAL_PLATFORMS.filter((p) => !socials.some((s) => s.key === p.key)).map((p) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => addSocial(p.key)}
+                  className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-transparent hover:bg-accent"
+                >
+                  <span
+                    className="grid h-4 w-4 place-items-center rounded-sm text-white"
+                    style={{ color: p.brand }}
+                  >
+                    <SocialIcon platform={p} className="h-3.5 w-3.5" />
+                  </span>
+                  {p.label}
+                  <Plus className="h-3 w-3 opacity-60" />
+                </button>
+              ))}
+              {SOCIAL_PLATFORMS.every((p) => socials.some((s) => s.key === p.key)) && (
+                <p className="text-xs text-muted-foreground">Todas as redes suportadas já foram adicionadas.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <Button
+              type="button"
+              onClick={saveSocials}
+              disabled={savingSocials}
+              className="bg-brand text-brand-foreground hover:bg-brand/90"
+            >
+              {savingSocials ? "Salvando…" : "Salvar redes sociais"}
+            </Button>
+          </div>
+        </Card>
+
+
+
+        <Card className="mt-8 p-6">
           <h2 className="text-lg font-semibold tracking-tight">Privacidade e dados (LGPD)</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Você é titular dos seus dados. Exercite seus direitos previstos no art. 18 da Lei 13.709/2018.
