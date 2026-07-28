@@ -45,7 +45,7 @@ const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", c
 export const Route = createFileRoute("/pix/$slug")({
   loader: async ({ params }) => {
     const { data } = await supabase.from("pix_campaigns")
-      .select("id,user_id,slug,title,description,cover_url,accent_color,goal_cents,min_cents,suggested_amounts,accepts_card,pass_fee_to_supporter,show_supporters,allow_message,ends_at,raised_cents,supporters_count")
+      .select("id,user_id,slug,title,description,cover_url,accent_color,goal_cents,min_cents,suggested_amounts,accepts_card,pass_fee_to_supporter,show_supporters,show_progress,allow_message,ends_at,raised_cents,supporters_count")
       .eq("slug", params.slug).eq("is_active", true).maybeSingle();
     if (!data) throw notFound();
     return { campaign: data as CampaignPub };
