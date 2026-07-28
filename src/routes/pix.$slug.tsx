@@ -17,6 +17,8 @@ import { LogoWordmark } from "@/components/logo";
 import { PixBadge, PIX_BADGE_META, type PixBadgeKey } from "@/components/pix-badges";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PixCardCheckout } from "@/components/pix-card-checkout";
+import { computeCampaignFees, mpFeeForMethod } from "@/lib/payments/fees";
+
 // Marca "Mercado Pago" renderizada como badge de texto para evitar
 // dependência de asset externo (URLs de CDN quebravam após deploy).
 
@@ -540,9 +542,10 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
                   <dt className="text-muted-foreground">
                     Tarifa Mercado Pago{" "}
                     {activeMethod === "card"
-                      ? `(~${mpCardPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% cartão)`
-                      : `(~${mpPixPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% PIX)`}{" "}
+                      ? `(~${mpPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% cartão)`
+                      : `(~${mpPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% PIX)`}{" "}
                     {passesFee ? "(paga por você)" : "(descontada do criador)"}
+
                   </dt>
                   <dd className={passesFee ? "font-medium" : "text-muted-foreground"}>
                     {passesFee ? "+ " : "− "}{brl(passesFee ? mpFeeAddedToSupporter : mpFeeCents)}
