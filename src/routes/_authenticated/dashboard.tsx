@@ -331,6 +331,58 @@ function Dashboard() {
           </div>
         </Card>
 
+        {/* Ações rápidas — estilo cartão bancário */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <NewCategoryDialog
+            onCreate={addCategory}
+            disabled={isFree && cats.length >= FREE_MAX_CATS}
+            trigger={
+              <button className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border bg-gradient-to-br from-brand/10 via-card to-card p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand text-brand-foreground shadow-md shadow-brand/25">
+                  <FolderPlus className="h-5 w-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">Nova categoria</span>
+                  <span className="block text-[11px] text-muted-foreground">Agrupe seus links</span>
+                </span>
+                <Plus className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-brand" />
+              </button>
+            }
+          />
+          <Link to="/pix" className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border bg-gradient-to-br from-rose-500/10 via-card to-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-rose-500 text-white shadow-md shadow-rose-500/25">
+              <Heart className="h-5 w-5" fill="currentColor" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">Campanhas</span>
+              <span className="block text-[11px] text-muted-foreground">PIX e cartão via Mercado Pago</span>
+            </span>
+            <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-rose-500" />
+          </Link>
+          <Link to="/encurtar" className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border bg-gradient-to-br from-amber-500/10 via-card to-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-amber-500 text-white shadow-md shadow-amber-500/25">
+              <Scissors className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold flex items-center gap-1.5">
+                Encurtador {isFree && <span className="rounded-full bg-amber-500/15 px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide text-amber-600">Pro</span>}
+              </span>
+              <span className="block text-[11px] text-muted-foreground">Links curtos com contagem</span>
+            </span>
+            <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-amber-500" />
+          </Link>
+          <Link to="/settings" className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border bg-gradient-to-br from-slate-500/10 via-card to-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-slate-700 text-white shadow-md shadow-slate-700/25">
+              <Settings2 className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">Personalizar</span>
+              <span className="block text-[11px] text-muted-foreground">Foto, bio e usuário</span>
+            </span>
+            <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-slate-700" />
+          </Link>
+        </div>
+
         {/* Visão geral */}
         <OverviewSection
           links={links}
