@@ -129,19 +129,21 @@ function PixPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao painel
         </Link>
 
-        <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand/10 text-brand">
-                <QrCode className="h-4 w-4" />
-              </span>
-              <h1 className="font-display text-2xl font-semibold tracking-tight">Módulo PIX</h1>
-              <Badge variant="secondary" className="ml-1">Marketplace</Badge>
+        <header className="mb-8 overflow-hidden rounded-2xl border bg-gradient-to-br from-card via-card to-brand/5 p-6 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand/70 text-white shadow-md shadow-brand/25">
+                  <Heart className="h-5 w-5" fill="currentColor" />
+                </span>
+                <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">Campanhas</h1>
+                <Badge variant="secondary" className="ml-1">Marketplace</Badge>
+              </div>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                Crie páginas de arrecadação com PIX ou cartão. Os valores caem <strong>direto</strong> na
+                sua conta Mercado Pago — o ForLink apenas cobra uma taxa de plataforma configurada pelo admin.
+              </p>
             </div>
-            <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
-              Crie páginas de arrecadação com QR Code PIX. Os valores caem <strong>direto</strong> na
-              sua conta Mercado Pago — o ForLink apenas cobra uma taxa de plataforma configurada pelo admin.
-            </p>
           </div>
         </header>
 
