@@ -55,21 +55,24 @@ async function flushChunk(reason: "size" | "time" | "route" | "unload" = "time")
     viewport_h: typeof window !== "undefined" ? window.innerHeight : null,
     bytes: estimateBytes(events),
   };
-  const body = JSON.stringify(payload);
   chunkStart = now;
 
   if (reason === "unload" && typeof navigator !== "undefined" && navigator.sendBeacon) {
     try {
-      const blob = new Blob([body], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
       if (navigator.sendBeacon(INGEST_URL, blob)) return;
     } catch { /* fallthrough */ }
   }
 
   try {
+    const { prepareBody } = await import("./worker-client");
+    const prep = await prepareBody(payload, { gzip: true });
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (prep.encoding === "gzip") headers["Content-Encoding"] = "gzip";
     await fetch(INGEST_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
+      headers,
+      body: prep.body as BodyInit,
       keepalive: true,
       credentials: "omit",
     });

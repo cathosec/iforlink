@@ -11,6 +11,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRequestIP, getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
+import { readMaybeGzip } from "./_body";
 
 const eventSchema = z
   .object({
@@ -112,8 +113,15 @@ export const Route = createFileRoute("/api/public/analytics/ingest")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const raw = await request.json().catch(() => null);
-          const parsed = schema.safeParse(raw);
+          const raw = await readMaybeGzip(request, 4 * 1024 * 1024);
+          if (raw == null) {
+            return new Response(JSON.stringify({ error: "payload_too_large" }), {
+              status: 413, headers: { "Content-Type": "application/json" },
+            });
+          }
+          let parsedJson: unknown = null;
+          try { parsedJson = JSON.parse(raw); } catch { parsedJson = null; }
+          const parsed = schema.safeParse(parsedJson);
           if (!parsed.success) {
             return new Response(
               JSON.stringify({ error: "invalid_payload", issues: parsed.error.issues.slice(0, 3) }),

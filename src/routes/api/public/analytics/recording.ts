@@ -8,6 +8,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
+import { readMaybeGzip } from "./_body";
 
 // Cada evento rrweb é opaco — validamos apenas o shape mínimo.
 const rrwebEventSchema = z
@@ -40,14 +41,15 @@ export const Route = createFileRoute("/api/public/analytics/recording")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          // Payload cap ~2MB para proteção
-          const raw = await request.text();
-          if (raw.length > 2 * 1024 * 1024) {
+          const raw = await readMaybeGzip(request, 4 * 1024 * 1024);
+          if (raw == null) {
             return new Response(JSON.stringify({ error: "payload_too_large" }), {
               status: 413, headers: { "Content-Type": "application/json" },
             });
           }
-          const parsed = schema.safeParse(JSON.parse(raw));
+          let parsedJson: unknown = null;
+          try { parsedJson = JSON.parse(raw); } catch { parsedJson = null; }
+          const parsed = schema.safeParse(parsedJson);
           if (!parsed.success) {
             return new Response(
               JSON.stringify({ error: "invalid_payload", issues: parsed.error.issues.slice(0, 3) }),
