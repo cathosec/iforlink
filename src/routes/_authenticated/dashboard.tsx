@@ -544,7 +544,7 @@ function SortableLinkRow({
     background: sortable.isDragging ? "var(--muted)" : undefined,
   };
   return (
-    <div ref={sortable.setNodeRef} style={style} className="flex items-center gap-3 px-5 py-3">
+    <div ref={sortable.setNodeRef} style={style} className="group flex items-center gap-3 px-5 py-3 transition hover:bg-muted/30">
       <button
         {...sortable.attributes}
         {...sortable.listeners}
