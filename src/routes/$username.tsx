@@ -16,7 +16,7 @@ import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
 import { LogoWordmark } from "@/components/logo";
 import { trackEvent } from "@/lib/analytics";
-import pixLogo from "@/assets/pix-logo.webp.asset.json";
+// Card de campanha usa a capa da própria campanha; sem dependência de asset externo.
 
 interface HeadProfile {
   username: string;
