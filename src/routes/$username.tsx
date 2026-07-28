@@ -28,9 +28,20 @@ interface HeadProfile {
   is_verified: boolean;
 }
 
+import {
+  SUPABASE_PUBLISHABLE_KEY_FALLBACK,
+  SUPABASE_URL_FALLBACK,
+} from "@/integrations/supabase/public-config";
+
 async function fetchProfileForHead(username: string): Promise<HeadProfile | null> {
-  const url = (typeof process !== "undefined" && process.env?.SUPABASE_URL) || undefined;
-  const key = (typeof process !== "undefined" && process.env?.SUPABASE_PUBLISHABLE_KEY) || undefined;
+  const url =
+    (typeof process !== "undefined" && process.env?.SUPABASE_URL) ||
+    (import.meta as any).env?.VITE_SUPABASE_URL ||
+    SUPABASE_URL_FALLBACK;
+  const key =
+    (typeof process !== "undefined" && process.env?.SUPABASE_PUBLISHABLE_KEY) ||
+    (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    SUPABASE_PUBLISHABLE_KEY_FALLBACK;
   if (!url || !key) return null;
   try {
     const res = await fetch(
