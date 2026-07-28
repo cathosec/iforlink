@@ -290,6 +290,14 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   const qc = useQueryClient();
   const create = useServerFn(createContribution);
   const getStatus = useServerFn(getContributionStatus);
+  const getCtx = useServerFn(getCampaignPaymentContext);
+
+  const ctxQ = useQuery({
+    queryKey: ["pix-campaign-ctx", c.slug],
+    queryFn: () => getCtx({ data: { slug: c.slug } }),
+    enabled: c.accepts_card,
+    staleTime: 5 * 60_000,
+  });
 
   const [amount, setAmount] = useState(c.suggested_amounts?.[1] ?? c.min_cents);
   const [name, setName] = useState("");
