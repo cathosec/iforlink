@@ -56,12 +56,6 @@ export const Route = createFileRoute("/api/public/analytics/recording")({
               { status: 400, headers: { "Content-Type": "application/json" } },
             );
           }
-          if (!parsed.success) {
-            return new Response(
-              JSON.stringify({ error: "invalid_payload", issues: parsed.error.issues.slice(0, 3) }),
-              { status: 400, headers: { "Content-Type": "application/json" } },
-            );
-          }
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
