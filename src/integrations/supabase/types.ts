@@ -653,6 +653,15 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_pix_campaign_public_data: {
+        Args: { _slug: string }
+        Returns: {
+          accepts_card: boolean
+          campaign_id: string
+          live_mode: boolean
+          public_key: string
+        }[]
+      }
       get_pix_contribution_status: {
         Args: { _id: string }
         Returns: {
