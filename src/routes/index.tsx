@@ -433,7 +433,7 @@ function Home() {
 
       {/* Top ad slot */}
       <div className="mx-auto max-w-6xl px-4">
-        <AdPlaceholder position="Topo do diretório" />
+        
         <AdSlot slot="top" label="Publicidade" />
       </div>
 
