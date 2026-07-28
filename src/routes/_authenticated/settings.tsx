@@ -20,10 +20,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Upload, Trash2, ShieldAlert, Download } from "lucide-react";
+import { Upload, Trash2, ShieldAlert, Download, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
+import {
+  SOCIAL_PLATFORMS,
+  SOCIAL_MAP,
+  SocialIcon,
+  normalizeSocialLinks,
+  type SocialLinkEntry,
+} from "@/lib/social-links";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: Settings,
