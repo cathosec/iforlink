@@ -21,6 +21,7 @@ import {
   QrCode, ImageIcon, Copy, TrendingUp, Users2, CheckCircle2, Heart, BarChart3,
 } from "lucide-react";
 import { FeatureGate } from "@/components/feature-gate";
+import { UpgradeBanner } from "@/components/upgrade-nudge";
 import { startMpOAuth, disconnectMp, getMpStatus } from "@/lib/pix.functions";
 
 export const Route = createFileRoute("/_authenticated/pix")({
@@ -214,9 +215,11 @@ function PixPage() {
           </div>
 
           {role === "free" && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg border border-brand/20 bg-brand/5 p-3 text-xs">
-              <Sparkles className="h-4 w-4 text-brand" />
-              <span>Plano <strong>Free</strong>: 1 campanha ativa. Faça upgrade para <Link to="/assinar" className="underline">Pro</Link> e crie ilimitadas.</span>
+            <div className="mb-4">
+              <UpgradeBanner
+                context="campaigns_limit"
+                source={campaigns.length >= 1 ? "pix_limit_hit" : "pix_free_hint"}
+              />
             </div>
           )}
 

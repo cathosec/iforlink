@@ -37,6 +37,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { CategoryIconPicker } from "@/components/category-icon-picker";
 import { CategoryIcon, DEFAULT_CATEGORY_ICON } from "@/lib/category-icons";
+import { UpgradeBanner, UpgradeDialog, type UpgradeContext } from "@/components/upgrade-nudge";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -101,6 +102,11 @@ function Dashboard() {
   const profileViews = profileStatsQ.data ?? 0;
   const activeSub = activeSubQ.data;
   const isFree = role === "free";
+  const [upgradeCtx, setUpgradeCtx] = useState<UpgradeContext | null>(null);
+
+  const nearLinkLimit = isFree && links.length >= Math.ceil(FREE_MAX_LINKS * 0.8);
+  const nearCatLimit = isFree && cats.length >= Math.ceil(FREE_MAX_CATS * 0.8);
+  const showLimitBanner = nearLinkLimit || nearCatLimit;
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["dash-cats", user?.id] });
@@ -109,7 +115,7 @@ function Dashboard() {
 
   const addCategory = async (name: string, icon: string) => {
     if (isFree && cats.length >= FREE_MAX_CATS) {
-      toast.error(`Plano Free permite ${FREE_MAX_CATS} categorias.`);
+      setUpgradeCtx("categories_limit");
       return false;
     }
     const { error } = await supabase.from("user_categories").insert({
@@ -166,7 +172,7 @@ function Dashboard() {
 
   const saveLink = async (data: Partial<LinkRow> & { category_id: string; title: string; url: string }) => {
     if (isFree && !data.id && links.length >= FREE_MAX_LINKS) {
-      toast.error(`Plano Free permite ${FREE_MAX_LINKS} links.`);
+      setUpgradeCtx("links_limit");
       return false;
     }
     const url = normalizeUrl(data.url);
@@ -382,6 +388,24 @@ function Dashboard() {
             <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-slate-700" />
           </Link>
         </div>
+
+        {showLimitBanner && (
+          <div className="mt-6">
+            <UpgradeBanner
+              context={nearLinkLimit ? "links_limit" : "categories_limit"}
+              source="dashboard_near_limit"
+            />
+          </div>
+        )}
+
+        <UpgradeDialog
+          open={upgradeCtx !== null}
+          onOpenChange={(v) => { if (!v) setUpgradeCtx(null); }}
+          context={upgradeCtx ?? "generic"}
+          source="dashboard_limit_hit"
+        />
+
+
 
         {/* Visão geral */}
         <OverviewSection
