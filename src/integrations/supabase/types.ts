@@ -764,6 +764,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_used_at: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           bucket: string
@@ -1295,6 +1328,10 @@ export type Database = {
         }
         Returns: string
       }
+      delete_push_subscription_by_endpoint: {
+        Args: { _endpoint: string }
+        Returns: undefined
+      }
       get_admin_notify_email: { Args: never; Returns: string }
       get_campaign_fee_for_user: {
         Args: { _user_id: string }
@@ -1302,6 +1339,14 @@ export type Database = {
           creator_role: Database["public"]["Enums"]["app_role"]
           fee_pct: number
           min_fee_cents: number
+        }[]
+      }
+      get_campaign_owner_push_subs: {
+        Args: { _campaign_id: string }
+        Returns: {
+          auth: string
+          endpoint: string
+          p256dh: string
         }[]
       }
       get_mercadopago_webhook_access_token: {
