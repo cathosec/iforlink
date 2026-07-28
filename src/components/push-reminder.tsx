@@ -5,12 +5,12 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import {
   pushSupported,
-  isStandalone,
   getExistingSubscription,
   subscribePush,
   subscriptionToJSON,
 } from "@/lib/push/client";
 import { savePushSubscription } from "@/lib/push.functions";
+import { useAuth } from "@/lib/auth-context";
 
 const SEEN_KEY = "forlink:push-reminder-seen-at";
 const SNOOZE_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
