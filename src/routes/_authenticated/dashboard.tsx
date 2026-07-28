@@ -450,8 +450,9 @@ function SortableCategoryCard(props: SortableCategoryCardProps) {
 
   return (
     <div ref={sortable.setNodeRef} style={style}>
-      <Card className="overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/30 px-5 py-3">
+      <Card className="overflow-hidden border-border/70 shadow-sm transition hover:shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-gradient-to-r from-muted/50 via-muted/20 to-transparent px-5 py-3">
+
           <div className="flex items-center gap-2">
             <button
               {...sortable.attributes}
