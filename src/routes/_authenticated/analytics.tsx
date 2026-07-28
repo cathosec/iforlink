@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -148,8 +148,7 @@ function AnalyticsPage() {
   );
 }
 
-// Redirect não usado — Navigate mantém compat se precisarmos
-export const _unused = Navigate;
+
 
 function Header({ role }: { role: string }) {
   return (
