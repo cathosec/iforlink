@@ -169,6 +169,31 @@ function PrivacyPage() {
             revisitando o banner de consentimento.
           </p>
 
+          <h2>4.1 Analytics próprio e gravação de sessão</h2>
+          <p>
+            Quando você consente com cookies de <strong>Análise</strong>, o
+            ForLink pode registrar mapas de calor (cliques e movimento do
+            mouse) e <strong>gravar a sua navegação em páginas públicas</strong>
+            usando tecnologia rrweb — isto reconstitui a interface como se
+            fosse um vídeo, para que o criador da página possa entender como
+            visitantes usam o link.
+          </p>
+          <p>
+            Aplicamos <strong>máscara automática</strong> em qualquer campo de
+            formulário (inputs, textareas, senhas, e-mails, telefones,
+            números de cartão, CPFs e tokens). Blocos marcados com
+            <code>.forlink-block</code> ou <code>data-forlink-sensitive</code>
+            são totalmente ocultados. O IP é truncado antes do armazenamento e
+            nunca gravamos áudio, câmera, microfone ou o conteúdo digitado.
+            Apenas o dono da página (Pro) e a equipe administrativa podem
+            reproduzir gravações das <em>próprias</em> páginas.
+          </p>
+          <p>
+            Se você não deseja ser gravado, recuse os cookies de Análise no
+            banner de consentimento — nenhuma gravação será iniciada.
+          </p>
+
+
           <h3>4.1. Módulo Campanhas (integração Mercado Pago)</h3>
           <p>
             O ForLink atua como <strong>facilitador tecnológico</strong>: não
