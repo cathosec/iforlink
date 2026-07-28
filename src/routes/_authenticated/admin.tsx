@@ -84,11 +84,18 @@ function Admin() {
           <div className="grid h-10 w-10 place-items-center rounded-lg bg-brand text-white">
             <ShieldAlert className="h-5 w-5" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="font-display text-3xl tracking-tight">Painel do Super-Admin</h1>
             <p className="text-sm text-muted-foreground">Controle total sobre a ForLink — usuários, conteúdo, assinaturas e gateways.</p>
           </div>
+          <Link
+            to="/eventos"
+            className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent"
+          >
+            <Activity className="h-4 w-4" /> Eventos
+          </Link>
         </div>
+
 
         <Tabs defaultValue="overview" orientation="vertical" className="mt-8 flex flex-col gap-6 md:flex-row md:items-start">
           <TabsList className="flex h-auto w-full flex-row flex-wrap justify-start gap-1 rounded-lg border bg-card p-2 md:w-56 md:shrink-0 md:flex-col md:flex-nowrap">
