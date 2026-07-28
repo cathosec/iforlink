@@ -205,7 +205,7 @@ async function sendSubscriptionEmails(
     }).catch((e) => console.error("[MP webhook] pro-activated", e));
 
     const { data: adminEmail } = await supabase.rpc("get_admin_notify_email" as never);
-    const adminTo = typeof adminEmail === "string" ? adminEmail.trim() : "";
+    const adminTo = typeof (adminEmail as unknown) === "string" ? (adminEmail as unknown as string).trim() : "";
     if (adminTo) {
       await sendTemplateEmail("admin-new-subscriber", adminTo, {
         idempotencyKey: `admin-new-sub-${externalRef}`,
