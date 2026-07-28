@@ -430,3 +430,102 @@ function Precos() {
     </div>
   );
 }
+
+// ============================================================================
+// Complementos (Fase 4 Monetização)
+// ============================================================================
+type AddonCatalogItem = { key: string; label: string; price_cents: number; description: string };
+
+function AddonsSection() {
+  const [user, setUser] = useState<{ id: string } | null>(null);
+  useMemo(() => {
+    void supabase.auth.getUser().then(({ data }) => setUser(data.user ? { id: data.user.id } : null));
+  }, []);
+
+  const catalogQ = useQuery({
+    queryKey: ["addons-catalog"],
+    queryFn: async (): Promise<AddonCatalogItem[]> => {
+      const { data } = await supabase.rpc("get_public_setting", { _key: "addons" });
+      const items = (data as { items?: AddonCatalogItem[] } | null)?.items ?? [];
+      return items;
+    },
+  });
+
+  const myAddonsQ = useQuery({
+    queryKey: ["my-addons", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase.from("user_addons")
+        .select("addon,status").eq("user_id", user!.id);
+      return data ?? [];
+    },
+  });
+
+  const request = async (item: AddonCatalogItem) => {
+    if (!user) {
+      window.location.href = "/auth";
+      return;
+    }
+    const { error } = await supabase.from("user_addons").insert({
+      user_id: user.id, addon: item.key, price_cents: item.price_cents, status: "requested",
+    } as never);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    void myAddonsQ.refetch();
+    alert("Solicitação enviada! Entraremos em contato para ativar.");
+  };
+
+  const items = catalogQ.data ?? [];
+  if (items.length === 0) return null;
+
+  const mine = new Map((myAddonsQ.data ?? []).map((r) => [r.addon, r.status]));
+
+  return (
+    <section className="border-b bg-secondary/20">
+      <div className="mx-auto max-w-6xl px-4 py-14">
+        <div className="mx-auto max-w-2xl text-center">
+          <Badge variant="secondary" className="mb-3">Complementos opcionais</Badge>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Add-ons para escalar mais</h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Contrate apenas o que precisar. Solicite pelo painel e nossa equipe ativa em até 1 dia útil.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((it) => {
+            const status = mine.get(it.key);
+            const isActive = status === "active";
+            const isPending = status === "requested";
+            return (
+              <Card key={it.key} className="flex flex-col justify-between p-5">
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-base font-semibold">{it.label}</h3>
+                    <Sparkles className="h-4 w-4 text-brand" />
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">{it.description}</p>
+                </div>
+                <div className="mt-4 flex items-end justify-between gap-2">
+                  <div>
+                    <div className="text-lg font-semibold">{brl(it.price_cents)}</div>
+                    <div className="text-[10px] uppercase text-muted-foreground">por mês</div>
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={isActive || isPending}
+                    variant={isActive ? "secondary" : "outline"}
+                    onClick={() => void request(it)}
+                  >
+                    {isActive ? "Ativo" : isPending ? "Solicitado" : "Solicitar"}
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
