@@ -239,64 +239,95 @@ function Dashboard() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
-      <main className="mx-auto max-w-4xl px-4 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="font-display text-4xl tracking-tight">Painel</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Organize suas categorias e links. Alterações são publicadas na hora.
+      {/* Faixa decorativa de topo */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-14 -z-10 h-[360px] opacity-[0.10]"
+        style={{ background: "radial-gradient(ellipse at 50% 0%, hsl(var(--brand)) 0%, transparent 65%)" }}
+      />
+
+      <main className="mx-auto max-w-5xl px-4 py-10">
+        {/* Hero */}
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-1.5 rounded-full border bg-background/70 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm backdrop-blur">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Publicação ao vivo
+            </div>
+            <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Painel</h1>
+            <p className="mt-1.5 max-w-xl text-sm text-muted-foreground sm:text-[15px]">
+              Organize suas categorias e links com uma experiência refinada. Suas alterações vão ao ar instantaneamente.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link to="/encurtar">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="rounded-full shadow-sm">
                 <Scissors className="mr-2 h-3.5 w-3.5" /> Encurtador
                 {isFree && <span className="ml-2 rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">Pro</span>}
               </Button>
             </Link>
             <Link to="/pix">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="rounded-full shadow-sm">
                 <CreditCard className="mr-2 h-3.5 w-3.5" /> Módulo PIX
               </Button>
             </Link>
             {profile && (
               <Link to="/$username" params={{ username: profile.username }}>
-                <Button variant="outline" size="sm"><ExternalLink className="mr-2 h-3.5 w-3.5" /> Ver perfil público</Button>
+                <Button size="sm" className="rounded-full bg-foreground text-background shadow-sm hover:bg-foreground/90">
+                  <ExternalLink className="mr-2 h-3.5 w-3.5" /> Ver perfil público
+                </Button>
               </Link>
             )}
           </div>
         </div>
 
         {/* Plano */}
-        <Card className="mt-6 flex flex-wrap items-center justify-between gap-4 p-5">
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-lg bg-brand-soft text-brand">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="font-semibold">Plano {role === "pro" ? "Pro" : role === "admin" ? "Admin" : "Free"}</div>
-              <div className="text-xs text-muted-foreground">
-                {isFree
-                  ? `${cats.length}/${FREE_MAX_CATS} categorias · ${links.length}/${FREE_MAX_LINKS} links`
-                  : activeSub?.current_period_end
-                  ? `Renova em ${new Date(activeSub.current_period_end).toLocaleDateString("pt-BR")}`
-                  : "Categorias e links ilimitados"}
+        <Card className="relative mt-8 overflow-hidden border-0 shadow-xl ring-1 ring-border/60">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[0.08]"
+            style={{ background: "linear-gradient(120deg, hsl(var(--brand)) 0%, transparent 55%)" }}
+          />
+          <div className="relative flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
+            <div className="flex items-center gap-4">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand/70 text-white shadow-lg shadow-brand/30">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <div className="font-display text-lg font-semibold">
+                    Plano {role === "pro" ? "Pro" : role === "admin" ? "Admin" : "Free"}
+                  </div>
+                  {role === "pro" && <Badge className="bg-brand/10 text-[10px] font-semibold uppercase text-brand hover:bg-brand/15">Ativo</Badge>}
+                  {role === "admin" && <Badge className="bg-amber-500/10 text-[10px] font-semibold uppercase text-amber-600 hover:bg-amber-500/15">Super</Badge>}
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+                  {isFree
+                    ? `${cats.length}/${FREE_MAX_CATS} categorias · ${links.length}/${FREE_MAX_LINKS} links`
+                    : activeSub?.current_period_end
+                    ? `Renova em ${new Date(activeSub.current_period_end).toLocaleDateString("pt-BR")}`
+                    : "Categorias e links ilimitados"}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link to="/assinatura">
-              <Button variant="outline" size="sm">
-                <CreditCard className="mr-2 h-3.5 w-3.5" /> Minha assinatura
-              </Button>
-            </Link>
-            {role !== "admin" && (
-              <Link to="/assinar">
-                <Button variant={role === "pro" ? "outline" : "default"} size="sm">
-                  {role === "pro" ? "Renovar" : "Fazer upgrade para Pro"}
+            <div className="flex flex-wrap items-center gap-2">
+              <Link to="/assinatura">
+                <Button variant="outline" size="sm" className="rounded-full">
+                  <CreditCard className="mr-2 h-3.5 w-3.5" /> Minha assinatura
                 </Button>
               </Link>
-            )}
+              {role !== "admin" && (
+                <Link to="/assinar">
+                  <Button
+                    size="sm"
+                    className={`rounded-full ${role === "pro" ? "" : "bg-gradient-to-r from-brand to-brand/80 text-brand-foreground shadow-md shadow-brand/20 hover:opacity-95"}`}
+                    variant={role === "pro" ? "outline" : "default"}
+                  >
+                    {role === "pro" ? "Renovar" : "Fazer upgrade para Pro"}
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
         </Card>
 
@@ -307,13 +338,15 @@ function Dashboard() {
           profileViews={profileViews}
         />
 
-
-
         {/* Nova categoria */}
-        <div className="mt-8 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Categorias</h2>
+        <div className="mt-10 flex items-end justify-between">
+          <div>
+            <h2 className="font-display text-2xl font-semibold tracking-tight">Categorias</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">Agrupe seus links por tema. Arraste para reordenar.</p>
+          </div>
           <NewCategoryDialog onCreate={addCategory} disabled={isFree && cats.length >= FREE_MAX_CATS} />
         </div>
+
 
         {cats.length === 0 ? (
           <Card className="mt-4 border-dashed p-12 text-center">
