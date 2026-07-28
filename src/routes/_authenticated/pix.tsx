@@ -55,6 +55,10 @@ const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", c
 const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
 
+function PixPageGated() {
+  return <FeatureGate flag="campaigns_enabled" title="Campanhas"><PixPage /></FeatureGate>;
+}
+
 function PixPage() {
   const { user, role, loading } = useAuth();
   const search = useSearch({ from: "/_authenticated/pix" });
