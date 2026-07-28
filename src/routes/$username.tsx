@@ -16,6 +16,7 @@ import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
 import { LogoWordmark } from "@/components/logo";
 import { trackEvent } from "@/lib/analytics";
+import { SOCIAL_MAP, SocialIcon, normalizeSocialLinks, type SocialLinkEntry } from "@/lib/social-links";
 // Card de campanha usa a capa da própria campanha; sem dependência de asset externo.
 
 interface HeadProfile {
