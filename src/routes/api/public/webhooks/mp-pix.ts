@@ -1,90 +1,107 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
+
+function getAnon() {
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
+  return createClient(url, key, {
+    auth: { persistSession: false },
+    global: {
+      fetch: (input, init) => {
+        const h = new Headers(init?.headers);
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      },
+    },
+  });
+}
 
 export const Route = createFileRoute("/api/public/webhooks/mp-pix")({
   server: {
     handlers: {
       GET: async () => Response.json({ ok: true, hook: "mp-pix" }),
       POST: async ({ request }) => {
-        const raw = await request.text();
-        const url = new URL(request.url);
-        let payload: { type?: string; action?: string; data?: { id?: string } } = {};
-        try { payload = raw ? JSON.parse(raw) : {}; } catch { /* noop */ }
-        const paymentId = payload?.data?.id ?? url.searchParams.get("data.id") ?? url.searchParams.get("id") ?? "";
-        const type = payload?.type ?? payload?.action ?? url.searchParams.get("type") ?? "";
-        if (!paymentId || !(type.includes("payment") || url.searchParams.get("type") === "payment")) {
-          return new Response("ignored", { status: 200 });
-        }
+        try {
+          const raw = await request.text();
+          const url = new URL(request.url);
+          let payload: { type?: string; action?: string; data?: { id?: string } } = {};
+          try { payload = raw ? JSON.parse(raw) : {}; } catch { /* noop */ }
+          const paymentId =
+            payload?.data?.id ??
+            url.searchParams.get("data.id") ??
+            url.searchParams.get("id") ??
+            "";
+          const type =
+            payload?.type ?? payload?.action ?? url.searchParams.get("type") ?? "";
+          if (!paymentId || !(String(type).includes("payment") || url.searchParams.get("type") === "payment")) {
+            return new Response("ignored", { status: 200 });
+          }
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const supabase = getAnon();
 
-        // Localiza contribuição pelo mp_payment_id
-        const { data: contrib } = await supabaseAdmin
-          .from("pix_contributions")
-          .select("id,campaign_id,status")
-          .eq("mp_payment_id", String(paymentId))
-          .maybeSingle();
-        if (!contrib) {
-          // Ainda não vinculada — tenta pelo external_reference após buscar no MP
-          // Precisa do token do dono; usa qualquer campanha ativa (fallback simples via qualquer conta)
-        }
+          // 1) tenta resolver contribuição pelo mp_payment_id
+          type ResolvedRow = { contribution_id: string; campaign_id: string; access_token: string; live_mode: boolean };
+          let contribId: string | null = null;
+          let ownerToken: string | null = null;
 
-        // Se não achou, precisa buscar external_reference no MP. Para isso precisamos de token.
-        // Estratégia: se achou o contrib, pega token do dono; senão, tenta cada conta ativa.
-        let contribId = contrib?.id ?? null;
-        let campaignId = contrib?.campaign_id ?? null;
-        let ownerToken: string | null = null;
-
-        if (campaignId) {
-          const { data: tokRows } = await supabaseAdmin.rpc(
-            "get_pix_campaign_owner_token" as never,
-            { _campaign_id: campaignId } as never,
+          const resolved = await supabase.rpc(
+            "resolve_pix_contribution_by_mp" as never,
+            { _mp_payment_id: String(paymentId) } as never,
           );
-          const row = Array.isArray(tokRows) ? tokRows[0] : tokRows;
-          ownerToken = (row as { access_token?: string } | null)?.access_token ?? null;
-        }
+          const row = Array.isArray(resolved.data) ? (resolved.data[0] as ResolvedRow | undefined) : undefined;
+          if (row?.contribution_id) {
+            contribId = row.contribution_id;
+            ownerToken = row.access_token ?? null;
+          }
 
-        // Se ainda não conhecemos, resolvemos external_reference tentando 1 token por vez
-        if (!contribId || !ownerToken) {
-          const { data: accts } = await supabaseAdmin
-            .from("mp_accounts").select("access_token").limit(50);
-          for (const a of accts ?? []) {
-            const r = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-              headers: { Authorization: `Bearer ${a.access_token}` },
-            });
-            if (r.ok) {
-              const j = await r.json();
-              const ext = j?.external_reference as string | undefined;
-              if (ext) {
-                contribId = ext;
-                ownerToken = a.access_token;
-                break;
+          // 2) fallback: procura em todas as contas MP e usa external_reference
+          if (!contribId || !ownerToken) {
+            const listed = await supabase.rpc("list_mp_account_tokens" as never);
+            const tokens = Array.isArray(listed.data)
+              ? (listed.data as { access_token: string }[])
+              : [];
+            for (const t of tokens) {
+              const r = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+                headers: { Authorization: `Bearer ${t.access_token}` },
+              });
+              if (r.ok) {
+                const j = (await r.json()) as { external_reference?: string };
+                if (j?.external_reference) {
+                  contribId = j.external_reference;
+                  ownerToken = t.access_token;
+                  break;
+                }
               }
             }
           }
-        }
 
-        if (!contribId || !ownerToken) {
-          return new Response("could not resolve payment", { status: 200 });
-        }
+          if (!contribId || !ownerToken) {
+            return new Response("could not resolve payment", { status: 200 });
+          }
 
-        const resp = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-          headers: { Authorization: `Bearer ${ownerToken}` },
-        });
-        if (!resp.ok) {
-          console.error("[mp-pix webhook] fetch payment failed", resp.status);
-          return new Response("mp fetch failed", { status: 502 });
-        }
-        const mp = await resp.json();
+          const resp = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+            headers: { Authorization: `Bearer ${ownerToken}` },
+          });
+          if (!resp.ok) {
+            console.error("[mp-pix webhook] fetch payment failed", resp.status);
+            return new Response("mp fetch failed", { status: 502 });
+          }
+          const mp = await resp.json();
 
-        const { error } = await supabaseAdmin.rpc(
-          "apply_pix_contribution_update" as never,
-          { _contribution_id: contribId, _mp_payment: mp } as never,
-        );
-        if (error) {
-          console.error("[mp-pix webhook] apply failed", error.message);
-          return new Response("apply failed", { status: 500 });
+          const { error } = await supabase.rpc(
+            "apply_pix_contribution_update" as never,
+            { _contribution_id: contribId, _mp_payment: mp } as never,
+          );
+          if (error) {
+            console.error("[mp-pix webhook] apply failed", error.message);
+            return new Response("apply failed", { status: 500 });
+          }
+          return new Response("ok", { status: 200 });
+        } catch (e) {
+          console.error("[mp-pix webhook] unexpected", e);
+          return new Response("error", { status: 500 });
         }
-        return new Response("ok", { status: 200 });
       },
     },
   },
