@@ -3,6 +3,8 @@
  */
 /* eslint-disable no-restricted-globals */
 
+const VAPID_PUBLIC_KEY = "BHwXwomqxRNyzKTsWLZDwupNYKadkCNvT4kTLQm8KlKT64QoDx-RKf37eqXqDX3O_P2vZxDqqjufZZbzEod_nXk";
+
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
@@ -62,7 +64,7 @@ self.addEventListener("pushsubscriptionchange", (event) => {
   event.waitUntil(
     (async () => {
       try {
-        const applicationServerKey = self.__VAPID_PUBLIC_KEY__;
+        const applicationServerKey = VAPID_PUBLIC_KEY;
         if (!applicationServerKey) return;
         const newSub = await self.registration.pushManager.subscribe({
           userVisibleOnly: true,

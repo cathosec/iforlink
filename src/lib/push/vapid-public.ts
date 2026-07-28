@@ -1,6 +1,7 @@
 // Chave pública VAPID — segura para expor no browser (é a metade pública do par ECDSA).
+// Atualizada em 28/07/2026.
 export const VAPID_PUBLIC_KEY =
-  "BE3iKlv7weqZ43hDh5vTNfoO9HIsAzEG_UXE1pYALpSYk_-cLxRiv6IgCJzeq9LGhmY4yKenO359wxJVX3AO0uw";
+  "BHwXwomqxRNyzKTsWLZDwupNYKadkCNvT4kTLQm8KlKT64QoDx-RKf37eqXqDX3O_P2vZxDqqjufZZbzEod_nXk";
 
 export function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
