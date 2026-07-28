@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/public/oauth/mercadopago/callback")({
       GET: async ({ request }) => {
         const url = new URL(request.url);
         const code = url.searchParams.get("code");
-        const state = url.searchParams.get("state"); // userId
+        const state = url.searchParams.get("state");
         const errorParam = url.searchParams.get("error");
         const site = `${url.protocol}//${url.host}`;
 
@@ -106,8 +106,6 @@ export const Route = createFileRoute("/api/public/oauth/mercadopago/callback")({
             `/pix?mp=error&reason=token_exchange&detail=${encodeURIComponent(String(mpMsg))}`,
           );
         }
-
-
         const t = tokenJson as {
           access_token?: string; refresh_token?: string; public_key?: string;
           user_id?: string | number; live_mode?: boolean; scope?: string; expires_in?: number;
