@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/pix")({
     reason: (s.reason as string | undefined) ?? undefined,
     detail: (s.detail as string | undefined) ?? undefined,
   }),
-  head: () => ({ meta: [{ title: "Módulo PIX · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({ meta: [{ title: "Campanhas · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
 interface Campaign {
@@ -37,6 +37,7 @@ interface Campaign {
   description: string | null; cover_url: string | null; accent_color: string;
   goal_cents: number; min_cents: number; suggested_amounts: number[];
   accepts_card: boolean; pass_fee_to_supporter: boolean; show_supporters: boolean;
+  show_progress: boolean;
   allow_message: boolean; ends_at: string | null; raised_cents: number;
   supporters_count: number; is_active: boolean; created_at: string;
 }
@@ -46,7 +47,7 @@ const emptyCampaign: Partial<Campaign> = {
   goal_cents: 100000, min_cents: 500,
   suggested_amounts: [1000, 2500, 5000, 10000],
   accepts_card: false, pass_fee_to_supporter: false,
-  show_supporters: true, allow_message: true, is_active: true,
+  show_supporters: true, show_progress: true, allow_message: true, is_active: true,
 };
 
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100);
