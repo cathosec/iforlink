@@ -83,9 +83,12 @@ function PixPage() {
       toast.success("Mercado Pago conectado com sucesso!");
       qc.invalidateQueries({ queryKey: ["mp-status", user?.id] });
     } else if (search.mp === "error") {
-      toast.error(`Falha ao conectar (${search.reason ?? "desconhecido"})`);
+      const reason = search.reason ?? "desconhecido";
+      const detail = (search as { detail?: string }).detail;
+      toast.error(`Falha ao conectar (${reason})${detail ? ` — ${detail}` : ""}`, { duration: 8000 });
     }
-  }, [search.mp, search.reason, qc, user?.id]);
+  }, [search.mp, search.reason, (search as { detail?: string }).detail, qc, user?.id]);
+
 
   if (!loading && !isPro) return <UpgradeGate />;
 
