@@ -509,7 +509,7 @@ function PublicProfile() {
                     <h2 className="mt-0.5 truncate text-sm font-semibold text-foreground">
                       {c.title}
                     </h2>
-                    {pct !== null ? (
+                    {showProgress && pct !== null ? (
                       <div className="mt-2">
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                           <div
@@ -524,7 +524,7 @@ function PublicProfile() {
                           <span>{pct}%</span>
                         </div>
                       </div>
-                    ) : raised > 0 ? (
+                    ) : showProgress && raised > 0 ? (
                       <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
                         Arrecadado:{" "}
                         <b className="font-semibold text-foreground">{fmt(raised)}</b>
