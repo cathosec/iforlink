@@ -124,6 +124,29 @@ interface CreateContribInput {
   is_anonymous?: boolean;
 }
 
+/** Público: dados seguros para inicializar o SDK Mercado Pago no checkout do apoiador. */
+export const getCampaignPaymentContext = createServerFn({ method: "POST" })
+  .inputValidator((data: { slug: string }) => {
+    if (!data.slug) throw new Error("slug obrigatório");
+    return data;
+  })
+  .handler(async ({ data }) => {
+    const supabase = publicSupabase();
+    const { data: rows, error } = await supabase.rpc(
+      "get_pix_campaign_public_data" as never,
+      { _slug: data.slug } as never,
+    );
+    if (error) throw new Error(error.message);
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    if (!row) throw new Error("Campanha não encontrada");
+    return row as {
+      campaign_id: string;
+      accepts_card: boolean;
+      public_key: string | null;
+      live_mode: boolean;
+    };
+  });
+
 /** Público: cria uma contribuição pendente e gera PIX no MP do dono da campanha. */
 export const createContribution = createServerFn({ method: "POST" })
   .inputValidator((data: CreateContribInput) => {
@@ -139,7 +162,6 @@ export const createContribution = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const supabase = publicSupabase();
 
-    // Busca campanha
     const { data: camp, error: campErr } = await supabase
       .from("pix_campaigns")
       .select("id,user_id,title,min_cents,accepts_card,pass_fee_to_supporter,is_active")
@@ -155,9 +177,8 @@ export const createContribution = createServerFn({ method: "POST" })
     if (!cfg.enabled) throw new Error("Pagamentos PIX desativados no momento.");
     const feePct = Number(cfg.fee_percent ?? 0);
     const minFee = Math.max(0, Number(cfg.min_fee_cents ?? 0));
-    let feeCents = Math.max(minFee, Math.round((data.amount_cents * feePct) / 100));
+    const feeCents = Math.max(minFee, Math.round((data.amount_cents * feePct) / 100));
 
-    // Passa taxa para o apoiador: aumenta o valor cobrado
     let charged = data.amount_cents;
     let net = data.amount_cents - feeCents;
     if (camp.pass_fee_to_supporter) {
@@ -166,7 +187,6 @@ export const createContribution = createServerFn({ method: "POST" })
     }
     if (net < 0) throw new Error("Configuração de taxa inválida");
 
-    // Busca token do dono via RPC SECURITY DEFINER (não requer service role)
     const { data: tokRows, error: tokErr } = await supabase.rpc(
       "get_pix_campaign_owner_token" as never,
       { _campaign_id: camp.id } as never,
@@ -175,7 +195,6 @@ export const createContribution = createServerFn({ method: "POST" })
     const acct = Array.isArray(tokRows) ? (tokRows[0] as { access_token?: string } | undefined) : undefined;
     if (!acct?.access_token) throw new Error("O criador da campanha ainda não conectou o Mercado Pago.");
 
-    // Cria linha pendente via RPC (SECURITY DEFINER, contorna RLS)
     const { data: contribId, error: rpcErr } = await supabase.rpc("create_pending_pix_contribution", {
       _campaign_id: camp.id,
       _supporter_name: data.supporter_name ?? null,
@@ -189,11 +208,9 @@ export const createContribution = createServerFn({ method: "POST" })
     } as never);
     if (rpcErr || !contribId) throw new Error(rpcErr?.message ?? "Falha ao registrar contribuição");
 
-    // Deriva webhook URL
     const host = await getRequestHostFallback("");
     const notificationUrl = host ? `https://${host}/api/public/webhooks/mp-pix` : undefined;
 
-    // Cria pagamento PIX no MP com application_fee (marketplace split)
     const body: Record<string, unknown> = {
       transaction_amount: charged / 100,
       description: `Apoio: ${camp.title}`,
@@ -239,6 +256,158 @@ export const createContribution = createServerFn({ method: "POST" })
       qr_code: txn.qr_code as string | null,
       qr_code_base64: txn.qr_code_base64 as string | null,
       ticket_url: txn.ticket_url as string | null,
+      amount_cents: charged,
+      fee_cents: feeCents,
+    };
+  });
+
+/**
+ * Público: processa pagamento com cartão de crédito/débito ou carteira Mercado Pago.
+ * O token é tokenizado no client via Payment Brick (PCI-DSS) — nunca recebemos PAN.
+ */
+interface ProcessCardInput {
+  campaignSlug: string;
+  amount_cents: number;
+  supporter_name?: string;
+  supporter_email: string;
+  message?: string;
+  is_anonymous?: boolean;
+  brick: {
+    token?: string;
+    issuer_id?: string | number;
+    payment_method_id: string;
+    payment_type_id?: string;
+    installments?: number;
+    payer?: {
+      email?: string;
+      identification?: { type?: string; number?: string };
+    };
+  };
+}
+
+export const processCardPayment = createServerFn({ method: "POST" })
+  .inputValidator((data: ProcessCardInput) => {
+    if (!data.campaignSlug) throw new Error("Campanha inválida");
+    if (!data.supporter_email?.includes("@")) throw new Error("E-mail obrigatório");
+    if (!Number.isFinite(data.amount_cents) || data.amount_cents < 100) throw new Error("Valor mínimo R$ 1,00");
+    if (data.amount_cents > 5_000_000) throw new Error("Valor acima do limite");
+    if (!data.brick?.payment_method_id) throw new Error("Método de pagamento inválido");
+    return data;
+  })
+  .handler(async ({ data }) => {
+    const supabase = publicSupabase();
+
+    const { data: camp, error: campErr } = await supabase
+      .from("pix_campaigns")
+      .select("id,user_id,title,min_cents,accepts_card,pass_fee_to_supporter,is_active")
+      .eq("slug", data.campaignSlug)
+      .maybeSingle();
+    if (campErr || !camp || !camp.is_active) throw new Error("Campanha indisponível");
+    if (!camp.accepts_card) throw new Error("Cartão/carteira desabilitado nessa campanha");
+    if (data.amount_cents < (camp.min_cents ?? 100)) {
+      throw new Error(`Valor mínimo desta campanha: R$ ${((camp.min_cents ?? 100) / 100).toFixed(2)}`);
+    }
+
+    const cfg = await loadPixConfig();
+    if (!cfg.enabled) throw new Error("Pagamentos desativados no momento.");
+    const feePct = Number(cfg.fee_percent ?? 0);
+    const minFee = Math.max(0, Number(cfg.min_fee_cents ?? 0));
+    const feeCents = Math.max(minFee, Math.round((data.amount_cents * feePct) / 100));
+
+    let charged = data.amount_cents;
+    let net = data.amount_cents - feeCents;
+    if (camp.pass_fee_to_supporter) {
+      charged = data.amount_cents + feeCents;
+      net = data.amount_cents;
+    }
+    if (net < 0) throw new Error("Configuração de taxa inválida");
+
+    const { data: tokRows, error: tokErr } = await supabase.rpc(
+      "get_pix_campaign_owner_token" as never,
+      { _campaign_id: camp.id } as never,
+    );
+    if (tokErr) throw new Error(`Falha ao localizar conta MP do criador: ${tokErr.message}`);
+    const acct = Array.isArray(tokRows) ? (tokRows[0] as { access_token?: string } | undefined) : undefined;
+    if (!acct?.access_token) throw new Error("O criador da campanha ainda não conectou o Mercado Pago.");
+
+    const { data: contribId, error: rpcErr } = await supabase.rpc("create_pending_pix_contribution", {
+      _campaign_id: camp.id,
+      _supporter_name: data.supporter_name ?? null,
+      _supporter_email: data.supporter_email,
+      _message: data.message ?? null,
+      _is_anonymous: !!data.is_anonymous,
+      _amount_cents: charged,
+      _net_cents: net,
+      _fee_cents: feeCents,
+      _method: data.brick.payment_method_id,
+    } as never);
+    if (rpcErr || !contribId) throw new Error(rpcErr?.message ?? "Falha ao registrar contribuição");
+
+    const host = await getRequestHostFallback("");
+    const notificationUrl = host ? `https://${host}/api/public/webhooks/mp-pix` : undefined;
+
+    const payer: Record<string, unknown> = {
+      email: data.brick.payer?.email ?? data.supporter_email,
+    };
+    if (data.brick.payer?.identification?.number) {
+      payer.identification = {
+        type: data.brick.payer.identification.type ?? "CPF",
+        number: data.brick.payer.identification.number,
+      };
+    }
+    if (data.supporter_name) {
+      payer.first_name = data.supporter_name.split(" ")[0];
+      payer.last_name = data.supporter_name.split(" ").slice(1).join(" ") || "ForLink";
+    }
+
+    const body: Record<string, unknown> = {
+      transaction_amount: charged / 100,
+      description: `Apoio: ${camp.title}`,
+      external_reference: String(contribId),
+      notification_url: notificationUrl,
+      application_fee: feeCents / 100,
+      statement_descriptor: "FORLINK",
+      payment_method_id: data.brick.payment_method_id,
+      payer,
+    };
+    if (data.brick.token) body.token = data.brick.token;
+    if (data.brick.issuer_id) body.issuer_id = data.brick.issuer_id;
+    if (data.brick.installments) body.installments = data.brick.installments;
+    if (data.brick.payment_type_id) body.payment_type_id = data.brick.payment_type_id;
+
+    const resp = await fetch(MP_PAY_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${acct.access_token}`,
+        "Content-Type": "application/json",
+        "X-Idempotency-Key": String(contribId),
+      },
+      body: JSON.stringify(body),
+    });
+    const json = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      console.error("[CARD] MP payment failed", resp.status, json);
+      const msg =
+        json?.message ||
+        (Array.isArray(json?.cause) && json.cause[0]?.description) ||
+        "Falha ao processar pagamento";
+      throw new Error(String(msg));
+    }
+
+    await supabase.rpc("attach_pix_contribution_mp", {
+      _contribution_id: String(contribId),
+      _mp_payment_id: String(json.id ?? ""),
+      _qr_code: null,
+      _qr_code_base64: null,
+      _ticket_url: json.transaction_details?.external_resource_url ?? null,
+      _status: json.status ?? "pending",
+      _raw: json,
+    } as never);
+
+    return {
+      id: String(contribId),
+      status: String(json.status ?? "pending"),
+      status_detail: String(json.status_detail ?? ""),
       amount_cents: charged,
       fee_cents: feeCents,
     };
