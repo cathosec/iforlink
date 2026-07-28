@@ -118,6 +118,14 @@ export const Route = createFileRoute("/api/public/webhooks/mp-pix")({
             console.error("[mp-pix webhook] apply failed", error.message);
             return new Response("apply failed", { status: 500 });
           }
+          try {
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            await supabaseAdmin
+              .from("webhook_events")
+              .update({ status: "processed", processed_at: new Date().toISOString() })
+              .eq("provider", "mercadopago")
+              .eq("event_id", eventId);
+          } catch { /* noop */ }
           return new Response("ok", { status: 200 });
         } catch (e) {
           console.error("[mp-pix webhook] unexpected", e);
