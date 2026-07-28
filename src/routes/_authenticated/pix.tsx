@@ -489,6 +489,10 @@ function CampaignDialog({ editing, disabled, disabledReason }: { editing?: Campa
             <Switch checked={!!form.show_supporters} onCheckedChange={(v) => setForm({ ...form, show_supporters: v })} />
           </div>
           <div className="flex items-center justify-between rounded-md border p-3">
+            <div><div className="text-sm font-medium">Mostrar progresso</div><div className="text-[11px] text-muted-foreground">Exibe valor arrecadado, meta e botão "Ver progresso"</div></div>
+            <Switch checked={form.show_progress ?? true} onCheckedChange={(v) => setForm({ ...form, show_progress: v })} />
+          </div>
+          <div className="flex items-center justify-between rounded-md border p-3">
             <div><div className="text-sm font-medium">Permitir mensagens</div><div className="text-[11px] text-muted-foreground">Apoiadores deixam recado</div></div>
             <Switch checked={!!form.allow_message} onCheckedChange={(v) => setForm({ ...form, allow_message: v })} />
           </div>
