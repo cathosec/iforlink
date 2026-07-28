@@ -1,0 +1,24 @@
+{
+  "name": "ForLink — Seu link na bio",
+  "short_name": "ForLink",
+  "description": "Agregador de links, campanhas PIX e analytics — tudo no forlink.app",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#003399",
+  "lang": "pt-BR",
+  "categories": ["social", "productivity", "finance"],
+  "icons": [
+    { "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Meu painel", "url": "/dashboard", "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Campanhas", "url": "/pix", "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Analytics", "url": "/analytics", "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
