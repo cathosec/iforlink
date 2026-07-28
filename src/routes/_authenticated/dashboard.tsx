@@ -268,7 +268,7 @@ function Dashboard() {
             </Link>
             <Link to="/pix">
               <Button variant="outline" size="sm" className="rounded-full shadow-sm">
-                <CreditCard className="mr-2 h-3.5 w-3.5" /> Módulo PIX
+                <Heart className="mr-2 h-3.5 w-3.5" /> Campanhas
               </Button>
             </Link>
             {profile && (
