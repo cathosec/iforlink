@@ -19,6 +19,7 @@ import { AdSlot } from "@/components/ad-slot";
 import { GoogleAnalytics } from "@/components/google-analytics";
 import { AnalyticsProvider } from "@/lib/analytics";
 import { InstallPrompt } from "@/components/install-prompt";
+import { PushReminder } from "@/components/push-reminder";
 
 function NotFoundComponent() {
   return (
