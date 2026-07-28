@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      event_log: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          level: string
+          payload: Json
+          target_id: string | null
+          target_type: string | null
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          level?: string
+          payload?: Json
+          target_id?: string | null
+          target_type?: string | null
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          level?: string
+          payload?: Json
+          target_id?: string | null
+          target_type?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       links: {
         Row: {
           category_id: string
@@ -308,6 +341,13 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "pix_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pix_contributions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "v_campaign_public"
             referencedColumns: ["id"]
           },
         ]
@@ -598,7 +638,141 @@ export type Database = {
             referencedRelation: "pix_campaigns"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pix_contributions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "v_campaign_public"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      v_campaign_public: {
+        Row: {
+          accent_color: string | null
+          accepts_card: boolean | null
+          allow_message: boolean | null
+          cover_url: string | null
+          created_at: string | null
+          description: string | null
+          ends_at: string | null
+          goal_cents: number | null
+          id: string | null
+          is_active: boolean | null
+          min_cents: number | null
+          pass_fee_to_supporter: boolean | null
+          raised_cents: number | null
+          show_progress: boolean | null
+          show_supporters: boolean | null
+          slug: string | null
+          suggested_amounts: number[] | null
+          supporters_count: number | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          accepts_card?: boolean | null
+          allow_message?: boolean | null
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          goal_cents?: never
+          id?: string | null
+          is_active?: boolean | null
+          min_cents?: number | null
+          pass_fee_to_supporter?: boolean | null
+          raised_cents?: never
+          show_progress?: boolean | null
+          show_supporters?: boolean | null
+          slug?: string | null
+          suggested_amounts?: number[] | null
+          supporters_count?: never
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          accepts_card?: boolean | null
+          allow_message?: boolean | null
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          goal_cents?: never
+          id?: string | null
+          is_active?: boolean | null
+          min_cents?: number | null
+          pass_fee_to_supporter?: boolean | null
+          raised_cents?: never
+          show_progress?: boolean | null
+          show_supporters?: boolean | null
+          slug?: string | null
+          suggested_amounts?: number[] | null
+          supporters_count?: never
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      v_link_public: {
+        Row: {
+          category_icon: string | null
+          category_id: string | null
+          category_name: string | null
+          category_order: number | null
+          clicks_count: number | null
+          description: string | null
+          display_order: number | null
+          favicon_url: string | null
+          id: string | null
+          profile_id: string | null
+          title: string | null
+          url: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "links_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "user_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_profile_public: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+          is_verified: boolean | null
+          username: string | null
+          views_count: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          username?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          username?: string | null
+          views_count?: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
@@ -712,6 +886,16 @@ export type Database = {
         Returns: {
           access_token: string
         }[]
+      }
+      log_event: {
+        Args: {
+          _level?: string
+          _payload?: Json
+          _target_id?: string
+          _target_type?: string
+          _type: string
+        }
+        Returns: string
       }
       resolve_pix_contribution_by_mp: {
         Args: { _mp_payment_id: string }

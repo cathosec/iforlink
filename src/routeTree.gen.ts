@@ -25,6 +25,7 @@ import { Route as PixSlugRouteImport } from './routes/pix.$slug'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPixRouteImport } from './routes/_authenticated/pix'
 import { Route as AuthenticatedObrigadoRouteImport } from './routes/_authenticated/obrigado'
+import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticated/eventos'
 import { Route as AuthenticatedEncurtarRouteImport } from './routes/_authenticated/encurtar'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAssinaturaRouteImport } from './routes/_authenticated/assinatura'
@@ -117,6 +118,11 @@ const AuthenticatedObrigadoRoute = AuthenticatedObrigadoRouteImport.update({
   path: '/obrigado',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEventosRoute = AuthenticatedEventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEncurtarRoute = AuthenticatedEncurtarRouteImport.update({
   id: '/encurtar',
   path: '/encurtar',
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/assinatura': typeof AuthenticatedAssinaturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/encurtar': typeof AuthenticatedEncurtarRoute
+  '/eventos': typeof AuthenticatedEventosRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
   '/pix': typeof AuthenticatedPixRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/assinatura': typeof AuthenticatedAssinaturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/encurtar': typeof AuthenticatedEncurtarRoute
+  '/eventos': typeof AuthenticatedEventosRoute
   '/obrigado': typeof AuthenticatedObrigadoRoute
   '/pix': typeof AuthenticatedPixRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/_authenticated/assinatura': typeof AuthenticatedAssinaturaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/encurtar': typeof AuthenticatedEncurtarRoute
+  '/_authenticated/eventos': typeof AuthenticatedEventosRoute
   '/_authenticated/obrigado': typeof AuthenticatedObrigadoRoute
   '/_authenticated/pix': typeof AuthenticatedPixRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/assinatura'
     | '/dashboard'
     | '/encurtar'
+    | '/eventos'
     | '/obrigado'
     | '/pix'
     | '/settings'
@@ -317,6 +327,7 @@ export interface FileRouteTypes {
     | '/assinatura'
     | '/dashboard'
     | '/encurtar'
+    | '/eventos'
     | '/obrigado'
     | '/pix'
     | '/settings'
@@ -347,6 +358,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assinatura'
     | '/_authenticated/dashboard'
     | '/_authenticated/encurtar'
+    | '/_authenticated/eventos'
     | '/_authenticated/obrigado'
     | '/_authenticated/pix'
     | '/_authenticated/settings'
@@ -499,6 +511,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObrigadoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/eventos': {
+      id: '/_authenticated/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof AuthenticatedEventosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/encurtar': {
       id: '/_authenticated/encurtar'
       path: '/encurtar'
@@ -592,6 +611,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssinaturaRoute: typeof AuthenticatedAssinaturaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEncurtarRoute: typeof AuthenticatedEncurtarRoute
+  AuthenticatedEventosRoute: typeof AuthenticatedEventosRoute
   AuthenticatedObrigadoRoute: typeof AuthenticatedObrigadoRoute
   AuthenticatedPixRoute: typeof AuthenticatedPixRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -603,6 +623,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssinaturaRoute: AuthenticatedAssinaturaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEncurtarRoute: AuthenticatedEncurtarRoute,
+  AuthenticatedEventosRoute: AuthenticatedEventosRoute,
   AuthenticatedObrigadoRoute: AuthenticatedObrigadoRoute,
   AuthenticatedPixRoute: AuthenticatedPixRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

@@ -225,6 +225,7 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
         return Response.json({ ok: true, provider: "mercadopago" });
       },
       POST: async ({ request }) => {
+        const { logEvent } = await import("@/lib/observability/log.server");
         try {
           const rawBody = await request.text();
           const signature = request.headers.get("x-signature") ?? "";
@@ -234,6 +235,11 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
           if (!paymentId || !(type.includes("payment") || url.searchParams.get("type") === "payment")) {
             return new Response("ignored", { status: 200 });
           }
+
+          await logEvent("webhook.received", { paymentId, type, requestId }, {
+            targetType: "mp_payment",
+            targetId: paymentId,
+          });
 
           const supabase = createSupabasePublicClient();
           const { data: platformToken, error: tokenError } = await supabase.rpc(
@@ -246,10 +252,10 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
           );
 
           if (tokenError) {
-            // Keep processing through the source-of-truth API when possible. Some
-            // marketplace/campaign callbacks may be sent for a connected seller,
-            // while the main ForLink subscription token cannot fetch that payment.
             console.warn("[MP webhook] signature/platform token unavailable", tokenError.message);
+            await logEvent("webhook.token_unavailable", { paymentId, error: tokenError.message }, {
+              level: "warn", targetType: "mp_payment", targetId: paymentId,
+            });
           }
 
           let mpResult = platformToken ? await fetchMercadoPagoPayment(paymentId, String(platformToken)) : null;
@@ -260,6 +266,9 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
 
           if (!mpResult?.ok) {
             console.error("[MP webhook] fetch payment failed", mpResult?.status ?? "no-token");
+            await logEvent("webhook.mp_fetch_failed", { paymentId, status: mpResult?.status ?? null }, {
+              level: "error", targetType: "mp_payment", targetId: paymentId,
+            });
             return new Response("mp fetch failed", { status: 200 });
           }
 
@@ -271,14 +280,20 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
           await applyCampaignWebhook(supabase, externalRef, mp);
           await sendSubscriptionEmails(supabase, externalRef, paymentId);
 
+          await logEvent(
+            mp.status === "approved" ? "payment.approved" : "payment.updated",
+            { paymentId, externalRef, status: mp.status, amount: mp.transaction_amount ?? null },
+            { targetType: "mp_payment", targetId: paymentId },
+          );
+
           return new Response("ok", { status: 200 });
         } catch (err) {
           console.error("[MP webhook] unexpected", err);
-          // Return 200 so Mercado Pago does not get a generic 500 page; the source
-          // payment can be safely reconciled by resending the same payment id.
+          await logEvent("webhook.exception", { error: (err as Error)?.message ?? String(err) }, { level: "error" });
           return new Response("error logged", { status: 200 });
         }
       },
+
     },
   },
 });
