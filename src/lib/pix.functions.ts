@@ -268,7 +268,7 @@ export const createContribution = createServerFn({ method: "POST" })
 
     return {
       id: String(contribId),
-      status: String(json.status ?? "pending"),
+      status: String(mpJson.status ?? "pending"),
       qr_code: txn.qr_code as string | null,
       qr_code_base64: txn.qr_code_base64 as string | null,
       ticket_url: txn.ticket_url as string | null,
