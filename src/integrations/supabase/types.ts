@@ -212,63 +212,6 @@ export type Database = {
           },
         ]
       }
-      analytics_recordings: {
-        Row: {
-          bytes: number
-          chunk_index: number
-          created_at: string
-          duration_ms: number
-          ended_at: string
-          events: Json
-          events_count: number
-          id: string
-          owner_user_id: string | null
-          page_id: string | null
-          path: string
-          session_id: string
-          started_at: string
-          viewport_h: number | null
-          viewport_w: number | null
-          visitor_id: string | null
-        }
-        Insert: {
-          bytes?: number
-          chunk_index: number
-          created_at?: string
-          duration_ms?: number
-          ended_at: string
-          events: Json
-          events_count?: number
-          id?: string
-          owner_user_id?: string | null
-          page_id?: string | null
-          path: string
-          session_id: string
-          started_at: string
-          viewport_h?: number | null
-          viewport_w?: number | null
-          visitor_id?: string | null
-        }
-        Update: {
-          bytes?: number
-          chunk_index?: number
-          created_at?: string
-          duration_ms?: number
-          ended_at?: string
-          events?: Json
-          events_count?: number
-          id?: string
-          owner_user_id?: string | null
-          page_id?: string | null
-          path?: string
-          session_id?: string
-          started_at?: string
-          viewport_h?: number | null
-          viewport_w?: number | null
-          visitor_id?: string | null
-        }
-        Relationships: []
-      }
       analytics_sessions: {
         Row: {
           browser_family: string | null
@@ -1229,16 +1172,6 @@ export type Database = {
       }
       analytics_delete_my_data: { Args: never; Returns: Json }
       analytics_export_my_data: { Args: never; Returns: Json }
-      analytics_get_recording: {
-        Args: { _session_id: string }
-        Returns: {
-          chunk_index: number
-          ended_at: string
-          events: Json
-          path: string
-          started_at: string
-        }[]
-      }
       analytics_heatmap: {
         Args: {
           _limit?: number
@@ -1256,25 +1189,6 @@ export type Database = {
         }[]
       }
       analytics_ingest_batch: { Args: { _payload: Json }; Returns: Json }
-      analytics_ingest_recording_chunk: {
-        Args: { _payload: Json }
-        Returns: string
-      }
-      analytics_list_recordings: {
-        Args: { _limit?: number; _path?: string; _since?: string }
-        Returns: {
-          chunks: number
-          duration_ms: number
-          ended_at: string
-          events_count: number
-          path: string
-          session_id: string
-          started_at: string
-          title: string
-          viewport_h: number
-          viewport_w: number
-        }[]
-      }
       analytics_my_pages: {
         Args: { _limit?: number }
         Returns: {
