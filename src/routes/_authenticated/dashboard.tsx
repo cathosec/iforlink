@@ -777,10 +777,11 @@ function OverviewSection({
   const catsWithClicks = byCategory.filter((c) => c.clicks > 0);
 
   return (
-    <section className="mt-6 space-y-4">
+    <section className="mt-8 space-y-4">
       <div className="flex items-center gap-2">
-        <BarChart3 className="h-4 w-4 text-brand" />
-        <h2 className="text-lg font-semibold">Visão geral</h2>
+        <div className="grid h-7 w-7 place-items-center rounded-lg bg-brand/10 text-brand"><BarChart3 className="h-4 w-4" /></div>
+        <h2 className="font-display text-xl font-semibold tracking-tight">Visão geral</h2>
+
       </div>
 
       {/* KPI grid */}
