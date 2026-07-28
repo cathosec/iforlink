@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { QrCode, Copy, ExternalLink, Heart, CheckCircle2, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { QrCode, Copy, ExternalLink, Heart, CheckCircle2, ShieldCheck, Sparkles, Users, AlertTriangle, Loader2 } from "lucide-react";
 import { createContribution, getContributionStatus } from "@/lib/pix.functions";
 import { LogoWordmark } from "@/components/logo";
 import { PixBadge, PIX_BADGE_META, type PixBadgeKey } from "@/components/pix-badges";
+import mpLogo from "@/assets/mercado-pago.webp.asset.json";
 
 interface CampaignPub {
   id: string; user_id: string; slug: string; title: string;
