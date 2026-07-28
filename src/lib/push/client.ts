@@ -73,9 +73,10 @@ export async function subscribePush(): Promise<PushSubscription> {
   if (!reg) throw new Error("Service worker indisponível neste ambiente.");
   const existing = await reg.pushManager.getSubscription();
   if (existing) return existing;
+  const key = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
   return await reg.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    applicationServerKey: key.buffer.slice(key.byteOffset, key.byteOffset + key.byteLength) as ArrayBuffer,
   });
 }
 
