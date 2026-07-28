@@ -242,6 +242,32 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
           });
 
           const supabase = createSupabasePublicClient();
+
+          // Idempotência: dedup por (provider, event_id).
+          {
+            const eventId = `${paymentId}:${requestId || "no-req"}`;
+            let payloadJson: Record<string, unknown> = {};
+            try { payloadJson = rawBody ? JSON.parse(rawBody) : {}; } catch { /* noop */ }
+            const { error: dupErr } = await supabase
+              .from("webhook_events" as never)
+              .insert({
+                provider: "mercadopago",
+                event_id: eventId,
+                event_type: type,
+                payload: payloadJson,
+                status: "received",
+              } as never);
+            if (dupErr) {
+              const msg = (dupErr as { message?: string }).message ?? "";
+              if (/duplicate|unique|23505/i.test(msg)) {
+                await logEvent("webhook.duplicate", { paymentId, eventId }, {
+                  level: "info", targetType: "mp_payment", targetId: paymentId,
+                });
+                return new Response("duplicate", { status: 200 });
+              }
+              console.warn("[MP webhook] dedup insert failed (proceeding)", msg);
+            }
+          }
           const { data: platformToken, error: tokenError } = await supabase.rpc(
             "get_mercadopago_webhook_access_token" as never,
             {
