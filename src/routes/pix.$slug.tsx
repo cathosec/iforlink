@@ -332,35 +332,26 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
 
   const feePct = Number(ctxQ.data?.fee_percent ?? 0);
   const minFeeCents = Number(ctxQ.data?.min_fee_cents ?? 0);
-  const mpPixPct = Number(ctxQ.data?.mp_fee_pix_percent ?? 0);
-  const mpCardPct = Number(ctxQ.data?.mp_fee_card_percent ?? 0);
-  const mpCardFixed = Number(ctxQ.data?.mp_fee_card_fixed_cents ?? 0);
-  const feeCents = amount > 0 ? Math.max(minFeeCents, Math.round((amount * feePct) / 100)) : 0;
   const passesFee = c.pass_fee_to_supporter;
-  const mpPct = activeMethod === "card" ? mpCardPct : mpPixPct;
-  const mpFixed = activeMethod === "card" ? mpCardFixed : 0;
-  // Quando o criador repassa as taxas, ambas (ForLink + MP) são SOMADAS ao valor
-  // pago pelo colaborador, de modo que o criador receba integralmente `amount`.
-  // Como a tarifa MP incide sobre o valor cobrado (grossToMp), resolvemos:
-  //   grossToMp = (amount + feeForLink + mpFixed) / (1 - mpPct/100)
-  let finalAmount: number;
-  let mpFeeCents: number;
-  if (amount <= 0) {
-    finalAmount = 0;
-    mpFeeCents = 0;
-  } else if (passesFee) {
-    const denom = Math.max(0.01, 1 - mpPct / 100);
-    const gross = Math.ceil((amount + feeCents + mpFixed) / denom);
-    finalAmount = gross;
-    mpFeeCents = Math.round((gross * mpPct) / 100) + mpFixed;
-  } else {
-    finalAmount = amount;
-    mpFeeCents = Math.round((amount * mpPct) / 100) + mpFixed;
-  }
-  const netAmount = passesFee
-    ? Math.max(0, finalAmount - feeCents - mpFeeCents)
-    : Math.max(0, amount - feeCents - mpFeeCents);
-  const mpFeeAddedToSupporter = passesFee ? Math.max(0, finalAmount - amount - feeCents) : 0;
+  const { mpPct, mpFixedCents: mpFixed } = mpFeeForMethod(activeMethod === "card" ? "card" : "pix", {
+    mp_fee_pix_percent: Number(ctxQ.data?.mp_fee_pix_percent ?? 0),
+    mp_fee_card_percent: Number(ctxQ.data?.mp_fee_card_percent ?? 0),
+    mp_fee_card_fixed_cents: Number(ctxQ.data?.mp_fee_card_fixed_cents ?? 0),
+  });
+  const fees = computeCampaignFees({
+    baseCents: amount,
+    feePct,
+    minFeeCents,
+    mpPct,
+    mpFixedCents: mpFixed,
+    passToSupporter: passesFee,
+  });
+  const feeCents = fees.feeForLink;
+  const finalAmount = fees.total;
+  const mpFeeCents = fees.feeMp;
+  const netAmount = fees.netCreator;
+  const mpFeeAddedToSupporter = fees.addedToSupporter;
+
 
 
 
