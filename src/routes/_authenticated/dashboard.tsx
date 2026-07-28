@@ -172,7 +172,7 @@ function Dashboard() {
 
   const saveLink = async (data: Partial<LinkRow> & { category_id: string; title: string; url: string }) => {
     if (isFree && !data.id && links.length >= FREE_MAX_LINKS) {
-      toast.error(`Plano Free permite ${FREE_MAX_LINKS} links.`);
+      setUpgradeCtx("links_limit");
       return false;
     }
     const url = normalizeUrl(data.url);
