@@ -62,21 +62,26 @@ export const Route = createFileRoute("/api/public/oauth/mercadopago/callback")({
         }
 
 
-        const expiresAt = tokenJson.expires_in
-          ? new Date(Date.now() + Number(tokenJson.expires_in) * 1000).toISOString()
+        const t = tokenJson as {
+          access_token?: string; refresh_token?: string; public_key?: string;
+          user_id?: string | number; live_mode?: boolean; scope?: string; expires_in?: number;
+        };
+        const expiresAt = t.expires_in
+          ? new Date(Date.now() + Number(t.expires_in) * 1000).toISOString()
           : null;
 
         const { error: upsertErr } = await supabaseAdmin.from("mp_accounts").upsert({
           user_id: state,
-          mp_user_id: String(tokenJson.user_id ?? ""),
-          access_token: String(tokenJson.access_token),
-          refresh_token: tokenJson.refresh_token ? String(tokenJson.refresh_token) : null,
-          public_key: tokenJson.public_key ? String(tokenJson.public_key) : null,
-          live_mode: !!tokenJson.live_mode,
-          scope: tokenJson.scope ? String(tokenJson.scope) : null,
+          mp_user_id: String(t.user_id ?? ""),
+          access_token: String(t.access_token),
+          refresh_token: t.refresh_token ? String(t.refresh_token) : null,
+          public_key: t.public_key ? String(t.public_key) : null,
+          live_mode: !!t.live_mode,
+          scope: t.scope ? String(t.scope) : null,
           expires_at: expiresAt,
           connected_at: new Date().toISOString(),
         } as never, { onConflict: "user_id" });
+
         if (upsertErr) {
           console.error("[MP OAuth] upsert failed", upsertErr.message);
           return redirect(`/pix?mp=error&reason=save`);
