@@ -5,6 +5,7 @@ export type { YouTubeChannelInfo };
 
 export const resolveYouTubeChannel = createServerFn({ method: "GET" })
   .validator((data: { raw: string }) => data)
-  .handler(async ({ data }) => {
-    return await resolveYouTubeChannelImpl(data.raw);
+  .handler(async ({ data }): Promise<{ channel: YouTubeChannelInfo | null }> => {
+    const channel = await resolveYouTubeChannelImpl(data.raw);
+    return { channel };
   });
