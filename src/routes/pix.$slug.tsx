@@ -475,13 +475,49 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
         <Label htmlFor="anon" className="text-sm">Doar anonimamente</Label>
       </div>
 
-      <Button onClick={() => void submit()} disabled={creating || !email || amount < c.min_cents}
-        className="mt-5 w-full" style={{ backgroundColor: c.accent_color, color: "#fff" }}>
-        {creating ? "Gerando PIX..." : `Contribuir com ${brl(finalAmount)}`}
-      </Button>
-      <p className="mt-2 text-center text-[10px] text-muted-foreground">
-        O pagamento é processado com segurança pelo Mercado Pago e vai <strong>direto para o criador da campanha</strong>.
-      </p>
+      <div className="mt-5">
+        <Tabs defaultValue="pix" className="w-full">
+          <TabsList className={`grid w-full ${c.accepts_card ? "grid-cols-2" : "grid-cols-1"}`}>
+            <TabsTrigger value="pix">PIX (instantâneo)</TabsTrigger>
+            {c.accepts_card && <TabsTrigger value="card">Cartão · Carteira MP</TabsTrigger>}
+          </TabsList>
+
+          <TabsContent value="pix" className="mt-4">
+            <Button onClick={() => void submit()} disabled={creating || !email || amount < c.min_cents}
+              className="w-full" style={{ backgroundColor: c.accent_color, color: "#fff" }}>
+              {creating ? "Gerando PIX..." : `Contribuir com ${brl(finalAmount)} via PIX`}
+            </Button>
+            <p className="mt-2 text-center text-[10px] text-muted-foreground">
+              QR Code e código Copia-e-Cola gerados na hora. Vai <strong>direto para o criador</strong>.
+            </p>
+          </TabsContent>
+
+          {c.accepts_card && (
+            <TabsContent value="card" className="mt-4">
+              {ctxQ.isLoading ? (
+                <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">Carregando checkout…</div>
+              ) : (
+                <PixCardCheckout
+                  publicKey={ctxQ.data?.public_key ?? ""}
+                  campaignSlug={c.slug}
+                  amountCents={amount}
+                  supporterName={name}
+                  supporterEmail={email}
+                  message={message}
+                  isAnonymous={anon}
+                  acceptsCard={c.accepts_card}
+                  accent={c.accent_color}
+                  onApproved={(cents) => {
+                    setResult({ id: "card", qr_code: null, qr_code_base64: null, ticket_url: null, amount_cents: cents });
+                    setApproved(true);
+                    qc.invalidateQueries({ queryKey: ["pix-supporters", c.id] });
+                  }}
+                />
+              )}
+            </TabsContent>
+          )}
+        </Tabs>
+      </div>
     </div>
   );
 }
