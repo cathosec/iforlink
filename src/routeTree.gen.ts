@@ -37,6 +37,7 @@ import { Route as ApiPublicWebhooksMpPixRouteImport } from './routes/api/public/
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
 import { Route as ApiPublicPixCoverFileRouteImport } from './routes/api/public/pix-cover/$file'
 import { Route as ApiPublicCronSubscriptionsCheckRouteImport } from './routes/api/public/cron/subscriptions-check'
+import { Route as ApiPublicCronReconcilePaymentsRouteImport } from './routes/api/public/cron/reconcile-payments'
 import { Route as ApiPublicAvatarFileRouteImport } from './routes/api/public/avatar/$file'
 import { Route as ApiPublicOauthMercadopagoCallbackRouteImport } from './routes/api/public/oauth/mercadopago/callback'
 
@@ -182,6 +183,12 @@ const ApiPublicCronSubscriptionsCheckRoute =
     path: '/api/public/cron/subscriptions-check',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronReconcilePaymentsRoute =
+  ApiPublicCronReconcilePaymentsRouteImport.update({
+    id: '/api/public/cron/reconcile-payments',
+    path: '/api/public/cron/reconcile-payments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAvatarFileRoute = ApiPublicAvatarFileRouteImport.update({
   id: '/api/public/avatar/$file',
   path: '/api/public/avatar/$file',
@@ -218,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
+  '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
   '/api/public/pix-cover/$file': typeof ApiPublicPixCoverFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
@@ -249,6 +257,7 @@ export interface FileRoutesByTo {
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
+  '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
   '/api/public/pix-cover/$file': typeof ApiPublicPixCoverFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
@@ -282,6 +291,7 @@ export interface FileRoutesById {
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
+  '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
   '/api/public/pix-cover/$file': typeof ApiPublicPixCoverFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
+    | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
     | '/api/public/pix-cover/$file'
     | '/api/public/webhooks/mercadopago'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
+    | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
     | '/api/public/pix-cover/$file'
     | '/api/public/webhooks/mercadopago'
@@ -378,6 +390,7 @@ export interface FileRouteTypes {
     | '/public/$'
     | '/s/$code'
     | '/api/public/avatar/$file'
+    | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
     | '/api/public/pix-cover/$file'
     | '/api/public/webhooks/mercadopago'
@@ -402,6 +415,7 @@ export interface RootRouteChildren {
   PublicSplatRoute: typeof PublicSplatRoute
   SCodeRoute: typeof SCodeRoute
   ApiPublicAvatarFileRoute: typeof ApiPublicAvatarFileRoute
+  ApiPublicCronReconcilePaymentsRoute: typeof ApiPublicCronReconcilePaymentsRoute
   ApiPublicCronSubscriptionsCheckRoute: typeof ApiPublicCronSubscriptionsCheckRoute
   ApiPublicPixCoverFileRoute: typeof ApiPublicPixCoverFileRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
@@ -608,6 +622,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronSubscriptionsCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/reconcile-payments': {
+      id: '/api/public/cron/reconcile-payments'
+      path: '/api/public/cron/reconcile-payments'
+      fullPath: '/api/public/cron/reconcile-payments'
+      preLoaderRoute: typeof ApiPublicCronReconcilePaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/avatar/$file': {
       id: '/api/public/avatar/$file'
       path: '/api/public/avatar/$file'
@@ -668,6 +689,7 @@ const rootRouteChildren: RootRouteChildren = {
   PublicSplatRoute: PublicSplatRoute,
   SCodeRoute: SCodeRoute,
   ApiPublicAvatarFileRoute: ApiPublicAvatarFileRoute,
+  ApiPublicCronReconcilePaymentsRoute: ApiPublicCronReconcilePaymentsRoute,
   ApiPublicCronSubscriptionsCheckRoute: ApiPublicCronSubscriptionsCheckRoute,
   ApiPublicPixCoverFileRoute: ApiPublicPixCoverFileRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
