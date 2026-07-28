@@ -260,7 +260,7 @@ function PublicProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("pix_campaigns")
-        .select("slug,title,description,accent_color,goal_cents,raised_cents,supporters_count")
+        .select("slug,title,description,cover_url,accent_color,goal_cents,raised_cents,supporters_count")
         .eq("user_id", profileQ.data!.id)
         .eq("is_active", true)
         .order("created_at", { ascending: false })
