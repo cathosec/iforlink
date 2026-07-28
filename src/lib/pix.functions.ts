@@ -190,13 +190,18 @@ export const createContribution = createServerFn({ method: "POST" })
     const minFee = Math.max(0, Number(cfg.min_fee_cents ?? 0));
     const feeCents = Math.max(minFee, Math.round((data.amount_cents * feePct) / 100));
 
+    // Quando o criador repassa, somamos também a tarifa MP (PIX ~0.99%) para
+    // que o criador receba integralmente `amount_cents`.
+    const MP_PIX_PCT = 0.99;
     let charged = data.amount_cents;
     let net = data.amount_cents - feeCents;
     if (camp.pass_fee_to_supporter) {
-      charged = data.amount_cents + feeCents;
+      const denom = Math.max(0.01, 1 - MP_PIX_PCT / 100);
+      charged = Math.ceil((data.amount_cents + feeCents) / denom);
       net = data.amount_cents;
     }
     if (net < 0) throw new Error("Configuração de taxa inválida");
+
 
     const { data: tokRows, error: tokErr } = await supabase.rpc(
       "get_pix_campaign_owner_token" as never,
