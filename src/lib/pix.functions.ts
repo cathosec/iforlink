@@ -209,7 +209,7 @@ export const createContribution = createServerFn({ method: "POST" })
     if (rpcErr || !contribId) throw new Error(rpcErr?.message ?? "Falha ao registrar contribuição");
 
     const host = await getRequestHostFallback("");
-    const notificationUrl = host ? `https://${host}/api/public/webhooks/mp-pix` : undefined;
+    const notificationUrl = host ? `https://${host}/api/public/webhooks/mercadopago` : undefined;
 
     const body: Record<string, unknown> = {
       transaction_amount: charged / 100,
@@ -360,7 +360,7 @@ export const processCardPayment = createServerFn({ method: "POST" })
     if (rpcErr || !contribId) throw new Error(rpcErr?.message ?? "Falha ao registrar contribuição");
 
     const host = await getRequestHostFallback("");
-    const notificationUrl = host ? `https://${host}/api/public/webhooks/mp-pix` : undefined;
+    const notificationUrl = host ? `https://${host}/api/public/webhooks/mercadopago` : undefined;
 
     const payer: Record<string, unknown> = {
       email: data.brick.payer?.email ?? data.supporter_email,
