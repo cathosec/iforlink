@@ -169,28 +169,19 @@ function PrivacyPage() {
             revisitando o banner de consentimento.
           </p>
 
-          <h2>4.1 Analytics próprio e gravação de sessão</h2>
+          <h2>4.1 Analytics próprio</h2>
           <p>
             Quando você consente com cookies de <strong>Análise</strong>, o
-            ForLink pode registrar mapas de calor (cliques e movimento do
-            mouse) e <strong>gravar a sua navegação em páginas públicas</strong>
-            usando tecnologia rrweb — isto reconstitui a interface como se
-            fosse um vídeo, para que o criador da página possa entender como
-            visitantes usam o link.
+            ForLink registra visitas, cliques e mapas de calor agregados
+            (movimento do mouse e cliques) das páginas públicas — nunca
+            gravamos áudio, câmera, microfone, conteúdo digitado ou o vídeo
+            da sessão. Campos de formulário são mascarados; o IP é truncado
+            antes do armazenamento. Apenas o dono da página (Pro) e a equipe
+            administrativa podem visualizar os dados das próprias páginas.
           </p>
           <p>
-            Aplicamos <strong>máscara automática</strong> em qualquer campo de
-            formulário (inputs, textareas, senhas, e-mails, telefones,
-            números de cartão, CPFs e tokens). Blocos marcados com
-            <code>.forlink-block</code> ou <code>data-forlink-sensitive</code>
-            são totalmente ocultados. O IP é truncado antes do armazenamento e
-            nunca gravamos áudio, câmera, microfone ou o conteúdo digitado.
-            Apenas o dono da página (Pro) e a equipe administrativa podem
-            reproduzir gravações das <em>próprias</em> páginas.
-          </p>
-          <p>
-            Se você não deseja ser gravado, recuse os cookies de Análise no
-            banner de consentimento — nenhuma gravação será iniciada.
+            Se você não deseja ser rastreado, recuse os cookies de Análise no
+            banner de consentimento — nenhum dado será enviado.
           </p>
 
 
