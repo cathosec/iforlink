@@ -331,8 +331,10 @@ function Home() {
             </div>
           </div>
         </div>
+      </section>
 
       {/* PIX Campaigns module */}
+
       <section id="campanhas-pix" className="border-b bg-gradient-to-b from-background via-brand/[0.04] to-background">
         <div className="mx-auto max-w-6xl px-4 py-16">
           <div className="grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:items-center">
