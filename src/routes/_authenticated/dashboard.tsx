@@ -37,6 +37,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { CategoryIconPicker } from "@/components/category-icon-picker";
 import { CategoryIcon, DEFAULT_CATEGORY_ICON } from "@/lib/category-icons";
+import { UpgradeBanner, UpgradeDialog, type UpgradeContext } from "@/components/upgrade-nudge";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
