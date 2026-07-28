@@ -41,14 +41,18 @@ export async function sendPushToSubscription(
     keys: { p256dh: sub.p256dh, auth: sub.auth },
   };
   const built = await buildPushPayload(
-    { data: payload as unknown as Record<string, unknown>, options: { ttl: 60 * 60 * 24, urgency: "normal" } },
+    { data: payload as unknown as Parameters<typeof buildPushPayload>[0]["data"], options: { ttl: 60 * 60 * 24, urgency: "normal" } },
     subscription,
     vapid,
   );
+  const body = built.body.buffer.slice(
+    built.body.byteOffset,
+    built.body.byteOffset + built.body.byteLength,
+  ) as ArrayBuffer;
   const res = await fetch(sub.endpoint, {
     method: built.method,
     headers: built.headers as Record<string, string>,
-    body: built.body,
+    body,
   });
   return { ok: res.ok, status: res.status, gone: res.status === 404 || res.status === 410 };
 }
