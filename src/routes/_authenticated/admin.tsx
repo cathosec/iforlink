@@ -1108,12 +1108,12 @@ function OperationsTab() {
     queryFn: async () => {
       const { data } = await supabase
         .from("webhook_events" as never)
-        .select("id,provider,event_id,event_type,status,created_at,processed_at")
-        .order("created_at", { ascending: false })
+        .select("id,provider,event_id,event_type,status,received_at,processed_at")
+        .order("received_at", { ascending: false })
         .limit(30);
       return (data ?? []) as Array<{
         id: string; provider: string; event_id: string; event_type: string;
-        status: string; created_at: string; processed_at: string | null;
+        status: string; received_at: string; processed_at: string | null;
       }>;
     },
     refetchInterval: 30_000,
