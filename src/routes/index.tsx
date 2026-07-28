@@ -465,7 +465,7 @@ function Home() {
           </Accordion>
         </Card>
 
-        <AdPlaceholder position="Após o FAQ" />
+
         <AdSlot slot="feed" label="Publicidade" />
 
         {/* Trust & contact strip */}
