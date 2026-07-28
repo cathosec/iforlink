@@ -387,6 +387,21 @@ function Dashboard() {
             </span>
             <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-slate-700" />
           </Link>
+          {!isFree && (
+            <Link to="/analytics" className="group relative flex items-center gap-3 overflow-hidden rounded-2xl border bg-gradient-to-br from-indigo-500/10 via-card to-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/25">
+                <BarChart3 className="h-5 w-5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold flex items-center gap-1.5">
+                  Analytics
+                  {role === "admin" && <span className="rounded-full bg-amber-500/15 px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide text-amber-600">Admin</span>}
+                </span>
+                <span className="block text-[11px] text-muted-foreground">Mapa de calor e cliques</span>
+              </span>
+              <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-indigo-600" />
+            </Link>
+          )}
         </div>
 
         {showLimitBanner && (

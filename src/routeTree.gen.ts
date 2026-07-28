@@ -31,6 +31,7 @@ import { Route as AuthenticatedEncurtarRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAssinaturaRouteImport } from './routes/_authenticated/assinatura'
 import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -152,6 +153,11 @@ const AuthenticatedAssinarRoute = AuthenticatedAssinarRouteImport.update({
   path: '/assinar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/assinatura': typeof AuthenticatedAssinaturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/assinatura': typeof AuthenticatedAssinaturaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -296,6 +304,7 @@ export interface FileRoutesById {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
   '/_authenticated/assinatura': typeof AuthenticatedAssinaturaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -332,6 +341,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/admin'
+    | '/analytics'
     | '/assinar'
     | '/assinatura'
     | '/dashboard'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/admin'
+    | '/analytics'
     | '/assinar'
     | '/assinatura'
     | '/dashboard'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/_authenticated/admin'
+    | '/_authenticated/analytics'
     | '/_authenticated/assinar'
     | '/_authenticated/assinatura'
     | '/_authenticated/dashboard'
@@ -607,6 +619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssinarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -689,6 +708,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedAssinarRoute: typeof AuthenticatedAssinarRoute
   AuthenticatedAssinaturaRoute: typeof AuthenticatedAssinaturaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -701,6 +721,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedAssinarRoute: AuthenticatedAssinarRoute,
   AuthenticatedAssinaturaRoute: AuthenticatedAssinaturaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
