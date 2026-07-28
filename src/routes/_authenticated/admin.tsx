@@ -22,8 +22,9 @@ import {
   Users, Link2, BadgeCheck, ExternalLink, DollarSign, CreditCard,
   Settings2, ShieldAlert, ShieldCheck, TrendingUp, Trash2, Search, Activity,
   FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone, Scissors, Copy, MousePointerClick, Mail,
-  QrCode, PlugZap, Sparkles, CheckCircle2,
+  QrCode, PlugZap, Sparkles, CheckCircle2, HeartPulse,
 } from "lucide-react";
+
 import {
   ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis,
   Tooltip as RTooltip, Legend as RLegend, Bar, Line,
