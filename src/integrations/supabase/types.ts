@@ -704,6 +704,21 @@ export type Database = {
         Returns: undefined
       }
       increment_short_click: { Args: { _code: string }; Returns: undefined }
+      list_mp_account_tokens: {
+        Args: never
+        Returns: {
+          access_token: string
+        }[]
+      }
+      resolve_pix_contribution_by_mp: {
+        Args: { _mp_payment_id: string }
+        Returns: {
+          access_token: string
+          campaign_id: string
+          contribution_id: string
+          live_mode: boolean
+        }[]
+      }
       resolve_short_link: { Args: { _code: string }; Returns: string }
     }
     Enums: {
