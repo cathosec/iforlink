@@ -131,6 +131,7 @@ function Admin() {
 
           <div className="min-w-0 flex-1">
             <TabsContent value="overview" className="mt-0"><OverviewTab /></TabsContent>
+            <TabsContent value="financials" className="mt-0"><FinancialsTab /></TabsContent>
             <TabsContent value="users" className="mt-0"><UsersTab logAction={logAction} /></TabsContent>
             <TabsContent value="content" className="mt-0"><ContentTab logAction={logAction} /></TabsContent>
             <TabsContent value="shortener" className="mt-0"><ShortenerTab logAction={logAction} /></TabsContent>
@@ -138,6 +139,7 @@ function Admin() {
             <TabsContent value="subscriptions" className="mt-0"><SubscriptionsTab logAction={logAction} /></TabsContent>
             <TabsContent value="gateways" className="mt-0"><GatewaysTab logAction={logAction} /></TabsContent>
             <TabsContent value="pix" className="mt-0"><PixTab logAction={logAction} /></TabsContent>
+            <TabsContent value="addons" className="mt-0"><AddonsAdminTab logAction={logAction} /></TabsContent>
             <TabsContent value="ads" className="mt-0"><AdsTab logAction={logAction} /></TabsContent>
             <TabsContent value="emails" className="mt-0"><EmailsTab logAction={logAction} /></TabsContent>
             <TabsContent value="settings" className="mt-0"><SettingsTab logAction={logAction} /></TabsContent>
