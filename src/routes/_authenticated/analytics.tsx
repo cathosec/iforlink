@@ -4,11 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Heatmap, type HeatmapPoint } from "@/lib/analytics/heatmap";
+import { SessionPlayer, formatDuration, formatRelative } from "@/lib/analytics/session-player";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, BarChart3, Crown, Eye, MousePointerClick, RefreshCw, Users } from "lucide-react";
+import { ArrowLeft, BarChart3, Crown, Eye, Film, MousePointerClick, RefreshCw, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
@@ -101,46 +103,63 @@ function AnalyticsPage() {
         <div className="mt-6 space-y-6">
           <SummaryCards path={selectedPath} since={since} until={until} />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-              <div>
-                <CardTitle className="text-base">Mapa de calor — {selectedPath}</CardTitle>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Cliques (com peso maior) e movimentos do mouse agregados. Coordenadas normalizadas por viewport.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={rangeKey} onValueChange={setRangeKey}>
-                  <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>{RANGES.map((r) => (
-                    <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>
-                  ))}</SelectContent>
-                </Select>
-                <Select value={layer} onValueChange={(v) => setLayer(v as typeof layer)}>
-                  <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Cliques + Mouse</SelectItem>
-                    <SelectItem value="clicks">Só cliques</SelectItem>
-                    <SelectItem value="moves">Só movimento</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <HeatmapView
-                path={selectedPath}
-                since={since}
-                until={until}
-                showClicks={layer !== "moves"}
-                showMoves={layer !== "clicks"}
-              />
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="heatmap" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="heatmap" className="gap-1.5">
+                <BarChart3 className="h-3.5 w-3.5" /> Mapa de calor
+              </TabsTrigger>
+              <TabsTrigger value="replay" className="gap-1.5">
+                <Film className="h-3.5 w-3.5" /> Gravações
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="heatmap" className="mt-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                  <div>
+                    <CardTitle className="text-base">Mapa de calor — {selectedPath}</CardTitle>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Cliques (com peso maior) e movimentos do mouse agregados. Coordenadas normalizadas por viewport.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={rangeKey} onValueChange={setRangeKey}>
+                      <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>{RANGES.map((r) => (
+                        <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>
+                      ))}</SelectContent>
+                    </Select>
+                    <Select value={layer} onValueChange={(v) => setLayer(v as typeof layer)}>
+                      <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Cliques + Mouse</SelectItem>
+                        <SelectItem value="clicks">Só cliques</SelectItem>
+                        <SelectItem value="moves">Só movimento</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <HeatmapView
+                    path={selectedPath}
+                    since={since}
+                    until={until}
+                    showClicks={layer !== "moves"}
+                    showMoves={layer !== "clicks"}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="replay" className="mt-4">
+              <ReplayPanel path={selectedPath} since={since} rangeLabel={range.label} />
+            </TabsContent>
+          </Tabs>
         </div>
       ) : (
         <Card className="mt-6">
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Selecione uma página acima para visualizar o mapa de calor.
+            Selecione uma página acima para visualizar o mapa de calor e as gravações.
           </CardContent>
         </Card>
       )}
@@ -314,4 +333,107 @@ function HeatmapView({
   }
 
   return <Heatmap points={q.data ?? []} showClicks={showClicks} showMoves={showMoves} />;
+}
+
+// ─── Session Replay ───────────────────────────────────────────────
+type RecordingRow = {
+  session_id: string;
+  path: string;
+  title: string | null;
+  started_at: string;
+  ended_at: string;
+  duration_ms: number;
+  events_count: number;
+  chunks: number;
+  viewport_w: number | null;
+  viewport_h: number | null;
+};
+
+function ReplayPanel({ path, since, rangeLabel }: { path: string; since: string; rangeLabel: string }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const q = useQuery({
+    queryKey: ["analytics_list_recordings", path, since],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("analytics_list_recordings" as never, {
+        _path: path, _since: since, _limit: 100,
+      } as never);
+      if (error) throw error;
+      return (data ?? []) as unknown as RecordingRow[];
+    },
+    enabled: !!path,
+  });
+
+  const rows = q.data ?? [];
+  const activeId = selected ?? rows[0]?.session_id ?? null;
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+      <Card className="max-h-[540px] overflow-hidden">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <CardTitle className="text-sm">Sessões gravadas</CardTitle>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{rangeLabel} · {rows.length} sessões</p>
+            </div>
+            <Button size="icon" variant="ghost" onClick={() => q.refetch()} title="Atualizar">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-h-[460px] overflow-y-auto">
+            {q.isLoading ? (
+              <div className="p-4 text-xs text-muted-foreground">Carregando…</div>
+            ) : q.isError ? (
+              <div className="p-4 text-xs text-destructive">{q.error instanceof Error ? q.error.message : "Falha"}</div>
+            ) : rows.length === 0 ? (
+              <div className="p-4 text-xs text-muted-foreground">
+                Nenhuma gravação neste período. As gravações começam a aparecer alguns segundos após novas visitas.
+              </div>
+            ) : rows.map((r) => {
+              const isActive = r.session_id === activeId;
+              return (
+                <button
+                  key={r.session_id}
+                  onClick={() => setSelected(r.session_id)}
+                  className={`w-full border-b px-3 py-2.5 text-left text-xs transition-colors last:border-b-0 ${
+                    isActive ? "bg-brand/10 text-foreground" : "hover:bg-muted/50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium tabular-nums">{formatDuration(r.duration_ms)}</span>
+                    <span className="text-[10px] text-muted-foreground">{formatRelative(r.started_at)}</span>
+                  </div>
+                  <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                    {r.events_count} eventos · {r.chunks} chunks
+                    {r.viewport_w ? ` · ${r.viewport_w}×${r.viewport_h}` : ""}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">
+            {activeId ? `Reproduzindo sessão ${activeId.slice(0, 8)}…` : "Selecione uma sessão"}
+          </CardTitle>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Reprodução DOM com máscara automática de inputs, senhas, e-mails e blocos marcados como sensíveis.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {activeId ? (
+            <SessionPlayer sessionId={activeId} />
+          ) : (
+            <div className="grid aspect-video w-full place-items-center rounded-xl border bg-muted/30 text-xs text-muted-foreground">
+              Selecione uma sessão na lista ao lado para começar a reprodução.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

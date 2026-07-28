@@ -41,6 +41,7 @@ import { Route as ApiPublicPixCoverFileRouteImport } from './routes/api/public/p
 import { Route as ApiPublicCronSubscriptionsCheckRouteImport } from './routes/api/public/cron/subscriptions-check'
 import { Route as ApiPublicCronReconcilePaymentsRouteImport } from './routes/api/public/cron/reconcile-payments'
 import { Route as ApiPublicAvatarFileRouteImport } from './routes/api/public/avatar/$file'
+import { Route as ApiPublicAnalyticsRecordingRouteImport } from './routes/api/public/analytics/recording'
 import { Route as ApiPublicAnalyticsIngestRouteImport } from './routes/api/public/analytics/ingest'
 import { Route as ApiPublicOauthMercadopagoCallbackRouteImport } from './routes/api/public/oauth/mercadopago/callback'
 
@@ -207,6 +208,12 @@ const ApiPublicAvatarFileRoute = ApiPublicAvatarFileRouteImport.update({
   path: '/api/public/avatar/$file',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAnalyticsRecordingRoute =
+  ApiPublicAnalyticsRecordingRouteImport.update({
+    id: '/api/public/analytics/recording',
+    path: '/api/public/analytics/recording',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAnalyticsIngestRoute =
   ApiPublicAnalyticsIngestRouteImport.update({
     id: '/api/public/analytics/ingest',
@@ -246,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/s/$code': typeof SCodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/analytics/ingest': typeof ApiPublicAnalyticsIngestRoute
+  '/api/public/analytics/recording': typeof ApiPublicAnalyticsRecordingRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
@@ -281,6 +289,7 @@ export interface FileRoutesByTo {
   '/s/$code': typeof SCodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/analytics/ingest': typeof ApiPublicAnalyticsIngestRoute
+  '/api/public/analytics/recording': typeof ApiPublicAnalyticsRecordingRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
@@ -318,6 +327,7 @@ export interface FileRoutesById {
   '/s/$code': typeof SCodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/analytics/ingest': typeof ApiPublicAnalyticsIngestRoute
+  '/api/public/analytics/recording': typeof ApiPublicAnalyticsRecordingRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
@@ -355,6 +365,7 @@ export interface FileRouteTypes {
     | '/s/$code'
     | '/api/public/health'
     | '/api/public/analytics/ingest'
+    | '/api/public/analytics/recording'
     | '/api/public/avatar/$file'
     | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | '/s/$code'
     | '/api/public/health'
     | '/api/public/analytics/ingest'
+    | '/api/public/analytics/recording'
     | '/api/public/avatar/$file'
     | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
@@ -426,6 +438,7 @@ export interface FileRouteTypes {
     | '/s/$code'
     | '/api/public/health'
     | '/api/public/analytics/ingest'
+    | '/api/public/analytics/recording'
     | '/api/public/avatar/$file'
     | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
@@ -453,6 +466,7 @@ export interface RootRouteChildren {
   SCodeRoute: typeof SCodeRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicAnalyticsIngestRoute: typeof ApiPublicAnalyticsIngestRoute
+  ApiPublicAnalyticsRecordingRoute: typeof ApiPublicAnalyticsRecordingRoute
   ApiPublicAvatarFileRoute: typeof ApiPublicAvatarFileRoute
   ApiPublicCronReconcilePaymentsRoute: typeof ApiPublicCronReconcilePaymentsRoute
   ApiPublicCronSubscriptionsCheckRoute: typeof ApiPublicCronSubscriptionsCheckRoute
@@ -689,6 +703,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAvatarFileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/analytics/recording': {
+      id: '/api/public/analytics/recording'
+      path: '/api/public/analytics/recording'
+      fullPath: '/api/public/analytics/recording'
+      preLoaderRoute: typeof ApiPublicAnalyticsRecordingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/analytics/ingest': {
       id: '/api/public/analytics/ingest'
       path: '/api/public/analytics/ingest'
@@ -752,6 +773,7 @@ const rootRouteChildren: RootRouteChildren = {
   SCodeRoute: SCodeRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicAnalyticsIngestRoute: ApiPublicAnalyticsIngestRoute,
+  ApiPublicAnalyticsRecordingRoute: ApiPublicAnalyticsRecordingRoute,
   ApiPublicAvatarFileRoute: ApiPublicAvatarFileRoute,
   ApiPublicCronReconcilePaymentsRoute: ApiPublicCronReconcilePaymentsRoute,
   ApiPublicCronSubscriptionsCheckRoute: ApiPublicCronSubscriptionsCheckRoute,
