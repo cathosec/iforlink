@@ -256,7 +256,7 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
                   provider: "mercadopago",
                   event_id: eventId,
                   event_type: type,
-                  payload: payloadJson,
+                  payload: payloadJson as never,
                   status: "received",
                 });
               if (dupErr) {
