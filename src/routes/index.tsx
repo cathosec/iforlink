@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check, HelpCircle, ShieldCheck, Mail } from "lucide-react";
+import { ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check, HelpCircle, ShieldCheck, Mail, Heart, QrCode, Wallet, Target, Sparkles } from "lucide-react";
 import { AdSlot } from "@/components/ad-slot";
 
 
@@ -124,10 +124,26 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
     a: "No painel, acesse 'Assinatura' e clique em cancelar. Você continua com os benefícios Pro até o fim do período já pago e depois volta automaticamente para o plano Free — sem perder seus links.",
   },
   {
+    q: "Como funcionam as Campanhas PIX no ForLink?",
+    a: "Você conecta sua própria conta Mercado Pago via OAuth (com 1 clique) e cria uma página de arrecadação em forlink.app/pix/seu-slug. Os pagamentos (PIX ou cartão) caem DIRETO na sua conta MP — o ForLink não intermedeia dinheiro. Cada colaborador aprovado aparece no mural com nome, valor e selo (Bronze, Prata, Ouro, Diamante ou Lenda) conforme o valor contribuído.",
+  },
+  {
+    q: "Quais taxas incidem em uma campanha PIX?",
+    a: "Duas taxas independentes: (1) taxa ForLink configurada pelo admin (atualmente 2% com mínimo de R$ 0,50 por transação) — você escolhe se ela é descontada do valor recebido ou repassada ao colaborador; (2) tarifa do Mercado Pago cobrada do recebedor, que gira em torno de 0,99% para PIX e ~4,98% para cartão de crédito à vista (varia conforme seu plano MP). Ambas as taxas aparecem detalhadas na tela de pagamento para o colaborador.",
+  },
+  {
+    q: "Quem pode criar uma Campanha PIX?",
+    a: "Qualquer usuário. No plano Free você pode manter 1 campanha ativa; no Pro é ilimitado. Basta ter uma conta Mercado Pago (pessoa física ou jurídica) para conectar.",
+  },
+  {
     q: "Preciso instalar algum aplicativo?",
     a: "Não. A ForLink funciona 100% no navegador, em qualquer dispositivo. Você pode adicionar o site à tela inicial do celular para ter uma experiência parecida com a de um app.",
   },
 ];
+
+
+
+
 
 function Home() {
   const [uname, setUname] = useState("");
@@ -316,6 +332,115 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* PIX Campaigns module */}
+
+      <section id="campanhas-pix" className="border-b bg-gradient-to-b from-background via-brand/[0.04] to-background">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <div className="grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:items-center">
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+                <Heart className="h-3.5 w-3.5 text-brand" />
+                Módulo Campanhas PIX
+              </div>
+              <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+                Receba doações e apoios via PIX <span className="text-brand">direto na sua conta</span>.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                Conecte sua conta Mercado Pago em um clique e crie uma página de arrecadação personalizada em <span className="font-medium text-foreground">forlink.app/pix/sua-campanha</span>. Cada colaborador aparece no mural com selo por valor (Bronze até Lenda), e o dinheiro cai direto na sua conta MP — sem intermediação do ForLink.
+              </p>
+
+              <ul className="mt-6 space-y-2.5 text-sm">
+                {[
+                  ["PIX instantâneo com QR Code e Copia-e-Cola", QrCode],
+                  ["Cartão de crédito, débito e Carteira Mercado Pago", Wallet],
+                  ["Meta de arrecadação, valores sugeridos e mensagem opcional", Target],
+                  ["Selos automáticos (Bronze · Prata · Ouro · Diamante · Lenda)", Sparkles],
+                  ["Repasse da taxa ao apoiador (opcional) — você recebe integral", ShieldCheck],
+                ].map(([txt, Icon]) => {
+                  const I = Icon as typeof Heart;
+                  return (
+                    <li key={String(txt)} className="flex items-start gap-2.5">
+                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
+                        <I className="h-3 w-3" />
+                      </span>
+                      <span className="text-muted-foreground"><span className="text-foreground">{String(txt)}</span></span>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="mt-6 rounded-lg border bg-card p-4 text-xs leading-relaxed text-muted-foreground">
+                <strong className="text-foreground">Taxas transparentes:</strong> taxa ForLink de <strong>2% (mínimo R$ 0,50)</strong> por transação, mais a tarifa padrão do Mercado Pago cobrada do recebedor (~0,99% PIX / ~4,98% cartão). Tudo detalhado na tela de pagamento — o colaborador vê exatamente o que paga e quanto você recebe.
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  <Button size="lg" className="bg-brand text-brand-foreground hover:bg-brand/90">
+                    Criar minha campanha grátis <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </Link>
+                <a href="#faq" className="inline-flex items-center gap-1.5 self-center text-sm text-muted-foreground hover:text-foreground">
+                  Como funcionam as taxas <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Preview mock */}
+            <div className="relative">
+              <div className="absolute inset-x-4 -bottom-4 h-32 rounded-2xl bg-brand/10 blur-2xl" aria-hidden />
+              <Card className="relative overflow-hidden p-0 shadow-lg">
+                <div className="relative h-32 w-full bg-gradient-to-br from-brand to-brand/70">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.25),transparent_50%)]" />
+                  <div className="absolute inset-x-0 bottom-0 p-4">
+                    <span className="rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground">
+                      Campanha ForLink
+                    </span>
+                    <h3 className="mt-1.5 font-display text-xl font-semibold text-white drop-shadow">
+                      Ajude o Studio Aurora
+                    </h3>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Arrecadado</div>
+                      <div className="mt-0.5 font-display text-2xl font-semibold text-brand tabular-nums">R$ 3.480</div>
+                    </div>
+                    <div className="text-right text-[11px] text-muted-foreground">
+                      <div className="text-base font-semibold text-foreground">58%</div>
+                      <div>da meta R$ 6.000</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-brand" style={{ width: "58%" }} />
+                  </div>
+                  <div className="mt-4 space-y-1.5">
+                    {[
+                      ["Marina S.", "Ouro", "R$ 100", "#eab308"],
+                      ["Carlos T.", "Prata", "R$ 50", "#64748b"],
+                      ["Apoiador anônimo", "Bronze", "R$ 20", "#a16207"],
+                    ].map(([name, tier, val, color]) => (
+                      <div key={name} className="flex items-center gap-2 rounded-md border bg-card px-2 py-1.5">
+                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white" style={{ background: color }}>
+                          <Heart className="h-3 w-3" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-xs font-medium">{name}</div>
+                          <div className="text-[10px] text-muted-foreground">{tier}</div>
+                        </div>
+                        <span className="text-xs font-bold tabular-nums text-brand">{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
 
 
       {/* Top ad slot */}

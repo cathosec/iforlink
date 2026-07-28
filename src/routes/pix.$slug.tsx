@@ -298,12 +298,13 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   const ctxQ = useQuery({
     queryKey: ["pix-campaign-ctx", c.slug],
     queryFn: () => getCtx({ data: { slug: c.slug } }),
-    enabled: c.accepts_card,
+    // Sempre carrega para exibir o detalhamento de taxas mesmo em campanhas PIX-only
     staleTime: 5 * 60_000,
   });
 
   const [amount, setAmount] = useState(c.suggested_amounts?.[1] ?? c.min_cents);
   const [amountInput, setAmountInput] = useState(((c.suggested_amounts?.[1] ?? c.min_cents) / 100).toFixed(2).replace(".", ","));
+  const [activeMethod, setActiveMethod] = useState<"pix" | "card">("pix");
   const syncAmount = (raw: string) => {
     // permite dígitos, vírgula e ponto; converte para centavos
     const cleaned = raw.replace(/[^\d.,]/g, "");
@@ -328,10 +329,20 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
 
   const feePct = Number(ctxQ.data?.fee_percent ?? 0);
   const minFeeCents = Number(ctxQ.data?.min_fee_cents ?? 0);
+  const mpPixPct = Number(ctxQ.data?.mp_fee_pix_percent ?? 0);
+  const mpCardPct = Number(ctxQ.data?.mp_fee_card_percent ?? 0);
+  const mpCardFixed = Number(ctxQ.data?.mp_fee_card_fixed_cents ?? 0);
   const feeCents = amount > 0 ? Math.max(minFeeCents, Math.round((amount * feePct) / 100)) : 0;
   const passesFee = c.pass_fee_to_supporter;
   const finalAmount = passesFee ? amount + feeCents : amount;
-  const netAmount = passesFee ? amount : Math.max(0, amount - feeCents);
+  const grossToMp = finalAmount; // valor que o MP processa
+  const mpFeeCents = amount > 0
+    ? activeMethod === "card"
+      ? Math.round((grossToMp * mpCardPct) / 100) + mpCardFixed
+      : Math.round((grossToMp * mpPixPct) / 100)
+    : 0;
+  const netAmount = Math.max(0, (passesFee ? amount : amount - feeCents) - mpFeeCents);
+
 
   const submit = async () => {
     if (!email.includes("@")) return toast.error("E-mail inválido");
@@ -489,12 +500,12 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
         </div>
 
         {/* Detalhamento transparente da taxa */}
-        {amount > 0 && feeCents > 0 && (
+        {amount > 0 && (
           <div className="mt-3 rounded-xl border bg-background/60 p-3 text-xs">
             <div className="mb-1.5 flex items-center justify-between">
               <span className="font-semibold text-foreground">Resumo da contribuição</span>
               <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                Taxa da plataforma: {feePct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
+                Taxa ForLink: {feePct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
                 {minFeeCents > 0 ? ` · mín. ${brl(minFeeCents)}` : ""}
               </span>
             </div>
@@ -503,33 +514,46 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
                 <dt className="text-muted-foreground">Sua contribuição</dt>
                 <dd className="font-medium">{brl(amount)}</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">
-                  Taxa da plataforma {passesFee ? "(paga por você)" : "(descontada do criador)"}
-                </dt>
-                <dd className={passesFee ? "font-medium" : "text-muted-foreground"}>
-                  {passesFee ? "+ " : "− "}{brl(feeCents)}
-                </dd>
-              </div>
+              {feeCents > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">
+                    Taxa ForLink {passesFee ? "(paga por você)" : "(descontada do criador)"}
+                  </dt>
+                  <dd className={passesFee ? "font-medium" : "text-muted-foreground"}>
+                    {passesFee ? "+ " : "− "}{brl(feeCents)}
+                  </dd>
+                </div>
+              )}
               <div className="mt-1.5 flex justify-between border-t pt-1.5">
                 <dt className="font-semibold">Você paga</dt>
                 <dd className="font-bold" style={{ color: c.accent_color }}>
                   {brl(finalAmount)}
                 </dd>
               </div>
-              <div className="flex justify-between text-[11px] text-muted-foreground">
-                <dt>Recebido pelo criador</dt>
-                <dd>{brl(netAmount)}</dd>
+              {mpFeeCents > 0 && (
+                <div className="flex justify-between text-[11px] text-muted-foreground">
+                  <dt>
+                    Tarifa Mercado Pago {activeMethod === "card"
+                      ? `(~${mpCardPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% cartão)`
+                      : `(~${mpPixPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% PIX)`}
+                  </dt>
+                  <dd>− {brl(mpFeeCents)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between border-t pt-1.5 text-[11px]">
+                <dt className="font-medium text-muted-foreground">Recebido pelo criador (estimado)</dt>
+                <dd className="font-semibold text-foreground">{brl(netAmount)}</dd>
               </div>
             </dl>
             <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-              {passesFee
-                ? "A taxa da plataforma é somada ao seu valor para que o criador receba integralmente o que você quis contribuir."
-                : "A taxa da plataforma é descontada do valor recebido pelo criador — nada é adicionado ao que você paga."}
-              {" "}O repasse ao criador é feito pelo Mercado Pago, sem intermediação do ForLink; ainda podem incidir tarifas do próprio Mercado Pago (PIX/cartão) sobre o valor recebido.
+              {feeCents > 0 && (passesFee
+                ? "A taxa ForLink é somada ao seu valor para que o criador receba integralmente o que você quis contribuir. "
+                : "A taxa ForLink é descontada do valor recebido pelo criador — nada é adicionado ao que você paga. ")}
+              A tarifa do Mercado Pago é cobrada diretamente do criador pelo processador de pagamento e pode variar conforme o plano/conta MP dele (valores exibidos são estimativas padrão para contas Brasil). O repasse é feito automaticamente à conta MP do criador, sem intermediação do ForLink.
             </p>
           </div>
         )}
+
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -556,11 +580,16 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
       </div>
 
       <div className="mt-5">
-        <Tabs defaultValue="pix" className="w-full">
+        <Tabs
+          defaultValue="pix"
+          className="w-full"
+          onValueChange={(v) => setActiveMethod(v === "card" ? "card" : "pix")}
+        >
           <TabsList className={`grid w-full ${c.accepts_card ? "grid-cols-2" : "grid-cols-1"}`}>
             <TabsTrigger value="pix">PIX (instantâneo)</TabsTrigger>
             {c.accepts_card && <TabsTrigger value="card">Cartão · Carteira MP</TabsTrigger>}
           </TabsList>
+
 
           <TabsContent value="pix" className="mt-4">
             <Button onClick={() => void submit()} disabled={creating || !email || amount < c.min_cents}
