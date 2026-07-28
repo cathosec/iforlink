@@ -181,6 +181,7 @@ export type Database = {
           min_cents: number
           pass_fee_to_supporter: boolean
           raised_cents: number
+          show_progress: boolean
           show_supporters: boolean
           slug: string
           suggested_amounts: number[]
@@ -203,6 +204,7 @@ export type Database = {
           min_cents?: number
           pass_fee_to_supporter?: boolean
           raised_cents?: number
+          show_progress?: boolean
           show_supporters?: boolean
           slug: string
           suggested_amounts?: number[]
@@ -225,6 +227,7 @@ export type Database = {
           min_cents?: number
           pass_fee_to_supporter?: boolean
           raised_cents?: number
+          show_progress?: boolean
           show_supporters?: boolean
           slug?: string
           suggested_amounts?: number[]
