@@ -7,7 +7,7 @@
  * - Requer que o CSS do rrweb-player esteja carregado (importado neste arquivo).
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
