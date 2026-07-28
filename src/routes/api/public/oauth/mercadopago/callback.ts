@@ -32,22 +32,35 @@ export const Route = createFileRoute("/api/public/oauth/mercadopago/callback")({
         }
 
         const redirectUri = `${site}/api/public/oauth/mercadopago/callback`;
+        const form = new URLSearchParams({
+          client_id: cfg.oauth_client_id,
+          client_secret: cfg.oauth_client_secret,
+          code,
+          grant_type: "authorization_code",
+          redirect_uri: redirectUri,
+        });
         const tokenResp = await fetch("https://api.mercadopago.com/oauth/token", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            client_id: cfg.oauth_client_id,
-            client_secret: cfg.oauth_client_secret,
-            code,
-            grant_type: "authorization_code",
-            redirect_uri: redirectUri,
-          }),
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Accept: "application/json",
+          },
+          body: form.toString(),
         });
-        const tokenJson = await tokenResp.json().catch(() => ({}));
+        const rawBody = await tokenResp.text();
+        let tokenJson: Record<string, unknown> = {};
+        try { tokenJson = JSON.parse(rawBody) as Record<string, unknown>; } catch { /* noop */ }
         if (!tokenResp.ok || !tokenJson.access_token) {
-          console.error("[MP OAuth] token exchange failed", tokenResp.status, tokenJson);
-          return redirect(`/pix?mp=error&reason=token_exchange`);
+          console.error("[MP OAuth] token exchange failed", tokenResp.status, rawBody);
+          const mpMsg =
+            (typeof tokenJson.error === "string" && tokenJson.error) ||
+            (typeof tokenJson.message === "string" && tokenJson.message) ||
+            `http_${tokenResp.status}`;
+          return redirect(
+            `/pix?mp=error&reason=token_exchange&detail=${encodeURIComponent(String(mpMsg))}`,
+          );
         }
+
 
         const expiresAt = tokenJson.expires_in
           ? new Date(Date.now() + Number(tokenJson.expires_in) * 1000).toISOString()
