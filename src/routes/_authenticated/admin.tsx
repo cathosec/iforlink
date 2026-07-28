@@ -101,13 +101,15 @@ function Admin() {
           <TabsList className="flex h-auto w-full flex-row flex-wrap justify-start gap-1 rounded-lg border bg-card p-2 md:w-56 md:shrink-0 md:flex-col md:flex-nowrap">
             {[
               ["overview", TrendingUp, "Visão geral"],
+              ["financials", DollarSign, "Financeiro"],
               ["users", Users, "Usuários"],
               ["content", FolderTree, "Conteúdo"],
               ["shortener", Scissors, "Encurtador"],
               ["security", ShieldCheck, "Segurança"],
               ["subscriptions", CreditCard, "Assinaturas"],
               ["gateways", DollarSign, "Pagamentos"],
-              ["pix", QrCode, "PIX Marketplace"],
+              ["pix", QrCode, "Campanhas"],
+              ["addons", Sparkles, "Complementos"],
               ["ads", Megaphone, "Anúncios"],
               ["emails", Mail, "E-mails"],
               ["settings", Settings2, "Plataforma"],
