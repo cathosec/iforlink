@@ -297,6 +297,7 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   const [creating, setCreating] = useState(false);
   const [result, setResult] = useState<{ id: string; qr_code: string | null; qr_code_base64: string | null; ticket_url: string | null; amount_cents: number } | null>(null);
   const [approved, setApproved] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const finalAmount = useMemo(() => {
     if (!c.pass_fee_to_supporter) return amount;
@@ -307,6 +308,7 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
     if (!email.includes("@")) return toast.error("E-mail inválido");
     if (amount < c.min_cents) return toast.error(`Valor mínimo ${brl(c.min_cents)}`);
     setCreating(true);
+    setFailed(null);
     try {
       const r = await create({
         data: {
@@ -320,7 +322,7 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
         },
       });
       setResult(r);
-      // Polling
+      // Polling — confirma aprovação ou detecta rejeição/expiração
       const interval = setInterval(async () => {
         try {
           const s = await getStatus({ data: { id: r.id } });
@@ -329,12 +331,23 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
             clearInterval(interval);
             qc.invalidateQueries({ queryKey: ["pix-supporters", c.id] });
             toast.success("Pagamento confirmado — muito obrigado!");
+          } else if (["rejected", "cancelled", "expired", "refunded", "charged_back"].includes(s.status)) {
+            const map: Record<string, string> = {
+              rejected: "Pagamento rejeitado pelo Mercado Pago.",
+              cancelled: "Pagamento cancelado.",
+              expired: "O QR Code expirou. Gere um novo para continuar.",
+              refunded: "Pagamento estornado.",
+              charged_back: "Pagamento contestado.",
+            };
+            setFailed(map[s.status] ?? `Status ${s.status}`);
+            clearInterval(interval);
+            toast.error(map[s.status] ?? `Falha no pagamento (${s.status})`);
           }
         } catch { /* noop */ }
       }, 4000);
       setTimeout(() => clearInterval(interval), 15 * 60_000);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha");
+      toast.error(e instanceof Error ? e.message : "Falha ao gerar cobrança");
     } finally {
       setCreating(false);
     }
