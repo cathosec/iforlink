@@ -657,6 +657,42 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_events: {
+        Row: {
+          error: string | null
+          event_id: string
+          event_type: string | null
+          id: string
+          payload: Json
+          processed_at: string | null
+          provider: string
+          received_at: string
+          status: string
+        }
+        Insert: {
+          error?: string | null
+          event_id: string
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          provider: string
+          received_at?: string
+          status?: string
+        }
+        Update: {
+          error?: string | null
+          event_id?: string
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          provider?: string
+          received_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       pix_supporters_public: {
@@ -938,6 +974,23 @@ export type Database = {
         Args: never
         Returns: {
           access_token: string
+        }[]
+      }
+      list_pending_pix_contributions_for_reconcile: {
+        Args: { _limit?: number; _older_than_seconds?: number }
+        Returns: {
+          access_token: string
+          contribution_id: string
+          created_at: string
+          mp_payment_id: string
+        }[]
+      }
+      list_pending_pix_payments_for_reconcile: {
+        Args: { _limit?: number; _older_than_seconds?: number }
+        Returns: {
+          created_at: string
+          mp_payment_id: string
+          pix_id: string
         }[]
       }
       log_event: {
