@@ -17,7 +17,7 @@ import { LogoWordmark } from "@/components/logo";
 import { PixBadge, PIX_BADGE_META, type PixBadgeKey } from "@/components/pix-badges";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PixCardCheckout } from "@/components/pix-card-checkout";
-import mpLogo from "@/assets/mercado-pago.webp.asset.json";
+import mpLogo from "@/assets/mercado-pago.png.asset.json";
 
 interface CampaignPub {
   id: string; user_id: string; slug: string; title: string;
