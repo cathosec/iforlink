@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { QrCode, Copy, ExternalLink, Heart, CheckCircle2, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { QrCode, Copy, ExternalLink, Heart, CheckCircle2, ShieldCheck, Sparkles, Users, AlertTriangle, Loader2 } from "lucide-react";
 import { createContribution, getContributionStatus } from "@/lib/pix.functions";
 import { LogoWordmark } from "@/components/logo";
 import { PixBadge, PIX_BADGE_META, type PixBadgeKey } from "@/components/pix-badges";
+import mpLogo from "@/assets/mercado-pago.webp.asset.json";
 
 interface CampaignPub {
   id: string; user_id: string; slug: string; title: string;
@@ -111,7 +112,10 @@ function PublicPixPage() {
             <Badge variant="secondary" className="hidden gap-1 text-[10px] sm:inline-flex">
               <ShieldCheck className="h-3 w-3" /> Pagamento seguro
             </Badge>
-            <Badge variant="outline" className="text-[10px]">Mercado Pago</Badge>
+            <div className="flex items-center gap-1.5 rounded-full border bg-card px-2 py-1">
+              <span className="text-[10px] text-muted-foreground">via</span>
+              <img src={mpLogo.url} alt="Mercado Pago" className="h-3.5 w-auto" />
+            </div>
           </div>
         </div>
       </header>
@@ -293,6 +297,7 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   const [creating, setCreating] = useState(false);
   const [result, setResult] = useState<{ id: string; qr_code: string | null; qr_code_base64: string | null; ticket_url: string | null; amount_cents: number } | null>(null);
   const [approved, setApproved] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const finalAmount = useMemo(() => {
     if (!c.pass_fee_to_supporter) return amount;
@@ -303,6 +308,7 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
     if (!email.includes("@")) return toast.error("E-mail inválido");
     if (amount < c.min_cents) return toast.error(`Valor mínimo ${brl(c.min_cents)}`);
     setCreating(true);
+    setFailed(null);
     try {
       const r = await create({
         data: {
@@ -316,7 +322,7 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
         },
       });
       setResult(r);
-      // Polling
+      // Polling — confirma aprovação ou detecta rejeição/expiração
       const interval = setInterval(async () => {
         try {
           const s = await getStatus({ data: { id: r.id } });
@@ -325,12 +331,23 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
             clearInterval(interval);
             qc.invalidateQueries({ queryKey: ["pix-supporters", c.id] });
             toast.success("Pagamento confirmado — muito obrigado!");
+          } else if (["rejected", "cancelled", "expired", "refunded", "charged_back"].includes(s.status)) {
+            const map: Record<string, string> = {
+              rejected: "Pagamento rejeitado pelo Mercado Pago.",
+              cancelled: "Pagamento cancelado.",
+              expired: "O QR Code expirou. Gere um novo para continuar.",
+              refunded: "Pagamento estornado.",
+              charged_back: "Pagamento contestado.",
+            };
+            setFailed(map[s.status] ?? `Status ${s.status}`);
+            clearInterval(interval);
+            toast.error(map[s.status] ?? `Falha no pagamento (${s.status})`);
           }
         } catch { /* noop */ }
       }, 4000);
       setTimeout(() => clearInterval(interval), 15 * 60_000);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha");
+      toast.error(e instanceof Error ? e.message : "Falha ao gerar cobrança");
     } finally {
       setCreating(false);
     }
@@ -356,35 +373,57 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   if (result) {
     return (
       <div className="rounded-xl border p-6">
-        <div className="flex items-center gap-2">
-          <QrCode className="h-5 w-5" style={{ color: c.accent_color }} />
-          <h3 className="font-semibold">Pague {brl(result.amount_cents)} via PIX</h3>
-        </div>
-        {result.qr_code_base64 && (
-          <div className="mt-4 grid place-items-center">
-            <img src={`data:image/png;base64,${result.qr_code_base64}`} alt="QR Code PIX" className="h-56 w-56" />
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <QrCode className="h-5 w-5" style={{ color: c.accent_color }} />
+            <h3 className="font-semibold">Pague {brl(result.amount_cents)} via PIX</h3>
           </div>
-        )}
-        {result.qr_code && (
-          <div className="mt-4">
-            <Label>PIX Copia e Cola</Label>
-            <div className="mt-1 flex gap-2">
-              <Input value={result.qr_code} readOnly className="font-mono text-xs" />
-              <Button variant="outline" onClick={() => void copyPix()}><Copy className="h-4 w-4" /></Button>
+          <img src={mpLogo.url} alt="Mercado Pago" className="h-4 w-auto opacity-80" />
+        </div>
+
+        {failed ? (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <div className="font-semibold">Não foi possível confirmar o pagamento</div>
+              <div className="text-xs opacity-90">{failed}</div>
+              <button type="button" onClick={() => { setResult(null); setFailed(null); }}
+                className="mt-2 text-xs font-medium underline underline-offset-2">
+                Tentar novamente
+              </button>
             </div>
           </div>
+        ) : (
+          <>
+            {result.qr_code_base64 && (
+              <div className="mt-4 grid place-items-center">
+                <img src={`data:image/png;base64,${result.qr_code_base64}`} alt="QR Code PIX" className="h-56 w-56" />
+              </div>
+            )}
+            {result.qr_code && (
+              <div className="mt-4">
+                <Label>PIX Copia e Cola</Label>
+                <div className="mt-1 flex gap-2">
+                  <Input value={result.qr_code} readOnly className="font-mono text-xs" />
+                  <Button variant="outline" onClick={() => void copyPix()}><Copy className="h-4 w-4" /></Button>
+                </div>
+              </div>
+            )}
+            {result.ticket_url && (
+              <a href={result.ticket_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs text-brand hover:underline">
+                <ExternalLink className="h-3 w-3" /> Ver comprovante Mercado Pago
+              </a>
+            )}
+            <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Aguardando confirmação do pagamento — esta página atualiza sozinha em segundos após o PIX ser aprovado.
+            </p>
+          </>
         )}
-        {result.ticket_url && (
-          <a href={result.ticket_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs text-brand hover:underline">
-            <ExternalLink className="h-3 w-3" /> Ver comprovante Mercado Pago
-          </a>
-        )}
-        <p className="mt-4 text-xs text-muted-foreground">
-          Aguardando confirmação do pagamento... esta página atualiza automaticamente quando o PIX for aprovado.
-        </p>
       </div>
     );
   }
+
 
   return (
     <div className="rounded-xl border p-6">
