@@ -21,6 +21,7 @@ import {
   QrCode, ImageIcon, Copy, TrendingUp, Users2, CheckCircle2, Heart, BarChart3,
 } from "lucide-react";
 import { FeatureGate } from "@/components/feature-gate";
+import { UpgradeBanner } from "@/components/upgrade-nudge";
 import { startMpOAuth, disconnectMp, getMpStatus } from "@/lib/pix.functions";
 
 export const Route = createFileRoute("/_authenticated/pix")({
