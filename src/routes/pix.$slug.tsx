@@ -26,6 +26,7 @@ interface CampaignPub {
   description: string | null; cover_url: string | null; accent_color: string;
   goal_cents: number; min_cents: number; suggested_amounts: number[];
   accepts_card: boolean; pass_fee_to_supporter: boolean; show_supporters: boolean;
+  show_progress: boolean;
   allow_message: boolean; ends_at: string | null; raised_cents: number;
   supporters_count: number;
 }
@@ -44,7 +45,7 @@ const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", c
 export const Route = createFileRoute("/pix/$slug")({
   loader: async ({ params }) => {
     const { data } = await supabase.from("pix_campaigns")
-      .select("id,user_id,slug,title,description,cover_url,accent_color,goal_cents,min_cents,suggested_amounts,accepts_card,pass_fee_to_supporter,show_supporters,allow_message,ends_at,raised_cents,supporters_count")
+      .select("id,user_id,slug,title,description,cover_url,accent_color,goal_cents,min_cents,suggested_amounts,accepts_card,pass_fee_to_supporter,show_supporters,show_progress,allow_message,ends_at,raised_cents,supporters_count")
       .eq("slug", params.slug).eq("is_active", true).maybeSingle();
     if (!data) throw notFound();
     return { campaign: data as CampaignPub };
@@ -159,6 +160,7 @@ function PublicPixPage() {
               </p>
             )}
 
+            {c.show_progress !== false && (
             <div className="mt-7 rounded-2xl border bg-gradient-to-br from-muted/30 to-transparent p-5">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <div>
@@ -195,6 +197,7 @@ function PublicPixPage() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Tiers de selos */}
             <div className="mt-6 rounded-xl border bg-card p-4">

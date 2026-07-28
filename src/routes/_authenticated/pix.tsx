@@ -18,7 +18,7 @@ import {
 import { toast } from "sonner";
 import {
   ArrowLeft, Plus, ExternalLink, Trash2, Pencil, Sparkles, Wallet, Link as LinkIcon,
-  QrCode, ImageIcon, Copy, TrendingUp, Users2, CheckCircle2,
+  QrCode, ImageIcon, Copy, TrendingUp, Users2, CheckCircle2, Heart, BarChart3,
 } from "lucide-react";
 import { startMpOAuth, disconnectMp, getMpStatus } from "@/lib/pix.functions";
 
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/pix")({
     reason: (s.reason as string | undefined) ?? undefined,
     detail: (s.detail as string | undefined) ?? undefined,
   }),
-  head: () => ({ meta: [{ title: "Módulo PIX · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({ meta: [{ title: "Campanhas · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });
 
 interface Campaign {
@@ -37,6 +37,7 @@ interface Campaign {
   description: string | null; cover_url: string | null; accent_color: string;
   goal_cents: number; min_cents: number; suggested_amounts: number[];
   accepts_card: boolean; pass_fee_to_supporter: boolean; show_supporters: boolean;
+  show_progress: boolean;
   allow_message: boolean; ends_at: string | null; raised_cents: number;
   supporters_count: number; is_active: boolean; created_at: string;
 }
@@ -46,7 +47,7 @@ const emptyCampaign: Partial<Campaign> = {
   goal_cents: 100000, min_cents: 500,
   suggested_amounts: [1000, 2500, 5000, 10000],
   accepts_card: false, pass_fee_to_supporter: false,
-  show_supporters: true, allow_message: true, is_active: true,
+  show_supporters: true, show_progress: true, allow_message: true, is_active: true,
 };
 
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100);
@@ -128,19 +129,21 @@ function PixPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao painel
         </Link>
 
-        <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand/10 text-brand">
-                <QrCode className="h-4 w-4" />
-              </span>
-              <h1 className="font-display text-2xl font-semibold tracking-tight">Módulo PIX</h1>
-              <Badge variant="secondary" className="ml-1">Marketplace</Badge>
+        <header className="mb-8 overflow-hidden rounded-2xl border bg-gradient-to-br from-card via-card to-brand/5 p-6 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand/70 text-white shadow-md shadow-brand/25">
+                  <Heart className="h-5 w-5" fill="currentColor" />
+                </span>
+                <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">Campanhas</h1>
+                <Badge variant="secondary" className="ml-1">Marketplace</Badge>
+              </div>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                Crie páginas de arrecadação com PIX ou cartão. Os valores caem <strong>direto</strong> na
+                sua conta Mercado Pago — o ForLink apenas cobra uma taxa de plataforma configurada pelo admin.
+              </p>
             </div>
-            <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
-              Crie páginas de arrecadação com QR Code PIX. Os valores caem <strong>direto</strong> na
-              sua conta Mercado Pago — o ForLink apenas cobra uma taxa de plataforma configurada pelo admin.
-            </p>
           </div>
         </header>
 
@@ -376,6 +379,7 @@ function CampaignDialog({ editing, disabled, disabledReason }: { editing?: Campa
         accepts_card: !!form.accepts_card,
         pass_fee_to_supporter: !!form.pass_fee_to_supporter,
         show_supporters: !!form.show_supporters,
+        show_progress: form.show_progress ?? true,
         allow_message: !!form.allow_message,
         ends_at: form.ends_at || null,
         is_active: form.is_active ?? true,
@@ -485,6 +489,10 @@ function CampaignDialog({ editing, disabled, disabledReason }: { editing?: Campa
             <Switch checked={!!form.show_supporters} onCheckedChange={(v) => setForm({ ...form, show_supporters: v })} />
           </div>
           <div className="flex items-center justify-between rounded-md border p-3">
+            <div><div className="text-sm font-medium">Mostrar progresso</div><div className="text-[11px] text-muted-foreground">Exibe valor arrecadado, meta e botão "Ver progresso"</div></div>
+            <Switch checked={form.show_progress ?? true} onCheckedChange={(v) => setForm({ ...form, show_progress: v })} />
+          </div>
+          <div className="flex items-center justify-between rounded-md border p-3">
             <div><div className="text-sm font-medium">Permitir mensagens</div><div className="text-[11px] text-muted-foreground">Apoiadores deixam recado</div></div>
             <Switch checked={!!form.allow_message} onCheckedChange={(v) => setForm({ ...form, allow_message: v })} />
           </div>
@@ -513,7 +521,7 @@ function UpgradeGate() {
           <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-brand/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-brand">
             <Sparkles className="h-3 w-3" /> Recurso Pro
           </div>
-          <h1 className="font-display text-2xl font-semibold">Módulo PIX (Marketplace)</h1>
+          <h1 className="font-display text-2xl font-semibold">Campanhas (Marketplace)</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             O plano Free permite 1 campanha PIX. Para desbloquear campanhas ilimitadas, cartão de crédito
             e recursos avançados, faça upgrade para <strong>Pro</strong>.

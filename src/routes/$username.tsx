@@ -260,7 +260,7 @@ function PublicProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("pix_campaigns")
-        .select("slug,title,description,cover_url,accent_color,goal_cents,raised_cents,supporters_count")
+        .select("slug,title,description,cover_url,accent_color,goal_cents,raised_cents,supporters_count,show_progress")
         .eq("user_id", profileQ.data!.id)
         .eq("is_active", true)
         .order("created_at", { ascending: false })
@@ -442,10 +442,11 @@ function PublicProfile() {
 
         {/* Campanha PIX ativa — card discreto e elegante */}
         {campaignQ.data && (() => {
-          const c = campaignQ.data;
+          const c = campaignQ.data as typeof campaignQ.data & { show_progress?: boolean | null };
+          const showProgress = c.show_progress !== false;
           const goal = c.goal_cents ?? 0;
           const raised = c.raised_cents ?? 0;
-          const pct = goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : null;
+          const pct = showProgress && goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : null;
           const missing = goal > 0 ? Math.max(0, goal - raised) : 0;
           const fmt = (cents: number) =>
             (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -508,7 +509,7 @@ function PublicProfile() {
                     <h2 className="mt-0.5 truncate text-sm font-semibold text-foreground">
                       {c.title}
                     </h2>
-                    {pct !== null ? (
+                    {showProgress && pct !== null ? (
                       <div className="mt-2">
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                           <div
@@ -523,7 +524,7 @@ function PublicProfile() {
                           <span>{pct}%</span>
                         </div>
                       </div>
-                    ) : raised > 0 ? (
+                    ) : showProgress && raised > 0 ? (
                       <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
                         Arrecadado:{" "}
                         <b className="font-semibold text-foreground">{fmt(raised)}</b>
@@ -539,34 +540,36 @@ function PublicProfile() {
                 </div>
               </Link>
 
-              {/* Botão "Ver progresso" — mostra quanto falta ou destaque quando não há meta */}
-              <div className="border-t bg-muted/30 px-4 py-2.5">
-                <Link
-                  to="/pix/$slug"
-                  params={{ slug: c.slug }}
-                  className="flex items-center justify-between gap-2 text-xs font-medium"
-                  onClick={() =>
-                    trackEvent("campaign_progress_click", {
-                      campaign_slug: c.slug,
-                      profile_username: p.username,
-                    })
-                  }
-                >
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Eye className="h-3.5 w-3.5" />
-                    Ver progresso
-                  </span>
-                  <span className="tabular-nums" style={{ color: accent }}>
-                    {pct !== null
-                      ? missing > 0
-                        ? `Faltam ${fmt(missing)}`
-                        : "Meta alcançada! 🎉"
-                      : raised > 0
-                        ? `${fmt(raised)} arrecadados`
-                        : "Seja o primeiro a apoiar"}
-                  </span>
-                </Link>
-              </div>
+              {/* Botão "Ver progresso" — só quando o dono habilita */}
+              {showProgress && (
+                <div className="border-t bg-muted/30 px-4 py-2.5">
+                  <Link
+                    to="/pix/$slug"
+                    params={{ slug: c.slug }}
+                    className="flex items-center justify-between gap-2 text-xs font-medium"
+                    onClick={() =>
+                      trackEvent("campaign_progress_click", {
+                        campaign_slug: c.slug,
+                        profile_username: p.username,
+                      })
+                    }
+                  >
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Eye className="h-3.5 w-3.5" />
+                      Ver progresso
+                    </span>
+                    <span className="tabular-nums" style={{ color: accent }}>
+                      {pct !== null
+                        ? missing > 0
+                          ? `Faltam ${fmt(missing)}`
+                          : "Meta alcançada! 🎉"
+                        : raised > 0
+                          ? `${fmt(raised)} arrecadados`
+                          : "Seja o primeiro a apoiar"}
+                    </span>
+                  </Link>
+                </div>
+              )}
             </div>
           );
         })()}

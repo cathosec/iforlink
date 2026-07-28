@@ -1,0 +1,1 @@
+ALTER TABLE public.pix_campaigns ADD COLUMN IF NOT EXISTS show_progress boolean NOT NULL DEFAULT true;

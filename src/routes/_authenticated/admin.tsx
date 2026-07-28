@@ -2000,7 +2000,7 @@ function PixTab({ logAction }: { logAction: (a: string, t?: string, id?: string,
 
         <div className="mt-5 flex items-center justify-between rounded-md border p-3">
           <div>
-            <div className="text-sm font-medium">Módulo PIX ativo</div>
+            <div className="text-sm font-medium">Módulo Campanhas ativo</div>
             <div className="text-xs text-muted-foreground">Se desativado, novas contribuições são bloqueadas.</div>
           </div>
           <Switch checked={!!form.enabled} onCheckedChange={(v) => setForm({ ...form, enabled: v })} />
