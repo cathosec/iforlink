@@ -248,12 +248,13 @@ export const createContribution = createServerFn({ method: "POST" })
 export const getContributionStatus = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
-      .from("pix_contributions")
-      .select("id,status,approved_at,amount_cents,badge_key")
-      .eq("id", data.id)
-      .maybeSingle();
+    const supabase = publicSupabase();
+    const { data: rows, error } = await supabase.rpc(
+      "get_pix_contribution_status" as never,
+      { _id: data.id } as never,
+    );
+    if (error) throw new Error(error.message);
+    const row = Array.isArray(rows) ? rows[0] : rows;
     if (!row) throw new Error("Contribuição não encontrada");
-    return row;
+    return row as { id: string; status: string; approved_at: string | null; amount_cents: number; badge_key: string | null };
   });
