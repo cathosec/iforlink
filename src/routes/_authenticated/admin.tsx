@@ -2155,3 +2155,69 @@ function MpTestButton() {
   );
 }
 
+
+function CampaignFeeMatrix() {
+  const [free, setFree] = useState<{ fee_pct: number; min_fee_cents: number }>({ fee_pct: 4, min_fee_cents: 50 });
+  const [pro, setPro] = useState<{ fee_pct: number; min_fee_cents: number }>({ fee_pct: 1, min_fee_cents: 0 });
+  const [admin, setAdmin] = useState<{ fee_pct: number; min_fee_cents: number }>({ fee_pct: 0, min_fee_cents: 0 });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase.from("platform_settings").select("value").eq("key", "campaign_fees").maybeSingle();
+      const v = (data?.value ?? {}) as Record<string, { fee_pct?: number; min_fee_cents?: number }>;
+      if (v.free) setFree({ fee_pct: Number(v.free.fee_pct ?? 4), min_fee_cents: Number(v.free.min_fee_cents ?? 50) });
+      if (v.pro) setPro({ fee_pct: Number(v.pro.fee_pct ?? 1), min_fee_cents: Number(v.pro.min_fee_cents ?? 0) });
+      if (v.admin) setAdmin({ fee_pct: Number(v.admin.fee_pct ?? 0), min_fee_cents: Number(v.admin.min_fee_cents ?? 0) });
+      setLoading(false);
+    })();
+  }, []);
+  const save = async () => {
+    setSaving(true);
+    const value = { free, pro, admin };
+    const { error } = await supabase.from("platform_settings").upsert({
+      key: "campaign_fees", value: value as never, description: "Comissão por plano do criador (Free/Pro/Admin)",
+    } as never);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Matriz de taxas salva");
+  };
+  const row = (label: string, badge: string, state: typeof free, set: (v: typeof free) => void) => (
+    <div className="grid gap-2 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[140px_1fr_1fr]">
+      <div>
+        <div className="text-sm font-semibold">{label}</div>
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{badge}</div>
+      </div>
+      <div>
+        <Label className="text-[11px]">Taxa (%)</Label>
+        <Input type="number" min={0} max={20} step="0.01" value={state.fee_pct}
+          onChange={(e) => set({ ...state, fee_pct: Number(e.target.value) })} />
+      </div>
+      <div>
+        <Label className="text-[11px]">Mínimo (centavos)</Label>
+        <Input type="number" min={0} step={1} value={state.min_fee_cents}
+          onChange={(e) => set({ ...state, min_fee_cents: Number(e.target.value) })} />
+      </div>
+    </div>
+  );
+  return (
+    <Card className="p-6">
+      <h3 className="font-display text-lg font-semibold">Comissão por plano (Fase 3)</h3>
+      <p className="text-sm text-muted-foreground">
+        Taxa cobrada nas campanhas conforme o plano do criador. Substitui a taxa global do módulo Campanhas.
+      </p>
+      {loading ? (
+        <div className="mt-4 text-sm text-muted-foreground">Carregando…</div>
+      ) : (
+        <div className="mt-4 space-y-2">
+          {row("Free", "Padrão do sistema", free, setFree)}
+          {row("Pro", "Taxa reduzida", pro, setPro)}
+          {row("Admin", "Isento (opcional)", admin, setAdmin)}
+        </div>
+      )}
+      <div className="mt-4 flex justify-end">
+        <Button onClick={() => void save()} disabled={saving || loading}>{saving ? "Salvando…" : "Salvar matriz"}</Button>
+      </div>
+    </Card>
+  );
+}
