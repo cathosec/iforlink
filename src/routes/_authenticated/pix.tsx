@@ -18,7 +18,7 @@ import {
 import { toast } from "sonner";
 import {
   ArrowLeft, Plus, ExternalLink, Trash2, Pencil, Sparkles, Wallet, Link as LinkIcon,
-  QrCode, ImageIcon, Copy, TrendingUp, Users2, CheckCircle2,
+  QrCode, ImageIcon, Copy, TrendingUp, Users2, CheckCircle2, Heart, BarChart3,
 } from "lucide-react";
 import { startMpOAuth, disconnectMp, getMpStatus } from "@/lib/pix.functions";
 
