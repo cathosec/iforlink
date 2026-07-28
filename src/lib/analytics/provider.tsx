@@ -9,9 +9,11 @@
 import { useEffect } from "react";
 import { useRouter, useRouterState } from "@tanstack/react-router";
 import { hasAnalyticsConsent, onConsentChange } from "@/lib/consent";
+import { isAnalyticsOptedOut, onOptOutChange } from "./optout";
 import { useAuth } from "@/lib/auth-context";
 import { startTracker, trackPageView, setUserId } from "./tracker";
 import { onRouteChange, startRecorder, stopRecorder } from "./recorder";
+
 
 // Helper para expor o session_id/visitor_id do tracker.
 // O tracker gerencia esses IDs em storage — lemos direto dele.
@@ -30,16 +32,16 @@ export function AnalyticsProvider() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
 
-  // Inicializa/desliga conforme consent
+  // Inicializa/desliga conforme consent + opt-out do usuário
   useEffect(() => {
-    let active = hasAnalyticsConsent();
+    const canTrack = () => hasAnalyticsConsent() && !isAnalyticsOptedOut();
+    let active = canTrack();
     if (active) {
       startTracker(user?.id ?? null);
-      // Pequeno atraso para o transport atribuir o session_id antes do rrweb começar
       setTimeout(() => { void startRecorder(getRecorderContext); }, 800);
     }
-    const off = onConsentChange(() => {
-      const now = hasAnalyticsConsent();
+    const sync = () => {
+      const now = canTrack();
       if (now && !active) {
         active = true;
         startTracker(user?.id ?? null);
@@ -48,23 +50,27 @@ export function AnalyticsProvider() {
         active = false;
         stopRecorder();
       }
-    });
-    return () => off();
+    };
+    const offConsent = onConsentChange(sync);
+    const offOpt = onOptOutChange(sync);
+    return () => { offConsent(); offOpt(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   // Atualiza user_id quando login/logout acontece
   useEffect(() => { setUserId(user?.id ?? null); }, [user?.id]);
 
   // Pageview + segmentação de replay em cada navegação
   useEffect(() => {
-    if (!hasAnalyticsConsent()) return;
+    if (!hasAnalyticsConsent() || isAnalyticsOptedOut()) return;
     const raf = requestAnimationFrame(() => {
       trackPageView(pathname, document.title);
       onRouteChange(pathname, document.title);
     });
     return () => cancelAnimationFrame(raf);
   }, [pathname, router]);
+
 
   return null;
 }
