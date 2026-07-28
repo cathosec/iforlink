@@ -899,16 +899,31 @@ function KpiCard({
   icon, label, value, hint, accent,
 }: { icon: React.ReactNode; label: string; value: string; hint?: string; accent?: boolean }) {
   return (
-    <Card className={`p-4 ${accent ? "border-brand/40 bg-brand-soft/40" : ""}`}>
-      <div className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-muted-foreground">
-        <span className={accent ? "text-brand" : ""}>{icon}</span>
-        {label}
+    <Card
+      className={`group relative overflow-hidden p-5 transition hover:-translate-y-0.5 hover:shadow-lg ${
+        accent ? "border-brand/30 bg-gradient-to-br from-brand-soft/60 to-transparent" : "bg-gradient-to-br from-muted/30 to-transparent"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div
+          className={`grid h-9 w-9 place-items-center rounded-xl ring-1 transition group-hover:scale-105 ${
+            accent
+              ? "bg-brand text-white ring-brand/20 shadow-md shadow-brand/25"
+              : "bg-background text-brand ring-border"
+          }`}
+        >
+          {icon}
+        </div>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          {label}
+        </span>
       </div>
-      <div className="mt-1 text-2xl font-semibold tabular-nums">{value}</div>
-      {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
+      <div className="mt-4 font-display text-3xl font-semibold tabular-nums tracking-tight">{value}</div>
+      {hint && <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>}
     </Card>
   );
 }
+
 
 function EmptyChart({ label }: { label: string }) {
   return (
