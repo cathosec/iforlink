@@ -493,16 +493,6 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
           <Label>Seu e-mail</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
         </div>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div>
-          <Label>Seu nome (opcional)</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Como quer aparecer no mural" />
-        </div>
-        <div>
-          <Label>Seu e-mail</Label>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
-        </div>
       </div>
 
       {c.allow_message && (
