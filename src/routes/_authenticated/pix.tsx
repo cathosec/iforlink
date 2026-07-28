@@ -379,6 +379,7 @@ function CampaignDialog({ editing, disabled, disabledReason }: { editing?: Campa
         accepts_card: !!form.accepts_card,
         pass_fee_to_supporter: !!form.pass_fee_to_supporter,
         show_supporters: !!form.show_supporters,
+        show_progress: form.show_progress ?? true,
         allow_message: !!form.allow_message,
         ends_at: form.ends_at || null,
         is_active: form.is_active ?? true,
