@@ -818,6 +818,14 @@ export type Database = {
         Returns: string
       }
       get_admin_notify_email: { Args: never; Returns: string }
+      get_campaign_fee_for_user: {
+        Args: { _user_id: string }
+        Returns: {
+          creator_role: Database["public"]["Enums"]["app_role"]
+          fee_pct: number
+          min_fee_cents: number
+        }[]
+      }
       get_mercadopago_webhook_access_token: {
         Args: { _payment_id: string; _request_id: string; _signature: string }
         Returns: string
@@ -826,7 +834,10 @@ export type Database = {
         Args: { _campaign_id: string }
         Returns: {
           access_token: string
+          creator_role: string
+          fee_pct: number
           live_mode: boolean
+          min_fee_cents: number
           user_id: string
         }[]
       }
@@ -835,7 +846,10 @@ export type Database = {
         Returns: {
           accepts_card: boolean
           campaign_id: string
+          creator_role: string
+          fee_pct: number
           live_mode: boolean
+          min_fee_cents: number
           public_key: string
         }[]
       }
