@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { SiteHeader } from "@/components/site-header";
@@ -666,7 +666,7 @@ function RenameableTitle({ name, onSave }: { name: string; onSave: (n: string) =
   );
 }
 
-function NewCategoryDialog({ onCreate, disabled, trigger }: { onCreate: (n: string, icon: string) => Promise<boolean>; disabled?: boolean; trigger?: React.ReactNode }) {
+function NewCategoryDialog({ onCreate, disabled, trigger }: { onCreate: (n: string, icon: string) => Promise<boolean>; disabled?: boolean; trigger?: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<string>(DEFAULT_CATEGORY_ICON);
