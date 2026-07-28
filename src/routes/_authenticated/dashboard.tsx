@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { getFaviconUrl, normalizeUrl } from "@/lib/favicon";
 import {
   Plus, Pencil, Trash2, ChevronUp, ChevronDown, ExternalLink, FolderPlus, Sparkles, Eye, EyeOff, Link2, Lock, GripVertical, Scissors,
-  MousePointerClick, BarChart3, TrendingUp, Layers, Trophy, CreditCard,
+  MousePointerClick, BarChart3, TrendingUp, Layers, Trophy, CreditCard, Heart, Zap, Settings2,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
