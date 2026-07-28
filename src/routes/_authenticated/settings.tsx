@@ -81,8 +81,39 @@ function Settings() {
       setDisplayName(profile.display_name);
       setBio(profile.bio ?? "");
       setAvatarUrl(profile.avatar_url ?? "");
+      setSocials(normalizeSocialLinks(profile.social_links));
     }
   }, [profile]);
+
+  const addSocial = (key: string) => {
+    if (socials.some((s) => s.key === key)) return;
+    setSocials((prev) => [...prev, { key, value: "" }]);
+  };
+  const updateSocial = (key: string, value: string) => {
+    setSocials((prev) => prev.map((s) => (s.key === key ? { ...s, value } : s)));
+  };
+  const removeSocial = (key: string) => {
+    setSocials((prev) => prev.filter((s) => s.key !== key));
+  };
+  const saveSocials = async () => {
+    if (!user) return;
+    setSavingSocials(true);
+    const payload = socials
+      .map((s) => ({ key: s.key, value: s.value.trim() }))
+      .filter((s) => s.value.length > 0);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ social_links: payload })
+      .eq("id", user.id);
+    setSavingSocials(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Redes sociais atualizadas");
+    await refresh();
+  };
+
 
   const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
