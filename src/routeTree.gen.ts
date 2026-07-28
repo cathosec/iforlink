@@ -36,6 +36,7 @@ import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/p
 import { Route as ApiPublicPixCoverFileRouteImport } from './routes/api/public/pix-cover/$file'
 import { Route as ApiPublicCronSubscriptionsCheckRouteImport } from './routes/api/public/cron/subscriptions-check'
 import { Route as ApiPublicAvatarFileRouteImport } from './routes/api/public/avatar/$file'
+import { Route as ApiPublicOauthMercadopagoCallbackRouteImport } from './routes/api/public/oauth/mercadopago/callback'
 
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
@@ -174,6 +175,12 @@ const ApiPublicAvatarFileRoute = ApiPublicAvatarFileRouteImport.update({
   path: '/api/public/avatar/$file',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOauthMercadopagoCallbackRoute =
+  ApiPublicOauthMercadopagoCallbackRouteImport.update({
+    id: '/api/public/oauth/mercadopago/callback',
+    path: '/api/public/oauth/mercadopago/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -202,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/mp-pix': typeof ApiPublicWebhooksMpPixRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/public/oauth/mercadopago/callback': typeof ApiPublicOauthMercadopagoCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -230,6 +238,7 @@ export interface FileRoutesByTo {
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/mp-pix': typeof ApiPublicWebhooksMpPixRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/public/oauth/mercadopago/callback': typeof ApiPublicOauthMercadopagoCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -260,6 +269,7 @@ export interface FileRoutesById {
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/mp-pix': typeof ApiPublicWebhooksMpPixRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/api/public/oauth/mercadopago/callback': typeof ApiPublicOauthMercadopagoCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/mp-pix'
     | '/lovable/email/transactional/preview'
+    | '/api/public/oauth/mercadopago/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -318,6 +329,7 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/mp-pix'
     | '/lovable/email/transactional/preview'
+    | '/api/public/oauth/mercadopago/callback'
   id:
     | '__root__'
     | '/'
@@ -347,6 +359,7 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/mp-pix'
     | '/lovable/email/transactional/preview'
+    | '/api/public/oauth/mercadopago/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -369,6 +382,7 @@ export interface RootRouteChildren {
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
   ApiPublicWebhooksMpPixRoute: typeof ApiPublicWebhooksMpPixRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  ApiPublicOauthMercadopagoCallbackRoute: typeof ApiPublicOauthMercadopagoCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -562,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAvatarFileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/oauth/mercadopago/callback': {
+      id: '/api/public/oauth/mercadopago/callback'
+      path: '/api/public/oauth/mercadopago/callback'
+      fullPath: '/api/public/oauth/mercadopago/callback'
+      preLoaderRoute: typeof ApiPublicOauthMercadopagoCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -610,7 +631,19 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
   ApiPublicWebhooksMpPixRoute: ApiPublicWebhooksMpPixRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  ApiPublicOauthMercadopagoCallbackRoute:
+    ApiPublicOauthMercadopagoCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
