@@ -1155,7 +1155,37 @@ export type Database = {
     Functions: {
       admin_ops_summary: { Args: { _hours?: number }; Returns: Json }
       analytics_admin_summary: { Args: { _hours?: number }; Returns: Json }
+      analytics_heatmap: {
+        Args: {
+          _limit?: number
+          _path: string
+          _since?: string
+          _until?: string
+        }
+        Returns: {
+          kind: string
+          ts: string
+          vh: number
+          vw: number
+          x: number
+          y: number
+        }[]
+      }
       analytics_ingest_batch: { Args: { _payload: Json }; Returns: Json }
+      analytics_my_pages: {
+        Args: { _limit?: number }
+        Returns: {
+          last_seen: string
+          owner_user_id: string
+          path: string
+          title: string
+          views_count: number
+        }[]
+      }
+      analytics_page_summary: {
+        Args: { _path: string; _since?: string; _until?: string }
+        Returns: Json
+      }
       analytics_upsert_page: {
         Args: { _path: string; _title: string }
         Returns: string
