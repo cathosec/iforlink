@@ -44,6 +44,284 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_custom_events: {
+        Row: {
+          client_event_id: string
+          id: string
+          name: string
+          page_id: string | null
+          props: Json
+          session_id: string
+          ts: string
+        }
+        Insert: {
+          client_event_id: string
+          id?: string
+          name: string
+          page_id?: string | null
+          props?: Json
+          session_id: string
+          ts?: string
+        }
+        Update: {
+          client_event_id?: string
+          id?: string
+          name?: string
+          page_id?: string | null
+          props?: Json
+          session_id?: string
+          ts?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_custom_events_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_custom_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics_events: {
+        Row: {
+          client_event_id: string
+          id: string
+          page_id: string | null
+          payload: Json
+          session_id: string
+          ts: string
+          type: string
+        }
+        Insert: {
+          client_event_id: string
+          id?: string
+          page_id?: string | null
+          payload?: Json
+          session_id: string
+          ts?: string
+          type: string
+        }
+        Update: {
+          client_event_id?: string
+          id?: string
+          page_id?: string | null
+          payload?: Json
+          session_id?: string
+          ts?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics_pages: {
+        Row: {
+          first_seen: string
+          id: string
+          last_seen: string
+          owner_user_id: string | null
+          path: string
+          title: string | null
+        }
+        Insert: {
+          first_seen?: string
+          id?: string
+          last_seen?: string
+          owner_user_id?: string | null
+          path: string
+          title?: string | null
+        }
+        Update: {
+          first_seen?: string
+          id?: string
+          last_seen?: string
+          owner_user_id?: string | null
+          path?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
+      analytics_pageviews: {
+        Row: {
+          duration_ms: number
+          id: string
+          is_exit: boolean
+          page_id: string | null
+          path: string
+          session_id: string
+          title: string | null
+          ts: string
+          url: string
+        }
+        Insert: {
+          duration_ms?: number
+          id?: string
+          is_exit?: boolean
+          page_id?: string | null
+          path: string
+          session_id: string
+          title?: string | null
+          ts?: string
+          url: string
+        }
+        Update: {
+          duration_ms?: number
+          id?: string
+          is_exit?: boolean
+          page_id?: string | null
+          path?: string
+          session_id?: string
+          title?: string | null
+          ts?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_pageviews_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_pageviews_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics_sessions: {
+        Row: {
+          browser_family: string | null
+          city: string | null
+          country: string | null
+          device_type: string | null
+          ended_at: string | null
+          id: string
+          ip_prefix: string | null
+          lang: string | null
+          last_seen: string
+          os_family: string | null
+          referrer: string | null
+          screen_h: number | null
+          screen_w: number | null
+          started_at: string
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          viewport_h: number | null
+          viewport_w: number | null
+          visitor_id: string
+        }
+        Insert: {
+          browser_family?: string | null
+          city?: string | null
+          country?: string | null
+          device_type?: string | null
+          ended_at?: string | null
+          id?: string
+          ip_prefix?: string | null
+          lang?: string | null
+          last_seen?: string
+          os_family?: string | null
+          referrer?: string | null
+          screen_h?: number | null
+          screen_w?: number | null
+          started_at?: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          viewport_h?: number | null
+          viewport_w?: number | null
+          visitor_id: string
+        }
+        Update: {
+          browser_family?: string | null
+          city?: string | null
+          country?: string | null
+          device_type?: string | null
+          ended_at?: string | null
+          id?: string
+          ip_prefix?: string | null
+          lang?: string | null
+          last_seen?: string
+          os_family?: string | null
+          referrer?: string | null
+          screen_h?: number | null
+          screen_w?: number | null
+          started_at?: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          viewport_h?: number | null
+          viewport_w?: number | null
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_sessions_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "analytics_visitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics_visitors: {
+        Row: {
+          created_at: string
+          first_seen: string
+          id: string
+          last_seen: string
+          ua_hash: string | null
+        }
+        Insert: {
+          created_at?: string
+          first_seen?: string
+          id?: string
+          last_seen?: string
+          ua_hash?: string | null
+        }
+        Update: {
+          created_at?: string
+          first_seen?: string
+          id?: string
+          last_seen?: string
+          ua_hash?: string | null
+        }
+        Relationships: []
+      }
       event_log: {
         Row: {
           actor_id: string | null
@@ -876,6 +1154,12 @@ export type Database = {
     }
     Functions: {
       admin_ops_summary: { Args: { _hours?: number }; Returns: Json }
+      analytics_admin_summary: { Args: { _hours?: number }; Returns: Json }
+      analytics_ingest_batch: { Args: { _payload: Json }; Returns: Json }
+      analytics_upsert_page: {
+        Args: { _path: string; _title: string }
+        Returns: string
+      }
       apply_mercadopago_payment_update: {
         Args: {
           _mp_payment: Json

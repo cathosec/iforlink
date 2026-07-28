@@ -17,6 +17,7 @@ import { LogoWordmark } from "@/components/logo";
 import { CookieConsent } from "@/components/cookie-consent";
 import { AdSlot } from "@/components/ad-slot";
 import { GoogleAnalytics } from "@/components/google-analytics";
+import { AnalyticsProvider } from "@/lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -218,7 +219,9 @@ function RootComponent() {
         <Outlet />
         <AdSlot slot="mobile_sticky" label="Publicidade" />
         <GoogleAnalytics />
+        <AnalyticsProvider />
         <CookieConsent />
+        <Toaster position="top-center" richColors />
         <Toaster position="top-center" richColors />
       </AuthProvider>
     </QueryClientProvider>
