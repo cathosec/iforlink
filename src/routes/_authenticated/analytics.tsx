@@ -101,21 +101,42 @@ function AnalyticsPage() {
         defaultPath={profile?.username ? `/${profile.username}` : null}
       />
 
-      {selectedPath ? (
-        <div className="mt-6 space-y-6">
-          <SummaryCards path={selectedPath} since={since} until={until} />
+      <div className="mt-6 space-y-6">
+        {selectedPath && <SummaryCards path={selectedPath} since={since} until={until} />}
 
-          <Tabs defaultValue="heatmap" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="heatmap" className="gap-1.5">
-                <BarChart3 className="h-3.5 w-3.5" /> Mapa de calor
-              </TabsTrigger>
-              <TabsTrigger value="replay" className="gap-1.5">
-                <Film className="h-3.5 w-3.5" /> Gravações
-              </TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full max-w-xl grid-cols-3">
+            <TabsTrigger value="overview" className="gap-1.5">
+              <LineChart className="h-3.5 w-3.5" /> Visão geral
+            </TabsTrigger>
+            <TabsTrigger value="heatmap" className="gap-1.5" disabled={!selectedPath}>
+              <BarChart3 className="h-3.5 w-3.5" /> Mapa de calor
+            </TabsTrigger>
+            <TabsTrigger value="replay" className="gap-1.5" disabled={!selectedPath}>
+              <Film className="h-3.5 w-3.5" /> Gravações
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="heatmap" className="mt-4">
+          <TabsContent value="overview" className="mt-4">
+            <div className="mb-3 flex items-center justify-end">
+              <Select value={rangeKey} onValueChange={setRangeKey}>
+                <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>{RANGES.map((r) => (
+                  <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>
+                ))}</SelectContent>
+              </Select>
+            </div>
+            <OverviewPanel
+              path={selectedPath}
+              since={since}
+              until={until}
+              bucket={bucket}
+              onBucketChange={setBucket}
+            />
+          </TabsContent>
+
+          <TabsContent value="heatmap" className="mt-4">
+            {selectedPath ? (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
                   <div>
@@ -151,20 +172,20 @@ function AnalyticsPage() {
                   />
                 </CardContent>
               </Card>
-            </TabsContent>
+            ) : (
+              <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Selecione uma página acima.</CardContent></Card>
+            )}
+          </TabsContent>
 
-            <TabsContent value="replay" className="mt-4">
+          <TabsContent value="replay" className="mt-4">
+            {selectedPath ? (
               <ReplayPanel path={selectedPath} since={since} rangeLabel={range.label} />
-            </TabsContent>
-          </Tabs>
-        </div>
-      ) : (
-        <Card className="mt-6">
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Selecione uma página acima para visualizar o mapa de calor e as gravações.
-          </CardContent>
-        </Card>
-      )}
+            ) : (
+              <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Selecione uma página acima.</CardContent></Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
