@@ -332,7 +332,7 @@ function Precos() {
 
       {/* AD SLOT (mostra só para Free em outras páginas — na página de preços fica discreto) */}
       <div className="mx-auto max-w-5xl px-4">
-        <AdSlot slot="content" className="my-4" />
+        <AdSlot slot="feed" className="my-4" />
       </div>
 
       {/* COMPARISON TABLE */}
