@@ -129,6 +129,14 @@ export const Route = createFileRoute("/api/public/analytics/ingest")({
             );
           }
 
+          // Sem service role key (ex.: preview sandbox), aceita o batch como no-op
+          // para não gerar 500 em loop no cliente.
+          if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.SUPABASE_URL) {
+            return new Response(JSON.stringify({ ok: true, skipped: "no_admin_key" }), {
+              status: 202, headers: { "Content-Type": "application/json" },
+            });
+          }
+
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
           // Rate limit por IP: 60 batches/min. Fail-open se a RPC não existir.
