@@ -386,6 +386,7 @@ function Dashboard() {
               <span className="block text-[11px] text-muted-foreground">Foto, bio e usuário</span>
             </span>
             <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-slate-700" />
+          </Link>
         </div>
 
         {showLimitBanner && (
