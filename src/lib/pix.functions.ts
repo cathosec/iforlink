@@ -140,6 +140,9 @@ export const getCampaignPaymentContext = createServerFn({ method: "POST" })
     const row = Array.isArray(rows) ? rows[0] : rows;
     if (!row) throw new Error("Campanha não encontrada");
     const cfg = await loadPixConfig();
+    // Estimativas públicas de tarifas do Mercado Pago cobradas do RECEBEDOR
+    // (descontadas do valor que cai na conta do criador). Valores padrão para
+    // contas Brasil sem plano especial; podem variar por conta/segmento.
     return {
       ...(row as {
         campaign_id: string;
@@ -149,6 +152,9 @@ export const getCampaignPaymentContext = createServerFn({ method: "POST" })
       }),
       fee_percent: Number(cfg.fee_percent ?? 0),
       min_fee_cents: Math.max(0, Number(cfg.min_fee_cents ?? 0)),
+      mp_fee_pix_percent: 0.99,
+      mp_fee_card_percent: 4.98,
+      mp_fee_card_fixed_cents: 0,
     };
   });
 
