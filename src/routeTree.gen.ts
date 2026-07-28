@@ -32,6 +32,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAssinaturaRouteImport } from './routes/_authenticated/assinatura'
 import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicWebhooksMpPixRouteImport } from './routes/api/public/webhooks/mp-pix'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
@@ -155,6 +156,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/pix/$slug': typeof PixSlugRoute
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/pix/$slug': typeof PixSlugRoute
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
@@ -290,6 +298,7 @@ export interface FileRoutesById {
   '/pix/$slug': typeof PixSlugRoute
   '/public/$': typeof PublicSplatRoute
   '/s/$code': typeof SCodeRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
@@ -324,6 +333,7 @@ export interface FileRouteTypes {
     | '/pix/$slug'
     | '/public/$'
     | '/s/$code'
+    | '/api/public/health'
     | '/api/public/avatar/$file'
     | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
@@ -356,6 +366,7 @@ export interface FileRouteTypes {
     | '/pix/$slug'
     | '/public/$'
     | '/s/$code'
+    | '/api/public/health'
     | '/api/public/avatar/$file'
     | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
@@ -389,6 +400,7 @@ export interface FileRouteTypes {
     | '/pix/$slug'
     | '/public/$'
     | '/s/$code'
+    | '/api/public/health'
     | '/api/public/avatar/$file'
     | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
@@ -414,6 +426,7 @@ export interface RootRouteChildren {
   PixSlugRoute: typeof PixSlugRoute
   PublicSplatRoute: typeof PublicSplatRoute
   SCodeRoute: typeof SCodeRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicAvatarFileRoute: typeof ApiPublicAvatarFileRoute
   ApiPublicCronReconcilePaymentsRoute: typeof ApiPublicCronReconcilePaymentsRoute
   ApiPublicCronSubscriptionsCheckRoute: typeof ApiPublicCronSubscriptionsCheckRoute
@@ -587,6 +600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -688,6 +708,7 @@ const rootRouteChildren: RootRouteChildren = {
   PixSlugRoute: PixSlugRoute,
   PublicSplatRoute: PublicSplatRoute,
   SCodeRoute: SCodeRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicAvatarFileRoute: ApiPublicAvatarFileRoute,
   ApiPublicCronReconcilePaymentsRoute: ApiPublicCronReconcilePaymentsRoute,
   ApiPublicCronSubscriptionsCheckRoute: ApiPublicCronSubscriptionsCheckRoute,
