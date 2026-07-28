@@ -186,21 +186,19 @@ export const createContribution = createServerFn({ method: "POST" })
 
     const cfg = await loadPixConfig();
     if (!cfg.enabled) throw new Error("Pagamentos PIX desativados no momento.");
-    const feePct = Number(cfg.fee_percent ?? 0);
-    const minFee = Math.max(0, Number(cfg.min_fee_cents ?? 0));
-    const feeCents = Math.max(minFee, Math.round((data.amount_cents * feePct) / 100));
-
-    // Quando o criador repassa, somamos também a tarifa MP (PIX ~0.99%) para
-    // que o criador receba integralmente `amount_cents`.
-    const MP_PIX_PCT = 0.99;
-    let charged = data.amount_cents;
-    let net = data.amount_cents - feeCents;
-    if (camp.pass_fee_to_supporter) {
-      const denom = Math.max(0.01, 1 - MP_PIX_PCT / 100);
-      charged = Math.ceil((data.amount_cents + feeCents) / denom);
-      net = data.amount_cents;
-    }
+    const { computeCampaignFees, MP_DEFAULT_FEES } = await import("@/lib/payments/fees");
+    const fees = computeCampaignFees({
+      baseCents: data.amount_cents,
+      feePct: Number(cfg.fee_percent ?? 0),
+      minFeeCents: Math.max(0, Number(cfg.min_fee_cents ?? 0)),
+      mpPct: MP_DEFAULT_FEES.pixPct,
+      passToSupporter: !!camp.pass_fee_to_supporter,
+    });
+    const feeCents = fees.feeForLink;
+    const charged = fees.total;
+    const net = fees.netCreator;
     if (net < 0) throw new Error("Configuração de taxa inválida");
+
 
 
     const { data: tokRows, error: tokErr } = await supabase.rpc(
@@ -342,20 +340,20 @@ export const processCardPayment = createServerFn({ method: "POST" })
 
     const cfg = await loadPixConfig();
     if (!cfg.enabled) throw new Error("Pagamentos desativados no momento.");
-    const feePct = Number(cfg.fee_percent ?? 0);
-    const minFee = Math.max(0, Number(cfg.min_fee_cents ?? 0));
-    const feeCents = Math.max(minFee, Math.round((data.amount_cents * feePct) / 100));
-
-    // Card ~4.98% (à vista). Quando repassa, embutimos ForLink + MP no total cobrado.
-    const MP_CARD_PCT = 4.98;
-    let charged = data.amount_cents;
-    let net = data.amount_cents - feeCents;
-    if (camp.pass_fee_to_supporter) {
-      const denom = Math.max(0.01, 1 - MP_CARD_PCT / 100);
-      charged = Math.ceil((data.amount_cents + feeCents) / denom);
-      net = data.amount_cents;
-    }
+    const { computeCampaignFees, MP_DEFAULT_FEES } = await import("@/lib/payments/fees");
+    const fees = computeCampaignFees({
+      baseCents: data.amount_cents,
+      feePct: Number(cfg.fee_percent ?? 0),
+      minFeeCents: Math.max(0, Number(cfg.min_fee_cents ?? 0)),
+      mpPct: MP_DEFAULT_FEES.cardPct,
+      mpFixedCents: MP_DEFAULT_FEES.cardFixedCents,
+      passToSupporter: !!camp.pass_fee_to_supporter,
+    });
+    const feeCents = fees.feeForLink;
+    const charged = fees.total;
+    const net = fees.netCreator;
     if (net < 0) throw new Error("Configuração de taxa inválida");
+
 
 
     const { data: tokRows, error: tokErr } = await supabase.rpc(
