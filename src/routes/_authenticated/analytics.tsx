@@ -54,6 +54,7 @@ function AnalyticsPage() {
   const [rangeKey, setRangeKey] = useState<string>("7d");
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [layer, setLayer] = useState<"all" | "clicks" | "moves">("all");
+  const [bucket, setBucket] = useState<"hour" | "day">("day");
 
   const range = RANGES.find((r) => r.key === rangeKey) ?? RANGES[1];
   const since = useMemo(() => new Date(Date.now() - range.ms).toISOString(), [range]);
