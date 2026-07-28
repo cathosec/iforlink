@@ -106,15 +106,12 @@ function AnalyticsPage() {
         {selectedPath && <SummaryCards path={selectedPath} since={since} until={until} />}
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3">
             <TabsTrigger value="overview" className="gap-1.5">
               <LineChart className="h-3.5 w-3.5" /> Visão geral
             </TabsTrigger>
             <TabsTrigger value="heatmap" className="gap-1.5" disabled={!selectedPath}>
               <BarChart3 className="h-3.5 w-3.5" /> Mapa de calor
-            </TabsTrigger>
-            <TabsTrigger value="replay" className="gap-1.5" disabled={!selectedPath}>
-              <Film className="h-3.5 w-3.5" /> Gravações
             </TabsTrigger>
             <TabsTrigger value="privacy" className="gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5" /> Privacidade
