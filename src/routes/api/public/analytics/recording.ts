@@ -8,7 +8,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { readMaybeGzip } from "./_body";
+import { readMaybeGzip } from "./-_body";
 
 // Cada evento rrweb é opaco — validamos apenas o shape mínimo.
 const rrwebEventSchema = z

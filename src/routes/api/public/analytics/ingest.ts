@@ -11,7 +11,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRequestIP, getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { readMaybeGzip } from "./_body";
+import { readMaybeGzip } from "./-_body";
 
 const eventSchema = z
   .object({
