@@ -139,11 +139,16 @@ export const getCampaignPaymentContext = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const row = Array.isArray(rows) ? rows[0] : rows;
     if (!row) throw new Error("Campanha não encontrada");
-    return row as {
-      campaign_id: string;
-      accepts_card: boolean;
-      public_key: string | null;
-      live_mode: boolean;
+    const cfg = await loadPixConfig();
+    return {
+      ...(row as {
+        campaign_id: string;
+        accepts_card: boolean;
+        public_key: string | null;
+        live_mode: boolean;
+      }),
+      fee_percent: Number(cfg.fee_percent ?? 0),
+      min_fee_cents: Math.max(0, Number(cfg.min_fee_cents ?? 0)),
     };
   });
 
