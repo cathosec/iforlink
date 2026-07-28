@@ -1210,8 +1210,23 @@ export type Database = {
       }
     }
     Functions: {
+      _analytics_require_pro: { Args: never; Returns: undefined }
       admin_ops_summary: { Args: { _hours?: number }; Returns: Json }
       analytics_admin_summary: { Args: { _hours?: number }; Returns: Json }
+      analytics_breakdown: {
+        Args: {
+          _dimension: string
+          _limit?: number
+          _path?: string
+          _since?: string
+          _until?: string
+        }
+        Returns: {
+          bucket: string
+          views: number
+          visitors: number
+        }[]
+      }
       analytics_get_recording: {
         Args: { _session_id: string }
         Returns: {
@@ -1271,6 +1286,41 @@ export type Database = {
       analytics_page_summary: {
         Args: { _path: string; _since?: string; _until?: string }
         Returns: Json
+      }
+      analytics_timeseries: {
+        Args: {
+          _bucket?: string
+          _path?: string
+          _since?: string
+          _until?: string
+        }
+        Returns: {
+          ts: string
+          views: number
+          visitors: number
+        }[]
+      }
+      analytics_top_events: {
+        Args: {
+          _limit?: number
+          _path?: string
+          _since?: string
+          _until?: string
+        }
+        Returns: {
+          name: string
+          sessions: number
+          total: number
+        }[]
+      }
+      analytics_top_pages: {
+        Args: { _limit?: number; _since?: string; _until?: string }
+        Returns: {
+          path: string
+          title: string
+          views: number
+          visitors: number
+        }[]
       }
       analytics_upsert_page: {
         Args: { _path: string; _title: string }
