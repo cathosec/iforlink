@@ -24,8 +24,8 @@ export function YouTubeChannelCard({
     retry: false,
   });
 
-  if (!q.data) return null;
-  const c = q.data;
+  const c = q.data?.channel;
+  if (!c) return null;
 
   return (
     <a
