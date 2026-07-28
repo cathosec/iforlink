@@ -183,9 +183,6 @@ function AnalyticsPage() {
             <PrivacyPanel />
           </TabsContent>
 
-          <TabsContent value="privacy" className="mt-4">
-            <PrivacyPanel />
-          </TabsContent>
         </Tabs>
       </div>
     </div>
