@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
+import { getRequestIP } from '@tanstack/react-start/server'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -17,6 +18,29 @@ export const sendContactMessage = createServerFn({ method: 'POST' })
       // Silenciosamente ignora spam.
       return { sent: true as const }
     }
+
+    // Rate limit: 3 mensagens por 10 min por IP + 3 por 10 min por e-mail.
+    try {
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+      const ip = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
+      const checks = await Promise.all([
+        supabaseAdmin.rpc('check_rate_limit' as never, {
+          _bucket: 'contact_ip', _subject: ip, _max: 3, _window_seconds: 600,
+        } as never),
+        supabaseAdmin.rpc('check_rate_limit' as never, {
+          _bucket: 'contact_email', _subject: data.email.toLowerCase(), _max: 3, _window_seconds: 600,
+        } as never),
+      ])
+      const allowed = checks.every((r) => r.data === true)
+      if (!allowed) {
+        throw new Error('Muitas tentativas. Aguarde alguns minutos antes de enviar novamente.')
+      }
+    } catch (err) {
+      // Se o rate limit não estiver disponível, deixa passar (fail-open) mas loga.
+      if (err instanceof Error && err.message.startsWith('Muitas tentativas')) throw err
+      console.warn('[sendContactMessage] rate_limit unavailable', err)
+    }
+
 
     const { sendTemplateEmail } = await import('@/lib/email-templates/send-email')
 

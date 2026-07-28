@@ -483,6 +483,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          bucket: string
+          count: number
+          subject: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          subject: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          subject?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       short_links: {
         Row: {
           clicks_count: number
@@ -851,6 +875,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_ops_summary: { Args: { _hours?: number }; Returns: Json }
       apply_mercadopago_payment_update: {
         Args: {
           _mp_payment: Json
@@ -878,6 +903,15 @@ export type Database = {
         Returns: undefined
       }
       calc_pix_badge: { Args: { _amount_cents: number }; Returns: string }
+      check_rate_limit: {
+        Args: {
+          _bucket: string
+          _max: number
+          _subject: string
+          _window_seconds: number
+        }
+        Returns: boolean
+      }
       create_pending_pix_contribution: {
         Args: {
           _amount_cents: number

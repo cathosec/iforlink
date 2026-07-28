@@ -22,8 +22,9 @@ import {
   Users, Link2, BadgeCheck, ExternalLink, DollarSign, CreditCard,
   Settings2, ShieldAlert, ShieldCheck, TrendingUp, Trash2, Search, Activity,
   FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone, Scissors, Copy, MousePointerClick, Mail,
-  QrCode, PlugZap, Sparkles, CheckCircle2,
+  QrCode, PlugZap, Sparkles, CheckCircle2, HeartPulse,
 } from "lucide-react";
+
 import {
   ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis,
   Tooltip as RTooltip, Legend as RLegend, Bar, Line,
@@ -113,6 +114,7 @@ function Admin() {
               ["ads", Megaphone, "Anúncios"],
               ["emails", Mail, "E-mails"],
               ["settings", Settings2, "Plataforma"],
+              ["ops", HeartPulse, "Operações"],
               ["audit", Activity, "Auditoria"],
             ].map(([v, Icon, label]) => {
               const I = Icon as React.ComponentType<{ className?: string }>;
@@ -143,6 +145,7 @@ function Admin() {
             <TabsContent value="ads" className="mt-0"><AdsTab logAction={logAction} /></TabsContent>
             <TabsContent value="emails" className="mt-0"><EmailsTab logAction={logAction} /></TabsContent>
             <TabsContent value="settings" className="mt-0"><SettingsTab logAction={logAction} /></TabsContent>
+            <TabsContent value="ops" className="mt-0"><OperationsTab /></TabsContent>
             <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
           </div>
         </Tabs>
@@ -1065,6 +1068,220 @@ function SettingsTab({ logAction }: { logAction: (a: string, t?: string, id?: st
 }
 
 /* ─────────── Audit log ─────────── */
+/* ─────────── Operations (observability) ─────────── */
+type OpsSummary = {
+  since: string;
+  webhooks: { total: number; processed: number; received: number; failed: number; by_type: Record<string, number> };
+  events: { total: number; errors: number; warns: number; by_type: Record<string, number> };
+  pending_subscriptions: number;
+  pending_contributions: number;
+};
+
+function OperationsTab() {
+  const [hours, setHours] = useState(24);
+  const summaryQ = useQuery({
+    queryKey: ["admin-ops-summary", hours],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_ops_summary" as never, { _hours: hours } as never);
+      if (error) throw new Error(error.message);
+      return data as unknown as OpsSummary;
+    },
+    refetchInterval: 30_000,
+  });
+
+  const recentErrorsQ = useQuery({
+    queryKey: ["admin-ops-recent-errors"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("event_log")
+        .select("id,type,level,payload,target_type,target_id,created_at")
+        .in("level", ["error", "warn"])
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return data ?? [];
+    },
+    refetchInterval: 30_000,
+  });
+
+  const recentWebhooksQ = useQuery({
+    queryKey: ["admin-ops-recent-webhooks"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("webhook_events" as never)
+        .select("id,provider,event_id,event_type,status,created_at,processed_at")
+        .order("created_at", { ascending: false })
+        .limit(30);
+      return (data ?? []) as Array<{
+        id: string; provider: string; event_id: string; event_type: string;
+        status: string; created_at: string; processed_at: string | null;
+      }>;
+    },
+    refetchInterval: 30_000,
+  });
+
+  const s = summaryQ.data;
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-5">
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <HeartPulse className="h-5 w-5 text-primary" />
+            <div className="font-semibold">Saúde operacional</div>
+          </div>
+          <div className="ml-auto flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Janela:</span>
+            {[1, 24, 168].map((h) => (
+              <Button
+                key={h}
+                size="sm"
+                variant={hours === h ? "default" : "outline"}
+                onClick={() => setHours(h)}
+              >
+                {h === 1 ? "1h" : h === 24 ? "24h" : "7d"}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {summaryQ.isLoading ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">Carregando…</div>
+        ) : summaryQ.isError ? (
+          <div className="py-6 text-center text-sm text-destructive">
+            {(summaryQ.error as Error).message}
+          </div>
+        ) : s ? (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <StatCard label="Webhooks recebidos" value={s.webhooks.total} />
+            <StatCard
+              label="Processados"
+              value={s.webhooks.processed}
+              tone={s.webhooks.total > 0 && s.webhooks.processed / s.webhooks.total < 0.9 ? "warn" : "ok"}
+            />
+            <StatCard label="Falhas de webhook" value={s.webhooks.failed} tone={s.webhooks.failed > 0 ? "error" : "ok"} />
+            <StatCard label="Erros no log" value={s.events.errors} tone={s.events.errors > 0 ? "error" : "ok"} />
+            <StatCard label="Assinaturas pendentes >5min" value={s.pending_subscriptions} tone={s.pending_subscriptions > 0 ? "warn" : "ok"} />
+            <StatCard label="Contribuições pendentes >5min" value={s.pending_contributions} tone={s.pending_contributions > 0 ? "warn" : "ok"} />
+            <StatCard label="Warns" value={s.events.warns} tone={s.events.warns > 0 ? "warn" : "ok"} />
+            <StatCard label="Total de eventos" value={s.events.total} />
+          </div>
+        ) : null}
+
+        {s && (
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <TypeBreakdown title="Webhooks por tipo" data={s.webhooks.by_type} />
+            <TypeBreakdown title="Eventos por tipo" data={s.events.by_type} />
+          </div>
+        )}
+      </Card>
+
+      <Card className="overflow-hidden">
+        <div className="border-b bg-muted/30 px-5 py-3 font-semibold">
+          Últimos webhooks ({recentWebhooksQ.data?.length ?? 0})
+        </div>
+        <div className="divide-y">
+          {(recentWebhooksQ.data ?? []).map((w) => (
+            <div key={w.id} className="flex flex-wrap items-center gap-2 px-5 py-2.5 text-sm">
+              <Badge variant="outline" className="font-mono text-[10px]">{w.provider}</Badge>
+              <span className="font-mono text-xs">{w.event_type || "—"}</span>
+              <span className="text-xs text-muted-foreground">#{w.event_id.slice(0, 24)}</span>
+              <Badge
+                variant={w.status === "processed" ? "default" : w.status === "failed" ? "destructive" : "secondary"}
+                className="ml-auto text-[10px]"
+              >
+                {w.status}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {new Date(w.created_at).toLocaleString("pt-BR")}
+              </span>
+            </div>
+          ))}
+          {(recentWebhooksQ.data ?? []).length === 0 && (
+            <div className="p-6 text-center text-sm text-muted-foreground">Sem webhooks recentes.</div>
+          )}
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <div className="border-b bg-muted/30 px-5 py-3 font-semibold">
+          Erros e avisos recentes ({recentErrorsQ.data?.length ?? 0})
+        </div>
+        <div className="divide-y">
+          {(recentErrorsQ.data ?? []).map((e) => (
+            <div key={e.id} className="px-5 py-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant={e.level === "error" ? "destructive" : "secondary"}
+                  className="text-[10px] uppercase"
+                >
+                  {e.level}
+                </Badge>
+                <span className="font-mono text-xs">{e.type}</span>
+                {e.target_type && (
+                  <span className="text-xs text-muted-foreground">
+                    {e.target_type}:{String(e.target_id ?? "").slice(0, 12)}
+                  </span>
+                )}
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {new Date(e.created_at).toLocaleString("pt-BR")}
+                </span>
+              </div>
+              {e.payload && Object.keys(e.payload as Record<string, unknown>).length > 0 && (
+                <pre className="mt-1 overflow-x-auto rounded bg-muted/40 p-2 text-[11px]">
+                  {JSON.stringify(e.payload, null, 2)}
+                </pre>
+              )}
+            </div>
+          ))}
+          {(recentErrorsQ.data ?? []).length === 0 && (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              Nenhum erro nem aviso registrado. 🎉
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function StatCard({ label, value, tone = "ok" }: { label: string; value: number; tone?: "ok" | "warn" | "error" }) {
+  const cls =
+    tone === "error" ? "border-destructive/40 bg-destructive/5"
+    : tone === "warn" ? "border-amber-500/40 bg-amber-500/5"
+    : "border-border bg-muted/20";
+  return (
+    <div className={`rounded-lg border p-3 ${cls}`}>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 text-2xl font-semibold tabular-nums">{value.toLocaleString("pt-BR")}</div>
+    </div>
+  );
+}
+
+function TypeBreakdown({ title, data }: { title: string; data: Record<string, number> }) {
+  const entries = Object.entries(data ?? {}).sort((a, b) => b[1] - a[1]);
+  const max = entries[0]?.[1] ?? 1;
+  return (
+    <div className="rounded-lg border p-4">
+      <div className="mb-3 text-sm font-semibold">{title}</div>
+      {entries.length === 0 ? (
+        <div className="text-xs text-muted-foreground">Sem dados na janela selecionada.</div>
+      ) : (
+        <div className="space-y-1.5">
+          {entries.map(([k, v]) => (
+            <div key={k} className="flex items-center gap-2 text-xs">
+              <span className="w-40 truncate font-mono">{k}</span>
+              <div className="h-1.5 flex-1 overflow-hidden rounded bg-muted">
+                <div className="h-full bg-primary" style={{ width: `${(v / max) * 100}%` }} />
+              </div>
+              <span className="w-10 text-right tabular-nums">{v}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AuditTab() {
   const q = useQuery({
     queryKey: ["admin-audit"],
