@@ -3,6 +3,8 @@
  */
 /* eslint-disable no-restricted-globals */
 
+const VAPID_PUBLIC_KEY = "BHwXwomqxRNyzKTsWLZDwupNYKadkCNvT4kTLQm8KlKT64QoDx-RKf37eqXqDX3O_P2vZxDqqjufZZbzEod_nXk";
+
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
