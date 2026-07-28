@@ -83,12 +83,11 @@ export async function flush(opts: { useBeacon?: boolean } = {}): Promise<void> {
   const batch = queue.splice(0, queue.length);
   const ctx = getContext();
   const payload: BatchPayload = { visitor: ctx.visitor, session: ctx.session, events: batch };
-  const body = JSON.stringify(payload);
 
-  // sendBeacon é fire-and-forget e sobrevive à navegação
+  // sendBeacon: sempre JSON (não podemos setar headers), fire-and-forget.
   if (opts.useBeacon && typeof navigator !== "undefined" && navigator.sendBeacon) {
     try {
-      const blob = new Blob([body], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
       const ok = navigator.sendBeacon(INGEST_URL, blob);
       if (ok) return;
     } catch { /* cai no fetch abaixo */ }
@@ -96,15 +95,18 @@ export async function flush(opts: { useBeacon?: boolean } = {}): Promise<void> {
 
   flushing = true;
   try {
+    const { prepareBody } = await import("./worker-client");
+    const prep = await prepareBody(payload, { gzip: true });
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (prep.encoding === "gzip") headers["Content-Encoding"] = "gzip";
     const res = await fetch(INGEST_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
+      headers,
+      body: prep.body as BodyInit,
       keepalive: true,
       credentials: "omit",
     });
     if (!res.ok) {
-      // devolve para reprocessar (fica no cap de 200 para não crescer indefinidamente)
       queue = [...batch.slice(-200), ...queue];
       return;
     }
