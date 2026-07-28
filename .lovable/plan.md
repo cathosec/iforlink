@@ -1,85 +1,125 @@
 
-# Plano de Estabilidade — ForLink
+# ForLink Analytics — plano de construção
 
-Objetivo: reduzir incidentes silenciosos, tornar pagamentos idempotentes e auditáveis, garantir que deploys no Cloudflare não quebrem assets/secrets, e criar visibilidade operacional. Cada fase é entregável isoladamente e não quebra o que já está no ar.
+Módulo próprio de analytics, heatmaps e session replay, 100% integrado ao Supabase, sem serviços externos. Entregue em **6 fases** para permitir revisão a cada passo — o escopo total é grande demais para uma única entrega estável.
 
----
-
-## Fase 1 — Pagamentos idempotentes e auto-reconciliação
-
-**Por quê:** hoje já houve casos de pagamento aprovado sem confirmação automática, exigindo reconciliação manual. O webhook do Mercado Pago pode chegar duplicado, fora de ordem ou nunca chegar.
-
-Entregas:
-- Tabela `webhook_events(provider, event_id, payload, received_at, processed_at, status)` com `UNIQUE(provider, event_id)` — descarta duplicatas antes de qualquer efeito colateral.
-- Refatorar `/api/public/webhooks/mercadopago` e `mp-pix` para: (1) gravar evento cru, (2) processar em transação, (3) marcar `processed_at`. Falha → mantém `status='pending'` para retry.
-- Cron `reconcile-pending-payments` (a cada 10 min) varre `pix_payments` e `subscriptions` com status `pending` há mais de 5 min e consulta a API do MP diretamente — resolve caso o webhook nunca chegue.
-- Verificação de assinatura HMAC do webhook do MP (`x-signature` header) — hoje qualquer POST na URL é aceito.
-- Log estruturado em `event_log` de cada transição de estado (`payment.received`, `payment.approved`, `payment.reconciled_by_cron`).
+Objetivo: dashboards e coleta parecidos com Microsoft Clarity/GA4/Plausible, respeitando LGPD e o consentimento de cookies que já existe no site.
 
 ---
 
-## Fase 2 — Resiliência de assets e deploy no Cloudflare
+## Arquitetura (visão geral)
 
-**Por quê:** a cada deploy imagens quebravam, secrets sumiam, e a solução tem sido manual. Precisamos que o deploy seja determinístico.
+```text
+Browser (todas as páginas)
+  └─ src/lib/analytics/            (SDK <20KB)
+       ├─ tracker (page views, tempo, idle, tab, custom)
+       ├─ interactions (click, move, scroll)   ← throttle/debounce
+       ├─ replay (rrweb + mascaramento)
+       ├─ transport (batch 5s / 30 evts, sendBeacon + gzip)
+       └─ consent-gate (respeita consent.ts existente)
 
-Entregas:
-- Auditoria: listar todos os assets em `public/brand/` referenciados no código e garantir que usam caminho relativo (`/brand/x.webp`), nunca CDN pointer instável.
-- Health-check em `/api/public/health` retornando `{ ok, commit, env_ok, supabase_ok, mp_configured }` — chamado pelo próprio painel admin e por um cron externo (UptimeRobot/BetterStack) para alerta.
-- Documento `docs/deploy.md` listando os secrets obrigatórios (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_PUBLISHABLE_KEY, MP_CLIENT_ID/SECRET, MP_WEBHOOK_SECRET) e o comando `wrangler secret put` para cada um — evita esquecimento em deploy novo.
-- Guard no boot da app: se secret crítico faltar em produção, a home renderiza uma página de manutenção controlada em vez de 500 opaco.
-- Migrar cover de campanha e avatares que ainda usem caminho instável para Supabase Storage com URL assinada de longa duração ou bucket público estável.
+Server (TanStack)
+  └─ /api/public/analytics/ingest    (edge, POST em lote, valida payload)
+  └─ /api/public/analytics/replay    (chunks rrweb)
+  └─ src/lib/analytics/*.functions.ts (queries do dashboard)
 
----
+Supabase
+  ├─ Tabelas normalizadas (ver §Dados)
+  ├─ RLS: admin do ForLink vê tudo; dono do perfil vê apenas eventos das próprias páginas públicas
+  └─ Rollups agregados por materialized views + pg_cron
 
-## Fase 3 — Observabilidade e alertas
+Dashboard
+  └─ /_authenticated/analytics/*  (subrota com sidebar própria)
+```
 
-**Por quê:** hoje só descobrimos problema quando o usuário reclama. `event_log` já existe (Fase 1 da arquitetura), mas ninguém olha.
-
-Entregas:
-- Nova aba **Operações** em `/admin`: últimos 100 eventos com filtro por `level` (error/warn), taxa de erro nas últimas 24h, top 10 rotas com erro, últimos webhooks recebidos e status.
-- RPC `admin_ops_summary` (SECURITY DEFINER + `has_role admin`) agregando dados de `event_log` + `webhook_events` + `cron.job_run_details`.
-- Envio de e-mail para o super admin quando: (a) mais de 5 erros do mesmo tipo em 10 min, (b) cron falha 2x seguidas, (c) pagamento fica `pending` há mais de 30 min. Reaproveita infra de e-mail transacional já existente.
-- Cliente: `reportLovableError` já captura React errors; adicionar hook para erros em `useServerFn` — mandar para `event_log` com contexto (rota, userId, mensagem).
-
----
-
-## Fase 4 — Rate limiting e proteção contra abuso
-
-**Por quê:** endpoints públicos (encurtador, criação de conta, reserva de username, contato) hoje não têm limite. Um bot pode esgotar slugs ou floodar o formulário de contato.
-
-Entregas:
-- Tabela `rate_limit_hits(key, window_start, count)` + função `check_rate_limit(_key, _limit, _window_seconds)` em Postgres.
-- Aplicar em: reserva de username (5/min por IP), contato (3/hora por IP), criação de encurtador para não-logados se aplicável, callback OAuth do MP (10/min por user).
-- Bloqueio suave: retorna 429 amigável com "Tente novamente em Xs" em vez de 500.
-- Captcha (hCaptcha ou Turnstile Cloudflare — já estamos no CF) no formulário de contato e cadastro se o IP tiver ≥3 falhas em 1h.
+Desacoplado: nada existente é alterado. O único gancho fora do módulo é uma linha em `__root.tsx` que monta `<AnalyticsProvider />`, respeitando `hasAnalyticsConsent()`.
 
 ---
 
-## Fase 5 — Testes de regressão dos fluxos críticos
+## Fases
 
-**Por quê:** hoje toda mudança em `pix.functions.ts` ou nos webhooks é validada manualmente. Isso não escala e já causou regressões (fee gross-up, aplicação de comissão).
+### Fase 1 — Fundação (banco + ingest + SDK mínimo)
+Entrega já visível como "page views por página" no admin.
 
-Entregas:
-- Suíte de testes unitários com Vitest para `src/lib/payments/fees.ts` cobrindo: Free vs Pro, gross-up PIX/cartão, valor mínimo, absorção vs repasse.
-- Testes de integração para os webhooks usando MP payload de exemplo — garantir idempotência, tolerância a evento duplicado, tolerância a evento fora de ordem.
-- Smoke test end-to-end com Playwright: cadastro → criar link → tornar público → visitar perfil → clicar link. Rodar em CI a cada PR e após deploy em produção contra a URL real.
-- Bloquear merge se testes de `fees.ts` e webhooks falharem.
+- Migração com tabelas: `analytics_visitors`, `analytics_sessions`, `analytics_pageviews`, `analytics_events`, `analytics_custom_events`, `analytics_devices`, `analytics_pages`. RLS restritiva (admin e dono da página); grants explícitos; índices em `(session_id, ts)`, `(page_id, ts)`, `(visitor_id)`.
+- Rota `/api/public/analytics/ingest` (rate-limit reaproveitando `check_rate_limit`; valida com Zod; deriva IP/UA server-side).
+- SDK `src/lib/analytics/*` com: visitor id (localStorage) + session id (sessionStorage), pageview automático em cada navegação do router, tempo na página (visibility + beforeunload via `sendBeacon`), UA/idioma/tela/viewport, `track(name, props)`.
+- Batch queue: 5s ou 30 eventos, gzip via CompressionStream, fallback `sendBeacon`.
+- Consent-gate: nada roda sem `hasAnalyticsConsent()`; se rejeitado, apenas 1 pageview anônimo diário (sem cookies).
+- Card "Analytics" no admin com totais brutos.
+
+### Fase 2 — Interações + heatmaps
+- Coleta de cliques (throttle 100ms), movimento do mouse (amostragem 50ms + agrupamento em grid 20px), profundidade de scroll (marcos 25/50/75/100%), idle (>30s sem input), troca de aba.
+- Tabelas `analytics_heatmap_clicks`, `analytics_scroll_depth`, `analytics_mouse_moves` — todas agregadas por célula (`x_bucket, y_bucket, viewport_w`) para consultas O(1).
+- Página `Analytics → Heatmaps`: seletor de página + período + dispositivo. Canvas desenha os pontos sobre um screenshot da página (screenshot gerado por rota `/api/public/analytics/snapshot/$page` usando `html2canvas` client-side, salva em Supabase Storage bucket privado `analytics-snapshots`).
+- Legenda com escala 🔴🟠🟡🔵 baseada em quartis da distribuição de intensidade.
+
+### Fase 3 — Session Replay (rrweb)
+- Integrar `rrweb` como chunk lazy (só carrega após 2s idle da primeira interação, para não pesar no LCP).
+- Mascaramento: `maskAllInputs`, `maskTextClass`, regex automática para CPF (`\d{3}\.\d{3}\.\d{3}-\d{2}`), cartão (Luhn de 13–19 dígitos), CVV, tokens (Bearer/JWT). Inputs `type=password|hidden` sempre mascarados. Toggle admin para mascarar e-mails.
+- Chunks de replay em `analytics_replays` (jsonb + `chunk_seq`) via rota dedicada `/api/public/analytics/replay`.
+- Player em `Analytics → Session Replay`: rrweb-player com Play/Pause, 1x/2x/4x, timeline com marcadores de clique/navegação/erro, lista lateral de eventos clicáveis que fazem seek.
+- Retenção: 30 dias (Free) / 90 dias (Pro) via job `pg_cron` diário.
+
+### Fase 4 — Dashboards
+Sidebar do módulo (`/_authenticated/analytics/*`):
+
+- **Visão Geral**: visitantes únicos, sessões, tempo médio, bounce rate, top páginas, mini heatmap agregado.
+- **Usuários Online (tempo real)**: Supabase Realtime na tabela `analytics_sessions` filtrando `last_seen > now() - 30s`.
+- **Eventos**: lista custom events + gráfico por tempo.
+- **Páginas / Dispositivos / Navegadores / Origem do tráfego**: agregações materializadas.
+- **Funis**: builder visual (arrastar passos: pageview:/x, event:signup, event:pix_paid); calcula % em cada etapa via CTE.
+- **Conversões**: marca eventos como "goal" e mostra taxa por origem/página.
+
+Estilo: cards + Recharts (já disponível), tema escuro respeitando design existente, responsivo.
+
+### Fase 5 — Performance & robustez
+- Web Worker para: gzip do payload, buffer de mousemove, cálculo de buckets de heatmap.
+- `requestIdleCallback` para flushes não críticos.
+- Materialized views `analytics_daily_page_stats`, `analytics_daily_device_stats` atualizadas por `pg_cron` a cada 10 min.
+- Dedup de eventos por `client_event_id` (UUID gerado no cliente) → idempotência total.
+- Bundle budget checado no CI: falha se `dist/analytics.*.js` > 20 KB gzip.
+
+### Fase 6 — Segurança, LGPD e retenção
+- Nada de PII: IP truncado (/24 IPv4, /48 IPv6), UA parseado e descartado.
+- Auto-mask no ingest: regex de CPF/cartão/CVV/token/e-mail em campos livres.
+- `/privacidade` e `/termos` atualizados descrevendo o módulo e a base legal (legítimo interesse + consentimento para replay).
+- Botão "Excluir meus dados" no perfil → RPC apaga por `visitor_id`.
+- Auditoria: cada acesso admin ao replay grava linha em `event_log` (`type='analytics.replay.viewed'`).
 
 ---
 
-## Ordem sugerida
+## Modelo de dados (resumido, para revisão técnica)
 
-1. **Fase 1** — pagamento é o núcleo do negócio; incidente aqui = perda de receita e confiança.
-2. **Fase 2** — o problema de deploy já é recorrente e afeta imagem publicada.
-3. **Fase 3** — depois de 1 e 2, começa a valer a pena olhar métricas.
-4. **Fase 4** — proteção pró-ativa quando o tráfego aumentar.
-5. **Fase 5** — investimento de longo prazo em segurança de refatoração.
+- `analytics_visitors(id, first_seen, last_seen, ua_hash)`
+- `analytics_sessions(id, visitor_id, started_at, ended_at, last_seen, device, os, browser, lang, screen_w, screen_h, referrer, utm_*, owner_user_id)`
+- `analytics_pageviews(id, session_id, page_id, url, path, title, ts, duration_ms, exit)`
+- `analytics_events(id, session_id, type, ts, payload jsonb, client_event_id unique)` — tipos: click, scroll, idle, tab_hidden/visible, error
+- `analytics_custom_events(id, session_id, name, ts, props jsonb)`
+- `analytics_heatmap_clicks(page_id, device, x_bucket, y_bucket, viewport_w, count)` — PK composta
+- `analytics_scroll_depth(page_id, device, depth_bucket, count)`
+- `analytics_mouse_moves(page_id, device, x_bucket, y_bucket, viewport_w, count)`
+- `analytics_replays(id, session_id, chunk_seq, events jsonb, created_at)`
+- `analytics_pages(id, path unique, title, owner_user_id)` — resolve dono via lookup por username no path
+- `analytics_devices(id, session_id, ua_family, os_family, device_type, is_mobile)`
+- `analytics_funnels(id, owner_user_id, name, steps jsonb)` — Fase 4
 
-## Detalhes técnicos
+RLS: admin (`has_role admin`) vê tudo; usuário autenticado vê apenas rows onde `owner_user_id = auth.uid()` (páginas do próprio perfil público). Ingest bypassa RLS via `SECURITY DEFINER RPC` que resolve o dono a partir do path.
 
-- Nenhuma mudança quebra fluxo existente: novas tabelas com default, novos crons pausados até configurar, webhook antigo continua respondendo enquanto o novo modelo é implantado atrás.
-- Toda RPC nova segue padrão: RLS + GRANT explícito + SECURITY DEFINER só quando expor agregado a admin.
-- Cron jobs usam `pg_cron` com `apikey` header (padrão do projeto), sem novos segredos.
-- Testes rodam em Vitest (`bunx vitest run`); Playwright roda em CI separado para não quebrar dev local.
+---
 
-Confirma que sigo pela **Fase 1 (pagamentos idempotentes + reconciliação automática)** primeiro?
+## Decisões que preciso confirmar antes de começar
+
+1. **Escopo por dono**: cada usuário Pro vê os analytics **apenas do próprio perfil público** (`/username`, `/pix/slug`, etc.) — ou o módulo é **admin-only** por enquanto? (Recomendo começar admin-only na Fase 1 e liberar por dono na Fase 4, mais barato.)
+2. **Session replay para Free ou só Pro?** Replay é caro em storage; recomendo restringir a Pro.
+3. **Screenshot da página**: usar `html2canvas` no navegador de quem visita (aumenta payload em ~30KB, chunked) ou renderizar sob demanda no admin usando o próprio DOM da página live? (Recomendo a 2ª — mais leve, mas o heatmap é sobre o layout atual, não histórico.)
+4. Posso pular a **compressão via Web Worker na Fase 1** (usar apenas gzip nativo do browser) e só introduzir o worker na Fase 5?
+
+---
+
+## O que **não** faz parte deste plano
+- Alterar código existente que não seja `__root.tsx` (uma linha para montar o Provider).
+- Substituir o `analytics.ts` atual (será usado como shim que delega para o novo SDK).
+- Geolocalização por cidade — requer base GeoIP; fica marcado como "quando disponível" via header `cf-ipcity` do Cloudflare, sem lookup próprio.
+
+Quando você aprovar, começo pela **Fase 1** (migração + ingest + SDK mínimo + card no admin) — é o pedaço que já entrega valor sozinho e valida a arquitetura.
