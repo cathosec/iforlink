@@ -1,98 +1,89 @@
 
-# Plano — Arquitetura ForLink
+# Plano de Monetização — ForLink
 
-Objetivo: reduzir acoplamento, centralizar regras críticas (taxas/pagamentos) e ganhar observabilidade sem quebrar o que já funciona. Executar em 4 etapas independentes, cada uma entregável sozinha.
-
----
-
-## Etapa 1 — Camada de domínio de pagamentos
-
-Hoje a matemática de taxas e as chamadas ao Mercado Pago vivem em vários lugares (componente de checkout, server function, RPC SQL). Isso é a raiz dos bugs de valor divergente e de "pagou e não caiu".
-
-**O que criar:**
-- `src/lib/payments/fees.ts` — módulo puro, sem dependências. Funções: `computeCampaignFees({ baseCents, feePct, minFeeCents, mpPct, passToSupporter })` retornando `{ total, base, feeForLink, feeMp, netCreator }`. Importado tanto pelo componente de checkout quanto pelo server.
-- `src/lib/payments/mercadopago.server.ts` — wrapper único das chamadas MP: `createPixPayment`, `createCardPayment`, `getPayment`, `reconcilePayment(mpPaymentId)`. Isola SDK e headers.
-- `src/lib/payments/campaigns.functions.ts` — server functions que orquestram: `startContribution`, `pollContributionStatus`, `reconcileContribution`.
-- Remover cálculos duplicados em `pix.$slug.tsx` e em RPCs. RPCs continuam responsáveis por persistência atômica; matemática vem do módulo TS.
-
-**Critério de aceite:** um único ponto de mudança para regras de taxa; checkout mostra exatamente o que o server cobra.
+Objetivo: aumentar a conversão Free → Pro, diversificar receitas (assinaturas + comissões + anúncios + add-ons) e dar visibilidade financeira ao super admin. Tudo governado por feature flags já criadas na Fase 4.
 
 ---
 
-## Etapa 2 — Views públicas + hardening de RLS
+## Fase 1 — Página de Preços dedicada (`/precos`)
 
-Reduzir superfície de exposição dos dados e simplificar policies.
+**Por que:** hoje os planos aparecem só na home. Uma página própria melhora SEO ("forlink preço", "bio link brasil"), permite comparação lado a lado e é o destino natural dos CTAs de upgrade.
 
-**O que criar (migração SQL):**
-- `v_campaign_public` — colunas seguras de `pix_campaigns` (sem `user_id`, sem tokens) + `show_progress`, `raised_cents` condicional.
-- `v_profile_public` — colunas seguras de `profiles`.
-- `v_link_public` — join de `links` + `user_categories` visíveis.
-- Grants: `SELECT` para `anon` e `authenticated` somente nas views.
-- Manter policies existentes nas tabelas base; front público passa a ler as views.
-
-**Critério de aceite:** perfil, campanha e links públicos funcionam lendo só das views; nenhum campo sensível retornável via PostgREST anônimo.
+Entregas:
+- Rota `src/routes/precos.tsx` com hero, tabela comparativa Free × Pro, FAQ de cobrança, selo "pagamento via PIX/Cartão", prova social (nº de criadores, doações processadas — vindo de `event_log`).
+- Toggle mensal/trimestral/anual com badge "economize X%".
+- Botão "Assinar Pro" abre modal de checkout PIX já existente (`pix_payments`) e, quando `card_enabled`, cartão.
+- SEO: JSON-LD `Product` + `Offer`, meta próprio, entrada no `sitemap.xml`.
+- Link na navbar e no rodapé.
 
 ---
 
-## Etapa 3 — Observabilidade (event_log + logs estruturados)
+## Fase 2 — CTAs de upgrade contextuais
 
-Sem isso, todo bug em produção vira "achismo".
+**Por que:** o usuário Free só descobre limites quando bate no erro. Precisamos empurrar Pro no momento certo, sem ser invasivo.
 
-**O que criar:**
-- Migração `event_log(id, type, actor_id, target_type, target_id, payload jsonb, level text, created_at)` — append-only, RLS: admin lê tudo, insert via RPC `log_event()` security definer.
-- Helper `src/lib/observability/log.server.ts` com `logEvent(type, payload)`.
-- Instrumentar pontos críticos: `payment.created`, `payment.approved`, `payment.reconciled`, `webhook.received`, `webhook.rejected`, `oauth.connected`, `oauth.failed`, `subscription.activated`, `limit.reached`.
-- Página `/admin/eventos` com filtro por tipo/data e paginação — troubleshooting sem SSH.
-
-**Critério de aceite:** consigo, no admin, ver a jornada completa de um pagamento em uma única tela.
-
----
-
-## Etapa 4 — Feature flags + kill switches
-
-Permitir desligar módulos instáveis sem deploy.
-
-**O que criar:**
-- Reutilizar `platform_settings` com chave `feature_flags`: `{ campaigns_enabled, cards_enabled, shortener_enabled, ads_enabled, oauth_mp_enabled }`.
-- Helper `src/lib/flags.ts` com `useFlag(name)` no cliente e `getFlag(name)` no server.
-- Painel `/admin/flags` com toggles.
-- Aplicar guards em: página `/pix/$slug` (bloqueia se `campaigns_enabled=false` com mensagem amigável), botões de cartão, encurtador, componente `AdSlot`.
-
-**Critério de aceite:** desligar "cartão" no admin faz o checkout ocultar cartão em 30s (revalidate cache) sem deploy.
+Entregas:
+- Componente `<UpgradeNudge context="links|campaigns|shortener|ads" />` reutilizável, respeita flag `pro_upgrade_enabled`.
+- Dashboard: banner discreto quando o usuário está a ≥80% do limite (15 links, 1 campanha).
+- Ao tentar criar 16º link / 2ª campanha / usar encurtador no Free: modal explicativo com botão "Assinar Pro" (em vez do toast de erro atual).
+- Perfil público: rodapé "Criado com ForLink — crie o seu grátis" só para perfis Free (Pro remove; já é benefício listado).
+- Métrica: cada clique dispara `log_event('upgrade_cta_click', { context })` para medir conversão por origem.
 
 ---
 
-## Ordem de execução recomendada
+## Fase 3 — Comissões dinâmicas por plano
 
-```text
-Etapa 1 (fees + payments module)  ── 2-3 dias
-   │
-   ├── Etapa 3 (event_log)         ── 1-2 dias  ◄ paralelo ok
-   │
-   ├── Etapa 2 (views públicas)    ── 1 dia
-   │
-   └── Etapa 4 (feature flags)     ── 1 dia
-```
+**Por que:** hoje a comissão de Campanhas é global (2% ou R$0,50). Diferenciar por plano transforma o Pro em economia real para quem arrecada.
 
-Etapas 2, 3 e 4 são independentes entre si. Etapa 1 é pré-requisito para instrumentar corretamente os eventos de pagamento na Etapa 3.
+Entregas:
+- Migração: adicionar `platform_settings.key = 'campaign_fees'` com estrutura `{ free: { pct, min_cents }, pro: { pct, min_cents } }`. Default sugerido: Free 4%/R$0,50, Pro 1%/R$0,25.
+- `src/lib/payments/fees.ts`: função `getCampaignFeeForUser(userId)` consulta o plano do dono e devolve a taxa correta.
+- Admin `/admin`: substituir os dois campos atuais por matriz Free/Pro com preview de exemplo (R$10, R$50, R$100).
+- Página da campanha: mostrar "Taxa reduzida — criador Pro" quando aplicável (reforça valor do Pro).
+- Backfill: manter valores atuais como Free para não quebrar campanhas existentes.
 
 ---
+
+## Fase 4 — Add-ons e receita recorrente extra
+
+**Por que:** nem todo usuário quer Pro completo; alguns querem só um recurso. Add-ons aumentam ARPU e destravam Pro pra quem hesita.
+
+Entregas (todos gated por flag):
+- **Domínio personalizado** (`custom_domain`): campo no perfil Pro + tabela `custom_domains(user_id, domain, verified_at, txt_token)`. Cobrança separada ou incluída no Pro anual.
+- **Remover marca "Criado com ForLink"** do perfil: incluso no Pro; add-on avulso R$X/mês pro Free (opcional).
+- **Analytics avançado**: página `/dashboard/analytics` com gráficos por link/dia/origem — Pro-only. Reaproveita `event_log`.
+- **Tema premium**: 3-5 presets de cores/fontes para o perfil público, Pro-only.
+- Registrar cada add-on como linha em `subscriptions` (campo `addon_key`) para o cron de renovação já existente cobrir.
+
+---
+
+## Fase 5 — Painel financeiro do super admin
+
+**Por que:** sem visibilidade da receita, não dá para iterar preços. Precisamos de MRR, churn e comissões arrecadadas em um lugar.
+
+Entregas:
+- Rota `src/routes/_authenticated/financeiro.tsx` (admin only).
+- Cards: MRR, ARR, assinantes Pro ativos, novos no mês, churn %, receita de comissões (mês/total), ticket médio das campanhas.
+- Gráfico últimos 12 meses (assinaturas + comissões empilhadas).
+- Tabela "Top campanhas por volume" e "Top criadores por receita gerada à plataforma".
+- Export CSV do período.
+- Fonte: queries agregadas em `subscriptions`, `pix_payments`, `pix_contributions` via RPC `admin_financial_summary` (SECURITY DEFINER + check `has_role admin`).
+
+---
+
+## Ordem sugerida de execução
+
+1. Fase 1 (Preços) — base de todos os CTAs.
+2. Fase 2 (CTAs) — conversão imediata sem migração.
+3. Fase 5 (Painel financeiro) — para medir o impacto das fases 1–2 antes de mexer em preço.
+4. Fase 3 (Comissões dinâmicas) — decisão de precificação baseada em dados da Fase 5.
+5. Fase 4 (Add-ons) — expansão de ARPU depois do funil básico estar afiado.
 
 ## Detalhes técnicos
 
-- **Zero breaking changes de schema**: nada é dropado. Colunas ficam; views são adicionais.
-- **RPCs existentes** (`apply_mercadopago_payment_update`, `create_pending_pix_contribution` etc.) continuam intactas — a camada TS orquestra chamadas a elas.
-- **Import graph seguro**: `mercadopago.server.ts` e `client.server` só importados dentro de `.handler()` de `createServerFn`, seguindo `tanstack-supabase-import-graph`.
-- **Testes mínimos**: adicionar `src/lib/payments/fees.test.ts` cobrindo os 4 cenários (PIX/cartão × repassa/absorve taxa).
-- **Nenhuma alteração em auth, OAuth PKCE, ou webhooks** nesta fase — foco em refatorar sem regressão.
+- Todas as novas tabelas/RPCs seguem o padrão da Fase 1–3 (RLS + GRANT + SECURITY DEFINER quando expor dados agregados).
+- Nada quebra usuários existentes: novos campos com default, flags iniciam ligadas apenas quando a fase for entregue.
+- Instrumentação `log_event` obrigatória em: view de `/precos`, clique em CTA, início de checkout, sucesso de pagamento, cancelamento — alimenta a Fase 5.
+- Sem alterações no fluxo Mercado Pago já estável; comissões dinâmicas só trocam o número passado em `application_fee`.
 
----
-
-## Fora do escopo desta fase
-
-- Cron de reconciliação automática (fica para Sprint de Estabilidade).
-- Sentry/monitoring externo (Estabilidade).
-- Página `/precos` e trial Pro (Monetização).
-- Rate limiting (Estabilidade).
-
-Quando aprovar, começo pela Etapa 1 (módulo `fees.ts` + refactor do checkout) — é a de maior impacto imediato porque fecha os bugs de valores que você viu no PIX.
+Confirma que sigo por essa ordem (começando pela Fase 1 — página `/precos`)?
