@@ -248,24 +248,29 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
             const eventId = `${paymentId}:${requestId || "no-req"}`;
             let payloadJson: Record<string, unknown> = {};
             try { payloadJson = rawBody ? JSON.parse(rawBody) : {}; } catch { /* noop */ }
-            const { error: dupErr } = await supabase
-              .from("webhook_events" as never)
-              .insert({
-                provider: "mercadopago",
-                event_id: eventId,
-                event_type: type,
-                payload: payloadJson,
-                status: "received",
-              } as never);
-            if (dupErr) {
-              const msg = (dupErr as { message?: string }).message ?? "";
-              if (/duplicate|unique|23505/i.test(msg)) {
-                await logEvent("webhook.duplicate", { paymentId, eventId }, {
-                  level: "info", targetType: "mp_payment", targetId: paymentId,
+            try {
+              const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+              const { error: dupErr } = await supabaseAdmin
+                .from("webhook_events")
+                .insert({
+                  provider: "mercadopago",
+                  event_id: eventId,
+                  event_type: type,
+                  payload: payloadJson,
+                  status: "received",
                 });
-                return new Response("duplicate", { status: 200 });
+              if (dupErr) {
+                const msg = dupErr.message ?? "";
+                if (/duplicate|unique|23505/i.test(msg)) {
+                  await logEvent("webhook.duplicate", { paymentId, eventId }, {
+                    level: "info", targetType: "mp_payment", targetId: paymentId,
+                  });
+                  return new Response("duplicate", { status: 200 });
+                }
+                console.warn("[MP webhook] dedup insert failed (proceeding)", msg);
               }
-              console.warn("[MP webhook] dedup insert failed (proceeding)", msg);
+            } catch (e) {
+              console.warn("[MP webhook] dedup unavailable (proceeding)", e);
             }
           }
           const { data: platformToken, error: tokenError } = await supabase.rpc(
