@@ -18,6 +18,7 @@ import { CookieConsent } from "@/components/cookie-consent";
 import { AdSlot } from "@/components/ad-slot";
 import { GoogleAnalytics } from "@/components/google-analytics";
 import { AnalyticsProvider } from "@/lib/analytics";
+import { InstallPrompt } from "@/components/install-prompt";
 
 function NotFoundComponent() {
   return (
@@ -155,8 +156,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", type: "image/svg+xml", href: "/brand/favicon.svg" },
-      { rel: "apple-touch-icon", href: "/brand/mark-color.svg" },
+      { rel: "apple-touch-icon", href: "/pwa/apple-touch-icon-180.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
@@ -220,8 +222,8 @@ function RootComponent() {
         <AdSlot slot="mobile_sticky" label="Publicidade" />
         <GoogleAnalytics />
         <AnalyticsProvider />
+        <InstallPrompt />
         <CookieConsent />
-        <Toaster position="top-center" richColors />
         <Toaster position="top-center" richColors />
       </AuthProvider>
     </QueryClientProvider>

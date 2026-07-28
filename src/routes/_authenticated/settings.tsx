@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Upload, Trash2, ShieldAlert, Download, Plus, X } from "lucide-react";
+import { PushToggle } from "@/components/push-toggle";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
@@ -379,7 +380,7 @@ function Settings() {
           </div>
         </Card>
 
-
+        <PushToggle />
 
         <Card className="mt-8 p-6">
           <h2 className="text-lg font-semibold tracking-tight">Privacidade e dados (LGPD)</h2>
