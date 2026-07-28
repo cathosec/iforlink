@@ -346,13 +346,17 @@ export const processCardPayment = createServerFn({ method: "POST" })
     const minFee = Math.max(0, Number(cfg.min_fee_cents ?? 0));
     const feeCents = Math.max(minFee, Math.round((data.amount_cents * feePct) / 100));
 
+    // Card ~4.98% (à vista). Quando repassa, embutimos ForLink + MP no total cobrado.
+    const MP_CARD_PCT = 4.98;
     let charged = data.amount_cents;
     let net = data.amount_cents - feeCents;
     if (camp.pass_fee_to_supporter) {
-      charged = data.amount_cents + feeCents;
+      const denom = Math.max(0.01, 1 - MP_CARD_PCT / 100);
+      charged = Math.ceil((data.amount_cents + feeCents) / denom);
       net = data.amount_cents;
     }
     if (net < 0) throw new Error("Configuração de taxa inválida");
+
 
     const { data: tokRows, error: tokErr } = await supabase.rpc(
       "get_pix_campaign_owner_token" as never,
