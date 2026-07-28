@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { BadgeCheck, Copy, Link2, ExternalLink, Lock, Search, Share2, Eye, MousePointerClick } from "lucide-react";
+import { BadgeCheck, Copy, Link2, ExternalLink, Lock, Search, Share2, Eye, MousePointerClick, ChevronRight, Heart } from "lucide-react";
 import { CategoryIcon } from "@/lib/category-icons";
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +16,7 @@ import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
 import { LogoWordmark } from "@/components/logo";
 import { trackEvent } from "@/lib/analytics";
+import pixLogo from "@/assets/pix-logo.webp.asset.json";
 
 interface HeadProfile {
   username: string;
