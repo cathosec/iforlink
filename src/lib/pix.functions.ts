@@ -423,20 +423,21 @@ export const processCardPayment = createServerFn({ method: "POST" })
       throw new Error(String(msg));
     }
 
+    const cardJson = json as { id?: string | number; status?: string; status_detail?: string; transaction_details?: { external_resource_url?: string } };
     await supabase.rpc("attach_pix_contribution_mp", {
       _contribution_id: String(contribId),
-      _mp_payment_id: String(json.id ?? ""),
+      _mp_payment_id: String(cardJson.id ?? ""),
       _qr_code: null,
       _qr_code_base64: null,
-      _ticket_url: json.transaction_details?.external_resource_url ?? null,
-      _status: json.status ?? "pending",
+      _ticket_url: cardJson.transaction_details?.external_resource_url ?? null,
+      _status: cardJson.status ?? "pending",
       _raw: json,
     } as never);
 
     return {
       id: String(contribId),
-      status: String(json.status ?? "pending"),
-      status_detail: String(json.status_detail ?? ""),
+      status: String(cardJson.status ?? "pending"),
+      status_detail: String(cardJson.status_detail ?? ""),
       amount_cents: charged,
       fee_cents: feeCents,
     };
