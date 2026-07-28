@@ -733,6 +733,7 @@ export type Database = {
           display_name: string
           id: string
           is_verified: boolean
+          social_links: Json
           updated_at: string
           username: string
           views_count: number
@@ -744,6 +745,7 @@ export type Database = {
           display_name: string
           id: string
           is_verified?: boolean
+          social_links?: Json
           updated_at?: string
           username: string
           views_count?: number
@@ -755,6 +757,7 @@ export type Database = {
           display_name?: string
           id?: string
           is_verified?: boolean
+          social_links?: Json
           updated_at?: string
           username?: string
           views_count?: number

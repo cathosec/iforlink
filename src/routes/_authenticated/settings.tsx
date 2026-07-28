@@ -20,10 +20,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Upload, Trash2, ShieldAlert, Download } from "lucide-react";
+import { Upload, Trash2, ShieldAlert, Download, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteMyAccount } from "@/lib/account.functions";
+import {
+  SOCIAL_PLATFORMS,
+  SOCIAL_MAP,
+  SocialIcon,
+  normalizeSocialLinks,
+  type SocialLinkEntry,
+} from "@/lib/social-links";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: Settings,
@@ -63,6 +70,8 @@ function Settings() {
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [socials, setSocials] = useState<SocialLinkEntry[]>([]);
+  const [savingSocials, setSavingSocials] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const runDelete = useServerFn(deleteMyAccount);
 
@@ -72,8 +81,39 @@ function Settings() {
       setDisplayName(profile.display_name);
       setBio(profile.bio ?? "");
       setAvatarUrl(profile.avatar_url ?? "");
+      setSocials(normalizeSocialLinks(profile.social_links));
     }
   }, [profile]);
+
+  const addSocial = (key: string) => {
+    if (socials.some((s) => s.key === key)) return;
+    setSocials((prev) => [...prev, { key, value: "" }]);
+  };
+  const updateSocial = (key: string, value: string) => {
+    setSocials((prev) => prev.map((s) => (s.key === key ? { ...s, value } : s)));
+  };
+  const removeSocial = (key: string) => {
+    setSocials((prev) => prev.filter((s) => s.key !== key));
+  };
+  const saveSocials = async () => {
+    if (!user) return;
+    setSavingSocials(true);
+    const payload = socials
+      .map((s) => ({ key: s.key, value: s.value.trim() }))
+      .filter((s) => s.value.length > 0);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ social_links: payload })
+      .eq("id", user.id);
+    setSavingSocials(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Redes sociais atualizadas");
+    await refresh();
+  };
+
 
   const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -250,6 +290,96 @@ function Settings() {
             </Button>
           </form>
         </Card>
+
+        <Card className="mt-8 p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Redes sociais</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Aparecem como ícones oficiais abaixo dos seus links, no seu perfil público.
+              </p>
+            </div>
+          </div>
+
+          {socials.length > 0 && (
+            <div className="mt-5 space-y-2.5">
+              {socials.map((s) => {
+                const p = SOCIAL_MAP[s.key];
+                if (!p) return null;
+                return (
+                  <div
+                    key={s.key}
+                    className="flex items-center gap-2 rounded-lg border bg-background/60 p-2"
+                  >
+                    <span
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-white"
+                      style={{ backgroundColor: p.brand }}
+                    >
+                      <SocialIcon platform={p} className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-medium text-muted-foreground">{p.label}</div>
+                      <Input
+                        value={s.value}
+                        onChange={(e) => updateSocial(s.key, e.target.value)}
+                        placeholder={p.placeholder}
+                        className="mt-0.5 h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeSocial(s.key)}
+                      aria-label={`Remover ${p.label}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-5">
+            <div className="text-xs font-medium text-muted-foreground">Adicionar rede</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {SOCIAL_PLATFORMS.filter((p) => !socials.some((s) => s.key === p.key)).map((p) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => addSocial(p.key)}
+                  className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-transparent hover:bg-accent"
+                >
+                  <span
+                    className="grid h-4 w-4 place-items-center rounded-sm text-white"
+                    style={{ color: p.brand }}
+                  >
+                    <SocialIcon platform={p} className="h-3.5 w-3.5" />
+                  </span>
+                  {p.label}
+                  <Plus className="h-3 w-3 opacity-60" />
+                </button>
+              ))}
+              {SOCIAL_PLATFORMS.every((p) => socials.some((s) => s.key === p.key)) && (
+                <p className="text-xs text-muted-foreground">Todas as redes suportadas já foram adicionadas.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <Button
+              type="button"
+              onClick={saveSocials}
+              disabled={savingSocials}
+              className="bg-brand text-brand-foreground hover:bg-brand/90"
+            >
+              {savingSocials ? "Salvando…" : "Salvar redes sociais"}
+            </Button>
+          </div>
+        </Card>
+
+
 
         <Card className="mt-8 p-6">
           <h2 className="text-lg font-semibold tracking-tight">Privacidade e dados (LGPD)</h2>

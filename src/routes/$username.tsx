@@ -16,6 +16,7 @@ import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
 import { LogoWordmark } from "@/components/logo";
 import { trackEvent } from "@/lib/analytics";
+import { SOCIAL_MAP, SocialIcon, normalizeSocialLinks, type SocialLinkEntry } from "@/lib/social-links";
 // Card de campanha usa a capa da própria campanha; sem dependência de asset externo.
 
 interface HeadProfile {
@@ -148,6 +149,7 @@ export const Route = createFileRoute("/$username")({
 interface ProfileRow {
   id: string; username: string; display_name: string; bio: string | null;
   avatar_url: string | null; is_verified: boolean; views_count: number;
+  social_links: unknown;
 }
 interface LinkItem {
   id: string; title: string; description: string | null; url: string;
@@ -165,7 +167,7 @@ function PublicProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id,username,display_name,bio,avatar_url,is_verified,views_count")
+        .select("id,username,display_name,bio,avatar_url,is_verified,views_count,social_links")
         .eq("username", username)
         .maybeSingle();
       if (!data) throw notFound();
@@ -686,6 +688,39 @@ function PublicProfile() {
           )}
 
         </div>
+
+        {(() => {
+          const socials: SocialLinkEntry[] = normalizeSocialLinks(profileQ.data?.social_links);
+          if (socials.length === 0) return null;
+          return (
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+              {socials.map((s) => {
+                const p = SOCIAL_MAP[s.key];
+                if (!p) return null;
+                const href = p.toHref(s.value);
+                if (!href) return null;
+                return (
+                  <a
+                    key={s.key}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    aria-label={p.label}
+                    title={p.label}
+                    onClick={() => trackEvent("social_click", { platform: p.key })}
+                    className="group grid h-11 w-11 place-items-center rounded-full border bg-card text-muted-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-transparent hover:shadow-md"
+                    style={{ ["--brand" as string]: p.brand } as React.CSSProperties}
+                  >
+                    <SocialIcon
+                      platform={p}
+                      className="h-5 w-5 transition-colors group-hover:text-[color:var(--brand)]"
+                    />
+                  </a>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {!hideAds && <AdSlot slot="profile" label="Publicidade" />}
 
