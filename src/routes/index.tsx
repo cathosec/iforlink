@@ -138,7 +138,9 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
   {
     q: "Preciso instalar algum aplicativo?",
     a: "Não. A ForLink funciona 100% no navegador, em qualquer dispositivo. Você pode adicionar o site à tela inicial do celular para ter uma experiência parecida com a de um app.",
+  },
 ];
+
 
 
 
