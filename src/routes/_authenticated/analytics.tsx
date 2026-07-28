@@ -334,3 +334,106 @@ function HeatmapView({
 
   return <Heatmap points={q.data ?? []} showClicks={showClicks} showMoves={showMoves} />;
 }
+
+// ─── Session Replay ───────────────────────────────────────────────
+type RecordingRow = {
+  session_id: string;
+  path: string;
+  title: string | null;
+  started_at: string;
+  ended_at: string;
+  duration_ms: number;
+  events_count: number;
+  chunks: number;
+  viewport_w: number | null;
+  viewport_h: number | null;
+};
+
+function ReplayPanel({ path, since, rangeLabel }: { path: string; since: string; rangeLabel: string }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const q = useQuery({
+    queryKey: ["analytics_list_recordings", path, since],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("analytics_list_recordings" as never, {
+        _path: path, _since: since, _limit: 100,
+      } as never);
+      if (error) throw error;
+      return (data ?? []) as unknown as RecordingRow[];
+    },
+    enabled: !!path,
+  });
+
+  const rows = q.data ?? [];
+  const activeId = selected ?? rows[0]?.session_id ?? null;
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+      <Card className="max-h-[540px] overflow-hidden">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <CardTitle className="text-sm">Sessões gravadas</CardTitle>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{rangeLabel} · {rows.length} sessões</p>
+            </div>
+            <Button size="icon" variant="ghost" onClick={() => q.refetch()} title="Atualizar">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="max-h-[460px] overflow-y-auto">
+            {q.isLoading ? (
+              <div className="p-4 text-xs text-muted-foreground">Carregando…</div>
+            ) : q.isError ? (
+              <div className="p-4 text-xs text-destructive">{q.error instanceof Error ? q.error.message : "Falha"}</div>
+            ) : rows.length === 0 ? (
+              <div className="p-4 text-xs text-muted-foreground">
+                Nenhuma gravação neste período. As gravações começam a aparecer alguns segundos após novas visitas.
+              </div>
+            ) : rows.map((r) => {
+              const isActive = r.session_id === activeId;
+              return (
+                <button
+                  key={r.session_id}
+                  onClick={() => setSelected(r.session_id)}
+                  className={`w-full border-b px-3 py-2.5 text-left text-xs transition-colors last:border-b-0 ${
+                    isActive ? "bg-brand/10 text-foreground" : "hover:bg-muted/50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium tabular-nums">{formatDuration(r.duration_ms)}</span>
+                    <span className="text-[10px] text-muted-foreground">{formatRelative(r.started_at)}</span>
+                  </div>
+                  <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                    {r.events_count} eventos · {r.chunks} chunks
+                    {r.viewport_w ? ` · ${r.viewport_w}×${r.viewport_h}` : ""}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">
+            {activeId ? `Reproduzindo sessão ${activeId.slice(0, 8)}…` : "Selecione uma sessão"}
+          </CardTitle>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Reprodução DOM com máscara automática de inputs, senhas, e-mails e blocos marcados como sensíveis.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {activeId ? (
+            <SessionPlayer sessionId={activeId} />
+          ) : (
+            <div className="grid aspect-video w-full place-items-center rounded-xl border bg-muted/30 text-xs text-muted-foreground">
+              Selecione uma sessão na lista ao lado para começar a reprodução.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
