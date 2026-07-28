@@ -49,9 +49,9 @@ export function PrivacyPanel() {
     try {
       const { data, error } = await supabase.rpc("analytics_delete_my_data");
       if (error) throw error;
-      const d = data as { deleted_sessions?: number; deleted_recordings?: number } | null;
+      const d = data as { deleted_sessions?: number } | null;
       toast.success("Dados apagados", {
-        description: `${d?.deleted_sessions ?? 0} sessões e ${d?.deleted_recordings ?? 0} gravações removidas.`,
+        description: `${d?.deleted_sessions ?? 0} sessões removidas.`,
       });
     } catch (err) {
       toast.error("Falha ao apagar", { description: (err as Error).message });
