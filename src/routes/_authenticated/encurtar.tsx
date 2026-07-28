@@ -38,6 +38,10 @@ const genCode = (len = 6) =>
     ALPHABET[Math.floor(Math.random() * ALPHABET.length)],
   ).join("");
 
+function ShortenerPageGated() {
+  return <FeatureGate flag="shortener_enabled" title="Encurtador"><ShortenerPage /></FeatureGate>;
+}
+
 function ShortenerPage() {
   const { user, role, loading } = useAuth();
   const qc = useQueryClient();
