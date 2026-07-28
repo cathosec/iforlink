@@ -300,6 +300,20 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   });
 
   const [amount, setAmount] = useState(c.suggested_amounts?.[1] ?? c.min_cents);
+  const [amountInput, setAmountInput] = useState(((c.suggested_amounts?.[1] ?? c.min_cents) / 100).toFixed(2).replace(".", ","));
+  const syncAmount = (raw: string) => {
+    // permite dígitos, vírgula e ponto; converte para centavos
+    const cleaned = raw.replace(/[^\d.,]/g, "");
+    setAmountInput(cleaned);
+    const normalized = cleaned.replace(/\./g, "").replace(",", ".");
+    const num = Number(normalized);
+    if (!isNaN(num) && num > 0) setAmount(Math.round(num * 100));
+    else if (cleaned === "") setAmount(0);
+  };
+  const pickSuggested = (v: number) => {
+    setAmount(v);
+    setAmountInput((v / 100).toFixed(2).replace(".", ","));
+  };
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
