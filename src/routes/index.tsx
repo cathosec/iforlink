@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check, HelpCircle, ShieldCheck, Mail } from "lucide-react";
+import { ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check, HelpCircle, ShieldCheck, Mail, Heart, QrCode, Wallet } from "lucide-react";
 import { AdSlot } from "@/components/ad-slot";
 
 
