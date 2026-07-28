@@ -24,7 +24,7 @@ import { FeatureGate } from "@/components/feature-gate";
 import { startMpOAuth, disconnectMp, getMpStatus } from "@/lib/pix.functions";
 
 export const Route = createFileRoute("/_authenticated/pix")({
-  component: PixPage,
+  component: PixPageGated,
   validateSearch: (s: Record<string, unknown>) => ({
     mp: (s.mp as string | undefined) ?? undefined,
     reason: (s.reason as string | undefined) ?? undefined,
