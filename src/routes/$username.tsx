@@ -253,6 +253,23 @@ function PublicProfile() {
     },
   });
 
+  // Campanha PIX ativa do dono (pega a mais recente para exibir card discreto).
+  const campaignQ = useQuery({
+    queryKey: ["profile-campaign", profileQ.data?.id],
+    enabled: !!profileQ.data?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pix_campaigns")
+        .select("slug,title,description,accent_color,goal_cents,raised_cents,supporters_count")
+        .eq("user_id", profileQ.data!.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   // Analytics — visualização de categorias/seções via IntersectionObserver.
   useEffect(() => {
     if (!profileQ.data || isOwner) return;
