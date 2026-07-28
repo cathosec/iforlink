@@ -27,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/pix")({
   validateSearch: (s: Record<string, unknown>) => ({
     mp: (s.mp as string | undefined) ?? undefined,
     reason: (s.reason as string | undefined) ?? undefined,
+    detail: (s.detail as string | undefined) ?? undefined,
   }),
   head: () => ({ meta: [{ title: "Módulo PIX · ForLink" }, { name: "robots", content: "noindex,nofollow" }] }),
 });

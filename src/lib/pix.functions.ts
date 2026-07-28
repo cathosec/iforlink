@@ -1,65 +1,25 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
-
-const MP_AUTH_URL = "https://auth.mercadopago.com/authorization";
-const MP_TOKEN_URL = "https://api.mercadopago.com/oauth/token";
-const MP_PAY_URL = "https://api.mercadopago.com/v1/payments";
-
-interface PixConfig {
-  enabled?: boolean;
-  fee_percent?: number;
-  min_fee_cents?: number;
-  oauth_client_id?: string;
-  oauth_client_secret?: string;
-}
-
-function publicSupabase() {
-  const url = process.env.SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL!;
-  const key =
-    process.env.SUPABASE_PUBLISHABLE_KEY ??
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
-  const opaque = key.startsWith("sb_publishable_") || key.startsWith("sb_secret_");
-  return createClient<Database>(url, key, {
-    global: {
-      fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (opaque && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      },
-    },
-    auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
-  });
-}
-
-async function loadPixConfig(): Promise<PixConfig> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
-    .from("platform_settings").select("value").eq("key", "pix_config").maybeSingle();
-  return ((data?.value ?? {}) as PixConfig) || {};
-}
+import { getRequestHostFallback, loadPixConfig, MP_AUTH_URL, MP_PAY_URL, MP_TOKEN_URL, publicSupabase } from "./pix.server";
 
 /** Gera URL OAuth do Mercado Pago para o usuário conectar a conta dele. */
 export const startMpOAuth = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const cfg = await loadPixConfig();
-    if (!cfg.oauth_client_id) {
+    const cfg = await loadPixConfig({ supabase: context.supabase });
+    const clientId = (cfg.oauth_client_id ?? "").trim();
+    const hasClientSecret = !!cfg.has_oauth_client_secret || !!(cfg.oauth_client_secret ?? "").trim();
+    if (!clientId) {
       throw new Error("OAuth do Mercado Pago não configurado pelo admin (Client ID ausente).");
     }
-    // Deriva host do request para redirect_uri
-    let host = "";
-    try {
-      const mod = await import("@tanstack/react-start/server");
-      host = mod.getRequestHost();
-    } catch { /* noop */ }
-    if (!host) host = "forlink.app";
+    if (!hasClientSecret) {
+      throw new Error("OAuth do Mercado Pago não configurado pelo admin (Client Secret ausente).");
+    }
+    const host = await getRequestHostFallback();
     const redirectUri = `https://${host}/api/public/oauth/mercadopago/callback`;
     const state = context.userId;
     const params = new URLSearchParams({
-      client_id: cfg.oauth_client_id,
+      client_id: clientId,
       response_type: "code",
       platform_id: "mp",
       redirect_uri: redirectUri,
@@ -98,7 +58,7 @@ export const testMpIntegration = createServerFn({ method: "POST" })
       _user_id: context.userId, _role: "admin",
     });
     if (!isAdmin) throw new Error("Acesso restrito a administradores");
-    const cfg = await loadPixConfig();
+    const cfg = await loadPixConfig({ supabase: context.supabase, includeSecret: true });
     const clientId = (cfg.oauth_client_id ?? "").trim();
     const clientSecret = (cfg.oauth_client_secret ?? "").trim();
     if (!clientId || !clientSecret) {
@@ -218,11 +178,7 @@ export const createContribution = createServerFn({ method: "POST" })
     if (rpcErr || !contribId) throw new Error(rpcErr?.message ?? "Falha ao registrar contribuição");
 
     // Deriva webhook URL
-    let host = "";
-    try {
-      const mod = await import("@tanstack/react-start/server");
-      host = mod.getRequestHost();
-    } catch { /* noop */ }
+    const host = await getRequestHostFallback("");
     const notificationUrl = host ? `https://${host}/api/public/webhooks/mp-pix` : undefined;
 
     // Cria pagamento PIX no MP com application_fee (marketplace split)
