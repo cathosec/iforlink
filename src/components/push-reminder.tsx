@@ -28,8 +28,6 @@ function recentlyDismissed(): boolean {
 export function PushReminder() {
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
-  const save = useServerFn(savePushSubscription);
-
   const { user, loading } = useAuth();
   const save = useServerFn(savePushSubscription);
 
