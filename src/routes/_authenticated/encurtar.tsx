@@ -11,9 +11,10 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Copy, Trash2, ExternalLink, Link2, MousePointerClick, Scissors, ArrowLeft, Sparkles } from "lucide-react";
 import { normalizeUrl } from "@/lib/favicon";
+import { FeatureGate } from "@/components/feature-gate";
 
 export const Route = createFileRoute("/_authenticated/encurtar")({
-  component: ShortenerPage,
+  component: ShortenerPageGated,
   head: () => ({
     meta: [
       { title: "Encurtador de links · ForLink" },
@@ -36,6 +37,10 @@ const genCode = (len = 6) =>
   Array.from({ length: len }, () =>
     ALPHABET[Math.floor(Math.random() * ALPHABET.length)],
   ).join("");
+
+function ShortenerPageGated() {
+  return <FeatureGate flag="shortener_enabled" title="Encurtador"><ShortenerPage /></FeatureGate>;
+}
 
 function ShortenerPage() {
   const { user, role, loading } = useAuth();

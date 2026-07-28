@@ -1006,6 +1006,11 @@ function SettingsTab({ logAction }: { logAction: (a: string, t?: string, id?: st
           {[
             { key: "signup_enabled", label: "Novos cadastros habilitados" },
             { key: "discovery_enabled", label: "Diretório de descoberta público" },
+            { key: "campaigns_enabled", label: "Módulo Campanhas (PIX/cartão)" },
+            { key: "campaigns_card_enabled", label: "Aceitar cartão nas campanhas" },
+            { key: "shortener_enabled", label: "Encurtador de links (Pro)" },
+            { key: "ads_enabled", label: "Anúncios (AdSense) em contas Free" },
+            { key: "pro_upgrade_enabled", label: "Upgrade para Pro disponível" },
             { key: "maintenance_mode", label: "Modo de manutenção", danger: true },
           ].map(f => (
             <div key={f.key} className="flex items-center justify-between rounded-md border p-3">

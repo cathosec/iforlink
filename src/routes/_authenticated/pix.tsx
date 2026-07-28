@@ -20,10 +20,11 @@ import {
   ArrowLeft, Plus, ExternalLink, Trash2, Pencil, Sparkles, Wallet, Link as LinkIcon,
   QrCode, ImageIcon, Copy, TrendingUp, Users2, CheckCircle2, Heart, BarChart3,
 } from "lucide-react";
+import { FeatureGate } from "@/components/feature-gate";
 import { startMpOAuth, disconnectMp, getMpStatus } from "@/lib/pix.functions";
 
 export const Route = createFileRoute("/_authenticated/pix")({
-  component: PixPage,
+  component: PixPageGated,
   validateSearch: (s: Record<string, unknown>) => ({
     mp: (s.mp as string | undefined) ?? undefined,
     reason: (s.reason as string | undefined) ?? undefined,
@@ -53,6 +54,10 @@ const emptyCampaign: Partial<Campaign> = {
 const brl = (c: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(c / 100);
 const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+
+function PixPageGated() {
+  return <FeatureGate flag="campaigns_enabled" title="Campanhas"><PixPage /></FeatureGate>;
+}
 
 function PixPage() {
   const { user, role, loading } = useAuth();
