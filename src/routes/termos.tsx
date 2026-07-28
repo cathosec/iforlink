@@ -31,7 +31,7 @@ function TermsPage() {
           Termos de Uso
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Última atualização: 17 de julho de 2026 · Versão 2026-07
+          Última atualização: 28 de julho de 2026 · Versão 2026-07.2
         </p>
 
         <div className="prose prose-sm mt-8 max-w-none text-foreground/90 [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-1">
