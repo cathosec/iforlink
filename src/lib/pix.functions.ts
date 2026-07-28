@@ -166,13 +166,13 @@ export const createContribution = createServerFn({ method: "POST" })
     }
     if (net < 0) throw new Error("Configuração de taxa inválida");
 
-    // Busca token do dono (bypass RLS via admin)
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: acct } = await supabaseAdmin
-      .from("mp_accounts")
-      .select("access_token,live_mode,mp_user_id")
-      .eq("user_id", camp.user_id)
-      .maybeSingle();
+    // Busca token do dono via RPC SECURITY DEFINER (não requer service role)
+    const { data: tokRows, error: tokErr } = await supabase.rpc(
+      "get_pix_campaign_owner_token" as never,
+      { _campaign_id: camp.id } as never,
+    );
+    if (tokErr) throw new Error(`Falha ao localizar conta MP do criador: ${tokErr.message}`);
+    const acct = Array.isArray(tokRows) ? (tokRows[0] as { access_token?: string } | undefined) : undefined;
     if (!acct?.access_token) throw new Error("O criador da campanha ainda não conectou o Mercado Pago.");
 
     // Cria linha pendente via RPC (SECURITY DEFINER, contorna RLS)
