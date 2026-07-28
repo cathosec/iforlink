@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getRequestHostFallback, loadPixConfig, MP_AUTH_URL, MP_PAY_URL, MP_TOKEN_URL, publicSupabase } from "./pix.server";
+import { createMpOAuthState, getRequestHostFallback, loadPixConfig, MP_AUTH_URL, MP_PAY_URL, MP_TOKEN_URL, publicSupabase } from "./pix.server";
 
 /** Gera URL OAuth do Mercado Pago para o usuário conectar a conta dele. */
 export const startMpOAuth = createServerFn({ method: "POST" })
@@ -17,13 +17,25 @@ export const startMpOAuth = createServerFn({ method: "POST" })
     }
     const host = await getRequestHostFallback();
     const redirectUri = `https://${host}/api/public/oauth/mercadopago/callback`;
-    const state = context.userId;
+    const oauth = await createMpOAuthState();
+
+    const { error: stateErr } = await context.supabase.from("oauth_states").insert({
+      state: oauth.state,
+      user_id: context.userId,
+      provider: "mercadopago",
+      code_verifier: oauth.codeVerifier,
+      redirect_uri: redirectUri,
+    } as never);
+    if (stateErr) throw new Error(`Falha ao preparar conexão Mercado Pago: ${stateErr.message}`);
+
     const params = new URLSearchParams({
       client_id: clientId,
       response_type: "code",
       platform_id: "mp",
       redirect_uri: redirectUri,
-      state,
+      state: oauth.state,
+      code_challenge: oauth.codeChallenge,
+      code_challenge_method: "S256",
     });
     return { url: `${MP_AUTH_URL}?${params.toString()}` };
   });
