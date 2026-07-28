@@ -323,10 +323,12 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   const [approved, setApproved] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
 
-  const finalAmount = useMemo(() => {
-    if (!c.pass_fee_to_supporter) return amount;
-    return amount; // taxa exibida separadamente; server soma
-  }, [amount, c.pass_fee_to_supporter]);
+  const feePct = Number(ctxQ.data?.fee_percent ?? 0);
+  const minFeeCents = Number(ctxQ.data?.min_fee_cents ?? 0);
+  const feeCents = amount > 0 ? Math.max(minFeeCents, Math.round((amount * feePct) / 100)) : 0;
+  const passesFee = c.pass_fee_to_supporter;
+  const finalAmount = passesFee ? amount + feeCents : amount;
+  const netAmount = passesFee ? amount : Math.max(0, amount - feeCents);
 
   const submit = async () => {
     if (!email.includes("@")) return toast.error("E-mail inválido");
