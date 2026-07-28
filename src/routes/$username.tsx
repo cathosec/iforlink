@@ -691,12 +691,14 @@ function PublicProfile() {
 
 
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <Link to="/" className="group flex flex-col items-center gap-2">
-            <span className="text-[11px] uppercase tracking-widest text-muted-foreground group-hover:text-foreground">
-              Criado com
-            </span>
-            <LogoWordmark className="h-5 w-auto opacity-70 transition-opacity group-hover:opacity-100" />
-          </Link>
+          {!removeBrandingQ.data && (
+            <Link to="/" className="group flex flex-col items-center gap-2">
+              <span className="text-[11px] uppercase tracking-widest text-muted-foreground group-hover:text-foreground">
+                Criado com
+              </span>
+              <LogoWordmark className="h-5 w-auto opacity-70 transition-opacity group-hover:opacity-100" />
+            </Link>
+          )}
           <div className="flex justify-center gap-3 text-[11px] text-muted-foreground">
             <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
             <span>·</span>
