@@ -171,14 +171,14 @@ function TermsPage() {
 
 
 
-          <h2>6. Publicidade</h2>
+          <h2>8. Publicidade</h2>
           <p>
             A ForLink pode exibir anúncios de parceiros em áreas específicas
             do site. Anúncios só são carregados quando o usuário autoriza
             expressamente cookies de publicidade no banner de consentimento.
           </p>
 
-          <h2>7. Suspensão e encerramento</h2>
+          <h2>9. Suspensão e encerramento</h2>
           <p>
             Podemos suspender ou encerrar contas que violem estes Termos, sem
             aviso prévio, especialmente em casos de risco à segurança da
@@ -195,7 +195,7 @@ function TermsPage() {
             para detalhes.
           </p>
 
-          <h2>8. Isenção de responsabilidade</h2>
+          <h2>10. Isenção de responsabilidade</h2>
           <p>
             O serviço é fornecido "no estado em que se encontra". A ForLink
             não se responsabiliza por indisponibilidades causadas por
@@ -203,21 +203,21 @@ function TermsPage() {
             sites externos referenciados por links publicados pelos usuários.
           </p>
 
-          <h2>9. Propriedade intelectual</h2>
+          <h2>11. Propriedade intelectual</h2>
           <p>
             A marca, o design, o código-fonte e a estrutura do site pertencem
             à ForLink. É proibida a reprodução total ou parcial sem prévia
             autorização por escrito.
           </p>
 
-          <h2>10. Lei aplicável e foro</h2>
+          <h2>12. Lei aplicável e foro</h2>
           <p>
             Estes Termos são regidos pelas leis da República Federativa do
             Brasil. Fica eleito o foro do domicílio do usuário consumidor
             para dirimir eventuais controvérsias.
           </p>
 
-          <h2>11. Alterações</h2>
+          <h2>13. Alterações</h2>
           <p>
             Podemos alterar estes Termos a qualquer momento. Alterações
             relevantes serão comunicadas com antecedência mínima de 15 dias
