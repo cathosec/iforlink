@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { usePlatformSetting } from "@/lib/use-platform-setting";
+import { useFlag } from "@/lib/flags";
 import { hasAdsConsent, onConsentChange } from "@/lib/consent";
+
 
 type AdConfig = {
   enabled?: boolean;
