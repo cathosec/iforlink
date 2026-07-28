@@ -381,32 +381,45 @@ export const processCardPayment = createServerFn({ method: "POST" })
       description: `Apoio: ${camp.title}`,
       external_reference: String(contribId),
       notification_url: notificationUrl,
-      application_fee: feeCents / 100,
       statement_descriptor: "FORLINK",
       payment_method_id: data.brick.payment_method_id,
       payer,
     };
+    if (feeCents > 0) body.application_fee = feeCents / 100;
     if (data.brick.token) body.token = data.brick.token;
     if (data.brick.issuer_id) body.issuer_id = data.brick.issuer_id;
     if (data.brick.installments) body.installments = data.brick.installments;
     if (data.brick.payment_type_id) body.payment_type_id = data.brick.payment_type_id;
 
-    const resp = await fetch(MP_PAY_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${acct.access_token}`,
-        "Content-Type": "application/json",
-        "X-Idempotency-Key": String(contribId),
-      },
-      body: JSON.stringify(body),
-    });
-    const json = await resp.json().catch(() => ({}));
+    const doPost = (payload: Record<string, unknown>) =>
+      fetch(MP_PAY_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${acct.access_token}`,
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": String(contribId),
+        },
+        body: JSON.stringify(payload),
+      });
+
+    let resp = await doPost(body);
+    let json: Record<string, unknown> = await resp.json().catch(() => ({}));
+    const feeRejected = !resp.ok && "application_fee" in body && (
+      /application_fee/i.test(String((json as { message?: string })?.message ?? "")) ||
+      (Array.isArray((json as { cause?: unknown }).cause) &&
+        ((json as { cause?: Array<{ description?: string; code?: string | number }> }).cause ?? [])
+          .some((c) => /application_fee/i.test(String(c?.description ?? "")) || String(c?.code ?? "") === "2107"))
+    );
+    if (feeRejected) {
+      console.warn("[CARD] retry without application_fee:", (json as { message?: string })?.message);
+      const { application_fee: _omit, ...rest } = body as Record<string, unknown>;
+      resp = await doPost(rest);
+      json = await resp.json().catch(() => ({}));
+    }
     if (!resp.ok) {
       console.error("[CARD] MP payment failed", resp.status, json);
-      const msg =
-        json?.message ||
-        (Array.isArray(json?.cause) && json.cause[0]?.description) ||
-        "Falha ao processar pagamento";
+      const jErr = json as { message?: string; cause?: Array<{ description?: string }> };
+      const msg = jErr?.message || (Array.isArray(jErr?.cause) && jErr.cause[0]?.description) || "Falha ao processar pagamento";
       throw new Error(String(msg));
     }
 
