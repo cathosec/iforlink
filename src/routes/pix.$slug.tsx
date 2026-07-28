@@ -407,7 +407,7 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
             <QrCode className="h-5 w-5" style={{ color: c.accent_color }} />
             <h3 className="font-semibold">Pague {brl(result.amount_cents)} via PIX</h3>
           </div>
-          <img src={mpLogo.url} alt="Mercado Pago" className="h-4 w-auto opacity-80" />
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Mercado Pago</span>
         </div>
 
         {failed ? (
