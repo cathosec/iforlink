@@ -73,18 +73,6 @@ function normalizeUsername(v: string) {
     .slice(0, 30);
 }
 
-function AdPlaceholder({ position }: { position: string }) {
-  return (
-    <div className="my-4 rounded-md border border-dashed bg-muted/30 px-4 py-3 text-[11px] text-muted-foreground">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-medium uppercase tracking-widest">Espaço para anúncios · {position}</span>
-        <span className="rounded-full border bg-background px-2 py-0.5 text-[10px] font-medium text-brand">
-          Plano Pro não exibe anúncios
-        </span>
-      </div>
-    </div>
-  );
-}
 
 const FAQ_ITEMS: { q: string; a: string }[] = [
   {
