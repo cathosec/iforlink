@@ -253,6 +253,19 @@ function PublicProfile() {
     },
   });
 
+  // Complemento "Remover marca" ativo no dono do perfil.
+  const removeBrandingQ = useQuery({
+    queryKey: ["owner-remove-branding", profileQ.data?.id],
+    enabled: !!profileQ.data?.id,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("user_has_active_addon", {
+        _user_id: profileQ.data!.id,
+        _addon: "remove_branding",
+      });
+      return data === true;
+    },
+  });
+
   // Campanha PIX ativa do dono (pega a mais recente para exibir card discreto).
   const campaignQ = useQuery({
     queryKey: ["profile-campaign", profileQ.data?.id],
@@ -678,12 +691,14 @@ function PublicProfile() {
 
 
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <Link to="/" className="group flex flex-col items-center gap-2">
-            <span className="text-[11px] uppercase tracking-widest text-muted-foreground group-hover:text-foreground">
-              Criado com
-            </span>
-            <LogoWordmark className="h-5 w-auto opacity-70 transition-opacity group-hover:opacity-100" />
-          </Link>
+          {!removeBrandingQ.data && (
+            <Link to="/" className="group flex flex-col items-center gap-2">
+              <span className="text-[11px] uppercase tracking-widest text-muted-foreground group-hover:text-foreground">
+                Criado com
+              </span>
+              <LogoWordmark className="h-5 w-auto opacity-70 transition-opacity group-hover:opacity-100" />
+            </Link>
+          )}
           <div className="flex justify-center gap-3 text-[11px] text-muted-foreground">
             <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
             <span>·</span>
