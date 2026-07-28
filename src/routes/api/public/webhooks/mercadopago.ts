@@ -317,6 +317,15 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
             { targetType: "mp_payment", targetId: paymentId },
           );
 
+          try {
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            await supabaseAdmin
+              .from("webhook_events")
+              .update({ status: "processed", processed_at: new Date().toISOString() })
+              .eq("provider", "mercadopago")
+              .eq("event_id", `${paymentId}:${requestId || "no-req"}`);
+          } catch { /* noop */ }
+
           return new Response("ok", { status: 200 });
         } catch (err) {
           console.error("[MP webhook] unexpected", err);
