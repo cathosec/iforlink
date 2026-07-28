@@ -2225,3 +2225,268 @@ function CampaignFeeMatrix() {
     </Card>
   );
 }
+
+// ============================================================================
+// Fase 5 — Financeiro (super admin)
+// ============================================================================
+function FinancialsTab() {
+  const now = new Date();
+  const from30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const from90 = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  const subsQ = useQuery({
+    queryKey: ["admin-fin-subs"],
+    queryFn: async () => {
+      const { data } = await supabase.from("subscriptions")
+        .select("id,plan,status,amount_cents,interval,current_period_end,created_at")
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      return data ?? [];
+    },
+  });
+
+  const pixQ = useQuery({
+    queryKey: ["admin-fin-pix"],
+    queryFn: async () => {
+      const { data } = await supabase.from("pix_payments")
+        .select("id,amount_cents,status,interval,paid_at,created_at")
+        .gte("created_at", from90)
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      return data ?? [];
+    },
+  });
+
+  const contribQ = useQuery({
+    queryKey: ["admin-fin-contrib"],
+    queryFn: async () => {
+      const { data } = await supabase.from("pix_contributions")
+        .select("id,amount_cents,net_cents,fee_cents,status,approved_at,created_at,campaign_id")
+        .gte("created_at", from90)
+        .order("created_at", { ascending: false })
+        .limit(2000);
+      return data ?? [];
+    },
+  });
+
+  const subs = subsQ.data ?? [];
+  const pix = pixQ.data ?? [];
+  const contribs = contribQ.data ?? [];
+
+  const activeSubs = subs.filter((s) => s.status === "active");
+  const mrr = activeSubs.reduce((n, s) => {
+    const monthly = s.interval === "year" ? s.amount_cents / 12 : s.interval === "quarter" ? s.amount_cents / 3 : s.amount_cents;
+    return n + monthly;
+  }, 0);
+  const arr = mrr * 12;
+
+  const pixThisMonth = pix.filter((p) => p.status === "approved" && (p.paid_at ?? "") >= monthStart);
+  const pixRevenue = pixThisMonth.reduce((n, p) => n + p.amount_cents, 0);
+  const pix30 = pix.filter((p) => p.status === "approved" && (p.paid_at ?? "") >= from30)
+    .reduce((n, p) => n + p.amount_cents, 0);
+
+  const contribApproved = contribs.filter((c) => c.status === "approved");
+  const gmv = contribApproved.reduce((n, c) => n + c.amount_cents, 0);
+  const platformFees = contribApproved.reduce((n, c) => n + c.fee_cents, 0);
+  const gmv30 = contribApproved.filter((c) => (c.approved_at ?? "") >= from30)
+    .reduce((n, c) => n + c.amount_cents, 0);
+  const fees30 = contribApproved.filter((c) => (c.approved_at ?? "") >= from30)
+    .reduce((n, c) => n + c.fee_cents, 0);
+
+  const totalRevenue30 = pix30 + fees30;
+  const loading = subsQ.isLoading || pixQ.isLoading || contribQ.isLoading;
+
+  const Kpi = ({ label, value, hint }: { label: string; value: string; hint?: string }) => (
+    <Card className="p-5">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-2xl">{value}</div>
+      {hint && <div className="mt-0.5 text-[11px] text-muted-foreground">{hint}</div>}
+    </Card>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-display text-2xl">Financeiro</h2>
+        <p className="text-sm text-muted-foreground">Visão consolidada de assinaturas, GMV das campanhas e comissões da plataforma.</p>
+      </div>
+
+      {loading ? (
+        <Card className="p-6 text-sm text-muted-foreground">Carregando indicadores…</Card>
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Kpi label="MRR" value={brl(mrr)} hint={`${activeSubs.length} assinaturas ativas`} />
+            <Kpi label="ARR estimado" value={brl(arr)} />
+            <Kpi label="Receita PIX/Pro (mês)" value={brl(pixRevenue)} hint={`${pixThisMonth.length} pagamentos aprovados`} />
+            <Kpi label="Receita total (30d)" value={brl(totalRevenue30)} hint="Pro + comissões de campanha" />
+          </div>
+
+          <Card className="p-6">
+            <h3 className="font-display text-lg font-semibold">Campanhas — últimos 90 dias</h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <Kpi label="GMV total" value={brl(gmv)} hint={`${contribApproved.length} contribuições aprovadas`} />
+              <Kpi label="Comissão ForLink" value={brl(platformFees)} hint={gmv ? `${((platformFees / gmv) * 100).toFixed(2)}% take rate` : ""} />
+              <Kpi label="GMV (30d)" value={brl(gmv30)} hint={`Comissão 30d: ${brl(fees30)}`} />
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="font-display text-lg font-semibold">Assinaturas por plano</h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {(["pro","admin","free"] as const).map((p) => {
+                const rows = activeSubs.filter((s) => s.plan === p);
+                return (
+                  <div key={p} className="rounded-lg border bg-muted/20 p-4">
+                    <div className="text-xs uppercase text-muted-foreground">{p}</div>
+                    <div className="mt-1 font-display text-xl">{rows.length}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {brl(rows.reduce((n, r) => n + r.amount_cents, 0))} volume/período
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Fase 4 — Complementos (admin manage requests + catalog)
+// ============================================================================
+type AddonRow = {
+  id: string; user_id: string; addon: string; status: string; price_cents: number;
+  notes: string | null; created_at: string; activated_at: string | null;
+};
+
+function AddonsAdminTab({ logAction }: { logAction: (a: string, tt?: string, tid?: string, m?: Record<string, unknown>) => Promise<void> }) {
+  const qc = useQueryClient();
+  const [items, setItems] = useState<Array<{ key: string; label: string; price_cents: number; description: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase.from("platform_settings").select("value").eq("key", "addons").maybeSingle();
+      const arr = (data?.value as { items?: typeof items } | null)?.items ?? [];
+      setItems(arr);
+      setLoading(false);
+    })();
+  }, []);
+
+  const requestsQ = useQuery({
+    queryKey: ["admin-addons-requests"],
+    queryFn: async (): Promise<AddonRow[]> => {
+      const { data } = await supabase.from("user_addons")
+        .select("id,user_id,addon,status,price_cents,notes,created_at,activated_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      return (data ?? []) as AddonRow[];
+    },
+  });
+
+  const saveCatalog = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("platform_settings").upsert({
+      key: "addons", value: { items } as never, description: "Catálogo de complementos pagos",
+    } as never);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    await logAction("addons_catalog_update", "settings", "addons", { count: items.length });
+    toast.success("Catálogo salvo");
+  };
+
+  const setStatus = async (id: string, status: "active" | "canceled") => {
+    const patch: Record<string, unknown> = { status };
+    if (status === "active") patch.activated_at = new Date().toISOString();
+    if (status === "canceled") patch.canceled_at = new Date().toISOString();
+    const { error } = await supabase.from("user_addons").update(patch as never).eq("id", id);
+    if (error) return toast.error(error.message);
+    await logAction("addon_status_change", "user_addons", id, { status });
+    qc.invalidateQueries({ queryKey: ["admin-addons-requests"] });
+    toast.success("Solicitação atualizada");
+  };
+
+  const addItem = () => setItems([...items, { key: "novo", label: "Novo complemento", price_cents: 990, description: "" }]);
+  const removeItem = (i: number) => setItems(items.filter((_, idx) => idx !== i));
+
+  const requests = requestsQ.data ?? [];
+  const pending = requests.filter((r) => r.status === "requested");
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-display text-lg font-semibold">Catálogo de complementos</h3>
+            <p className="text-sm text-muted-foreground">
+              Aparecem na página <code>/precos</code> como add-ons opcionais que usuários podem solicitar.
+            </p>
+          </div>
+          <Button size="sm" onClick={addItem}><Plus className="mr-1 h-4 w-4" /> Adicionar</Button>
+        </div>
+        {loading ? (
+          <div className="mt-4 text-sm text-muted-foreground">Carregando…</div>
+        ) : (
+          <div className="mt-4 space-y-2">
+            {items.map((it, i) => (
+              <div key={i} className="grid gap-2 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[130px_1fr_130px_2fr_auto]">
+                <Input value={it.key} onChange={(e) => { const a = [...items]; a[i] = { ...it, key: e.target.value }; setItems(a); }} placeholder="chave" />
+                <Input value={it.label} onChange={(e) => { const a = [...items]; a[i] = { ...it, label: e.target.value }; setItems(a); }} placeholder="Rótulo" />
+                <Input type="number" min={0} value={it.price_cents} onChange={(e) => { const a = [...items]; a[i] = { ...it, price_cents: Number(e.target.value) }; setItems(a); }} placeholder="Preço (centavos)" />
+                <Input value={it.description} onChange={(e) => { const a = [...items]; a[i] = { ...it, description: e.target.value }; setItems(a); }} placeholder="Descrição curta" />
+                <Button size="icon" variant="ghost" onClick={() => removeItem(i)}><X className="h-4 w-4" /></Button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-4 flex justify-end">
+          <Button onClick={() => void saveCatalog()} disabled={saving || loading}>{saving ? "Salvando…" : "Salvar catálogo"}</Button>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg font-semibold">Solicitações de complementos</h3>
+          <span className="text-xs text-muted-foreground">{pending.length} pendente(s) · {requests.length} total</span>
+        </div>
+        {requestsQ.isLoading ? (
+          <div className="mt-4 text-sm text-muted-foreground">Carregando…</div>
+        ) : requests.length === 0 ? (
+          <div className="mt-4 rounded-md border bg-muted/20 p-6 text-center text-sm text-muted-foreground">Nenhuma solicitação até o momento.</div>
+        ) : (
+          <div className="mt-4 space-y-2">
+            {requests.map((r) => (
+              <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3 text-sm">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold">{r.addon} · {brl(r.price_cents)}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    user <code>{r.user_id.slice(0, 8)}…</code> · {new Date(r.created_at).toLocaleString("pt-BR")}
+                  </div>
+                  {r.notes && <div className="mt-1 text-xs italic text-muted-foreground">"{r.notes}"</div>}
+                </div>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase ${r.status === "active" ? "bg-emerald-500/15 text-emerald-700" : r.status === "canceled" ? "bg-muted text-muted-foreground" : "bg-amber-500/15 text-amber-700"}`}>
+                  {r.status}
+                </span>
+                {r.status === "requested" && (
+                  <div className="flex gap-1.5">
+                    <Button size="sm" onClick={() => void setStatus(r.id, "active")}>
+                      <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Ativar
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => void setStatus(r.id, "canceled")}>
+                      Recusar
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
