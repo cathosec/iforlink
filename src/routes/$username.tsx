@@ -253,6 +253,19 @@ function PublicProfile() {
     },
   });
 
+  // Complemento "Remover marca" ativo no dono do perfil.
+  const removeBrandingQ = useQuery({
+    queryKey: ["owner-remove-branding", profileQ.data?.id],
+    enabled: !!profileQ.data?.id,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("user_has_active_addon", {
+        _user_id: profileQ.data!.id,
+        _addon: "remove_branding",
+      });
+      return data === true;
+    },
+  });
+
   // Campanha PIX ativa do dono (pega a mais recente para exibir card discreto).
   const campaignQ = useQuery({
     queryKey: ["profile-campaign", profileQ.data?.id],
