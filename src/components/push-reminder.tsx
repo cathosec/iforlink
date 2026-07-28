@@ -5,12 +5,12 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import {
   pushSupported,
-  isStandalone,
   getExistingSubscription,
   subscribePush,
   subscriptionToJSON,
 } from "@/lib/push/client";
 import { savePushSubscription } from "@/lib/push.functions";
+import { useAuth } from "@/lib/auth-context";
 
 const SEEN_KEY = "forlink:push-reminder-seen-at";
 const SNOOZE_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
@@ -28,22 +28,29 @@ function recentlyDismissed(): boolean {
 export function PushReminder() {
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
+  const { user, loading } = useAuth();
   const save = useServerFn(savePushSubscription);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!isStandalone()) return;
+    if (loading) return;
+    if (!user) return; // só solicita após login
     if (!pushSupported()) return;
     if (recentlyDismissed()) return;
     if (Notification.permission !== "default") return;
 
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     (async () => {
       const existing = await getExistingSubscription();
-      if (existing) return;
-      const t = setTimeout(() => setVisible(true), 2500);
-      return () => clearTimeout(t);
+      if (cancelled || existing) return;
+      timer = setTimeout(() => setVisible(true), 2500);
     })();
-  }, []);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [user, loading]);
 
   function dismiss() {
     try { localStorage.setItem(SEEN_KEY, String(Date.now())); } catch { /* noop */ }
