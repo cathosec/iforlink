@@ -1,0 +1,4 @@
+export const SUPABASE_PROJECT_ID_FALLBACK = "llhvsvpcdxccqhpqgiwd";
+export const SUPABASE_URL_FALLBACK = "https://llhvsvpcdxccqhpqgiwd.supabase.co";
+export const SUPABASE_PUBLISHABLE_KEY_FALLBACK =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxsaHZzdnBjZHhjY3FocHFnaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyOTAxNjEsImV4cCI6MjA5OTg2NjE2MX0.PGyYZU0GYUka7elUKJog-aO2enQbYaUVUNtkkItHDfk";

@@ -23,18 +23,31 @@ export const Route = createFileRoute("/api/public/oauth/mercadopago/callback")({
         if (errorParam) return redirect(`/pix?mp=error&reason=${encodeURIComponent(errorParam)}`);
         if (!code || !state) return redirect(`/pix?mp=error&reason=missing_params`);
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: cfgRow } = await supabaseAdmin
+        let supabaseAdmin: Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
+        try {
+          ({ supabaseAdmin } = await import("@/integrations/supabase/client.server"));
+        } catch (err) {
+          console.error("[MP OAuth] Supabase admin unavailable", err instanceof Error ? err.message : String(err));
+          return redirect(`/pix?mp=error&reason=server_config&detail=SUPABASE_SERVICE_ROLE_KEY`);
+        }
+
+        const { data: cfgRow, error: cfgErr } = await supabaseAdmin
           .from("platform_settings").select("value").eq("key", "pix_config").maybeSingle();
+        if (cfgErr) {
+          console.error("[MP OAuth] config read failed", cfgErr.message);
+          return redirect(`/pix?mp=error&reason=config_read`);
+        }
         const cfg = ((cfgRow?.value ?? {}) as PixCfg) || {};
-        if (!cfg.oauth_client_id || !cfg.oauth_client_secret) {
-          return redirect(`/pix?mp=error&reason=not_configured`);
+        const clientId = (cfg.oauth_client_id ?? "").trim();
+        const clientSecret = (cfg.oauth_client_secret ?? "").trim();
+        if (!clientId || !clientSecret) {
+          return redirect(`/pix?mp=error&reason=not_configured&detail=client_id_or_secret_missing`);
         }
 
         const redirectUri = `${site}/api/public/oauth/mercadopago/callback`;
         const payload = {
-          client_id: cfg.oauth_client_id,
-          client_secret: cfg.oauth_client_secret,
+          client_id: clientId,
+          client_secret: clientSecret,
           code,
           grant_type: "authorization_code",
           redirect_uri: redirectUri,
@@ -44,7 +57,6 @@ export const Route = createFileRoute("/api/public/oauth/mercadopago/callback")({
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Bearer ${cfg.oauth_client_secret}`,
           },
           body: JSON.stringify(payload),
         });
