@@ -515,11 +515,18 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
         {/* Detalhamento transparente da taxa */}
         {amount > 0 && (
           <div className="mt-3 rounded-xl border bg-background/60 p-3 text-xs">
-            <div className="mb-1.5 flex items-center justify-between">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5">
               <span className="font-semibold text-foreground">Resumo da contribuição</span>
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                Taxa ForLink: {feePct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
-                {minFeeCents > 0 ? ` · mín. ${brl(minFeeCents)}` : ""}
+              <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                {ctxQ.data?.creator_role === "pro" || ctxQ.data?.creator_role === "admin" ? (
+                  <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 font-semibold text-emerald-700 dark:text-emerald-400">
+                    Taxa reduzida · criador Pro
+                  </span>
+                ) : null}
+                <span>
+                  Taxa ForLink: {feePct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
+                  {minFeeCents > 0 ? ` · mín. ${brl(minFeeCents)}` : ""}
+                </span>
               </span>
             </div>
             <dl className="space-y-1 tabular-nums">
