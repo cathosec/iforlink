@@ -71,8 +71,8 @@ export function PrivacyPanel() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <p className="text-muted-foreground">
-            Você tem controle total sobre os dados coletados enquanto usa o ForLink. Podemos coletar
-            somente o necessário para gerar mapas de calor e gravações anonimizadas — nunca senhas,
+            Você tem controle total sobre os dados coletados enquanto usa o ForLink. Coletamos
+            apenas o necessário para gerar mapas de calor e métricas agregadas — nunca senhas,
             campos de formulário ou dados pessoais visíveis em tela.
           </p>
 
@@ -83,7 +83,7 @@ export function PrivacyPanel() {
                 Pausar coleta neste navegador
               </div>
               <p className="text-xs text-muted-foreground">
-                Desliga o tracker e as gravações imediatamente. Configuração salva localmente.
+                Desliga o tracker imediatamente. Configuração salva localmente.
               </p>
             </div>
             <Switch
