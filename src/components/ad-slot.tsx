@@ -25,6 +25,7 @@ export function AdSlot({
   label?: string;
 }) {
   const { data } = usePlatformSetting<AdConfig>("ads");
+  const adsFlag = useFlag("ads_enabled");
   const ref = useRef<HTMLDivElement | null>(null);
   const [consent, setConsent] = useState<boolean>(false);
 
@@ -34,8 +35,9 @@ export function AdSlot({
   }, []);
 
   const cfg = data?.[slot];
-  const globalOn = data?.enabled !== false;
+  const globalOn = data?.enabled !== false && adsFlag;
   const enabled = globalOn && cfg?.enabled && (cfg?.code ?? "").trim().length > 0;
+
 
   useEffect(() => {
     if (!enabled || !consent || !ref.current) return;
