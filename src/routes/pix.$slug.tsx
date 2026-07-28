@@ -373,35 +373,57 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   if (result) {
     return (
       <div className="rounded-xl border p-6">
-        <div className="flex items-center gap-2">
-          <QrCode className="h-5 w-5" style={{ color: c.accent_color }} />
-          <h3 className="font-semibold">Pague {brl(result.amount_cents)} via PIX</h3>
-        </div>
-        {result.qr_code_base64 && (
-          <div className="mt-4 grid place-items-center">
-            <img src={`data:image/png;base64,${result.qr_code_base64}`} alt="QR Code PIX" className="h-56 w-56" />
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <QrCode className="h-5 w-5" style={{ color: c.accent_color }} />
+            <h3 className="font-semibold">Pague {brl(result.amount_cents)} via PIX</h3>
           </div>
-        )}
-        {result.qr_code && (
-          <div className="mt-4">
-            <Label>PIX Copia e Cola</Label>
-            <div className="mt-1 flex gap-2">
-              <Input value={result.qr_code} readOnly className="font-mono text-xs" />
-              <Button variant="outline" onClick={() => void copyPix()}><Copy className="h-4 w-4" /></Button>
+          <img src={mpLogo.url} alt="Mercado Pago" className="h-4 w-auto opacity-80" />
+        </div>
+
+        {failed ? (
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <div className="font-semibold">Não foi possível confirmar o pagamento</div>
+              <div className="text-xs opacity-90">{failed}</div>
+              <button type="button" onClick={() => { setResult(null); setFailed(null); }}
+                className="mt-2 text-xs font-medium underline underline-offset-2">
+                Tentar novamente
+              </button>
             </div>
           </div>
+        ) : (
+          <>
+            {result.qr_code_base64 && (
+              <div className="mt-4 grid place-items-center">
+                <img src={`data:image/png;base64,${result.qr_code_base64}`} alt="QR Code PIX" className="h-56 w-56" />
+              </div>
+            )}
+            {result.qr_code && (
+              <div className="mt-4">
+                <Label>PIX Copia e Cola</Label>
+                <div className="mt-1 flex gap-2">
+                  <Input value={result.qr_code} readOnly className="font-mono text-xs" />
+                  <Button variant="outline" onClick={() => void copyPix()}><Copy className="h-4 w-4" /></Button>
+                </div>
+              </div>
+            )}
+            {result.ticket_url && (
+              <a href={result.ticket_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs text-brand hover:underline">
+                <ExternalLink className="h-3 w-3" /> Ver comprovante Mercado Pago
+              </a>
+            )}
+            <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Aguardando confirmação do pagamento — esta página atualiza sozinha em segundos após o PIX ser aprovado.
+            </p>
+          </>
         )}
-        {result.ticket_url && (
-          <a href={result.ticket_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs text-brand hover:underline">
-            <ExternalLink className="h-3 w-3" /> Ver comprovante Mercado Pago
-          </a>
-        )}
-        <p className="mt-4 text-xs text-muted-foreground">
-          Aguardando confirmação do pagamento... esta página atualiza automaticamente quando o PIX for aprovado.
-        </p>
       </div>
     );
   }
+
 
   return (
     <div className="rounded-xl border p-6">
