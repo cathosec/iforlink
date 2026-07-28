@@ -580,11 +580,16 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
       </div>
 
       <div className="mt-5">
-        <Tabs defaultValue="pix" className="w-full">
+        <Tabs
+          defaultValue="pix"
+          className="w-full"
+          onValueChange={(v) => setActiveMethod(v === "card" ? "card" : "pix")}
+        >
           <TabsList className={`grid w-full ${c.accepts_card ? "grid-cols-2" : "grid-cols-1"}`}>
             <TabsTrigger value="pix">PIX (instantâneo)</TabsTrigger>
             {c.accepts_card && <TabsTrigger value="card">Cartão · Carteira MP</TabsTrigger>}
           </TabsList>
+
 
           <TabsContent value="pix" className="mt-4">
             <Button onClick={() => void submit()} disabled={creating || !email || amount < c.min_cents}
