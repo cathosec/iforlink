@@ -1192,7 +1192,7 @@ function OperationsTab() {
                 {w.status}
               </Badge>
               <span className="text-xs text-muted-foreground">
-                {new Date(w.created_at).toLocaleString("pt-BR")}
+                {new Date(w.received_at).toLocaleString("pt-BR")}
               </span>
             </div>
           ))}
