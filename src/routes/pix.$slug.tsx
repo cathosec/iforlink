@@ -116,10 +116,11 @@ function PublicPixPage() {
             <Badge variant="secondary" className="hidden gap-1 text-[10px] sm:inline-flex">
               <ShieldCheck className="h-3 w-3" /> Pagamento seguro
             </Badge>
-            <div className="flex items-center gap-1.5 rounded-full border bg-card px-2 py-1">
+            <div className="flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1">
               <span className="text-[10px] text-muted-foreground">via</span>
-              <img src={mpLogo.url} alt="Mercado Pago" className="h-3.5 w-auto" />
+              <span className="text-[11px] font-semibold tracking-tight text-foreground">Mercado Pago</span>
             </div>
+
           </div>
         </div>
       </header>
