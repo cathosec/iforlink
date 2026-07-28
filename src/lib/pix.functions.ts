@@ -217,42 +217,58 @@ export const createContribution = createServerFn({ method: "POST" })
       payment_method_id: "pix",
       external_reference: String(contribId),
       notification_url: notificationUrl,
-      application_fee: feeCents / 100,
       payer: {
         email: data.supporter_email,
         first_name: (data.supporter_name ?? "Apoiador").split(" ")[0] || "Apoiador",
         last_name: (data.supporter_name ?? "").split(" ").slice(1).join(" ") || "ForLink",
       },
     };
+    if (feeCents > 0) body.application_fee = feeCents / 100;
 
-    const resp = await fetch(MP_PAY_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${acct.access_token}`,
-        "Content-Type": "application/json",
-        "X-Idempotency-Key": String(contribId),
-      },
-      body: JSON.stringify(body),
-    });
-    const json = await resp.json().catch(() => ({}));
+    const doPost = (payload: Record<string, unknown>) =>
+      fetch(MP_PAY_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${acct.access_token}`,
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": String(contribId),
+        },
+        body: JSON.stringify(payload),
+      });
+
+    let resp = await doPost(body);
+    let json: Record<string, unknown> = await resp.json().catch(() => ({}));
+    const feeRejected = !resp.ok && "application_fee" in body && (
+      /application_fee/i.test(String(json?.message ?? "")) ||
+      (Array.isArray((json as { cause?: unknown }).cause) &&
+        ((json as { cause?: Array<{ description?: string; code?: string | number }> }).cause ?? [])
+          .some((c) => /application_fee/i.test(String(c?.description ?? "")) || String(c?.code ?? "") === "2107"))
+    );
+    if (feeRejected) {
+      console.warn("[PIX] retry without application_fee:", json?.message);
+      const { application_fee: _omit, ...rest } = body as Record<string, unknown>;
+      resp = await doPost(rest);
+      json = await resp.json().catch(() => ({}));
+    }
     if (!resp.ok) {
       console.error("[PIX] MP payment failed", resp.status, json);
-      throw new Error(json?.message ?? "Falha ao gerar cobrança no Mercado Pago");
+      throw new Error((json as { message?: string })?.message ?? "Falha ao gerar cobrança no Mercado Pago");
     }
-    const txn = json?.point_of_interaction?.transaction_data ?? {};
+    const mpJson = json as { id?: string | number; status?: string; point_of_interaction?: { transaction_data?: { qr_code?: string; qr_code_base64?: string; ticket_url?: string } } };
+    const txn = mpJson.point_of_interaction?.transaction_data ?? {};
     await supabase.rpc("attach_pix_contribution_mp", {
       _contribution_id: String(contribId),
-      _mp_payment_id: String(json.id ?? ""),
+      _mp_payment_id: String(mpJson.id ?? ""),
       _qr_code: txn.qr_code ?? null,
       _qr_code_base64: txn.qr_code_base64 ?? null,
       _ticket_url: txn.ticket_url ?? null,
-      _status: json.status ?? "pending",
+      _status: mpJson.status ?? "pending",
       _raw: json,
     } as never);
 
     return {
       id: String(contribId),
-      status: String(json.status ?? "pending"),
+      status: String(mpJson.status ?? "pending"),
       qr_code: txn.qr_code as string | null,
       qr_code_base64: txn.qr_code_base64 as string | null,
       ticket_url: txn.ticket_url as string | null,
@@ -365,49 +381,63 @@ export const processCardPayment = createServerFn({ method: "POST" })
       description: `Apoio: ${camp.title}`,
       external_reference: String(contribId),
       notification_url: notificationUrl,
-      application_fee: feeCents / 100,
       statement_descriptor: "FORLINK",
       payment_method_id: data.brick.payment_method_id,
       payer,
     };
+    if (feeCents > 0) body.application_fee = feeCents / 100;
     if (data.brick.token) body.token = data.brick.token;
     if (data.brick.issuer_id) body.issuer_id = data.brick.issuer_id;
     if (data.brick.installments) body.installments = data.brick.installments;
     if (data.brick.payment_type_id) body.payment_type_id = data.brick.payment_type_id;
 
-    const resp = await fetch(MP_PAY_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${acct.access_token}`,
-        "Content-Type": "application/json",
-        "X-Idempotency-Key": String(contribId),
-      },
-      body: JSON.stringify(body),
-    });
-    const json = await resp.json().catch(() => ({}));
+    const doPost = (payload: Record<string, unknown>) =>
+      fetch(MP_PAY_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${acct.access_token}`,
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": String(contribId),
+        },
+        body: JSON.stringify(payload),
+      });
+
+    let resp = await doPost(body);
+    let json: Record<string, unknown> = await resp.json().catch(() => ({}));
+    const feeRejected = !resp.ok && "application_fee" in body && (
+      /application_fee/i.test(String((json as { message?: string })?.message ?? "")) ||
+      (Array.isArray((json as { cause?: unknown }).cause) &&
+        ((json as { cause?: Array<{ description?: string; code?: string | number }> }).cause ?? [])
+          .some((c) => /application_fee/i.test(String(c?.description ?? "")) || String(c?.code ?? "") === "2107"))
+    );
+    if (feeRejected) {
+      console.warn("[CARD] retry without application_fee:", (json as { message?: string })?.message);
+      const { application_fee: _omit, ...rest } = body as Record<string, unknown>;
+      resp = await doPost(rest);
+      json = await resp.json().catch(() => ({}));
+    }
     if (!resp.ok) {
       console.error("[CARD] MP payment failed", resp.status, json);
-      const msg =
-        json?.message ||
-        (Array.isArray(json?.cause) && json.cause[0]?.description) ||
-        "Falha ao processar pagamento";
+      const jErr = json as { message?: string; cause?: Array<{ description?: string }> };
+      const msg = jErr?.message || (Array.isArray(jErr?.cause) && jErr.cause[0]?.description) || "Falha ao processar pagamento";
       throw new Error(String(msg));
     }
 
+    const cardJson = json as { id?: string | number; status?: string; status_detail?: string; transaction_details?: { external_resource_url?: string } };
     await supabase.rpc("attach_pix_contribution_mp", {
       _contribution_id: String(contribId),
-      _mp_payment_id: String(json.id ?? ""),
+      _mp_payment_id: String(cardJson.id ?? ""),
       _qr_code: null,
       _qr_code_base64: null,
-      _ticket_url: json.transaction_details?.external_resource_url ?? null,
-      _status: json.status ?? "pending",
+      _ticket_url: cardJson.transaction_details?.external_resource_url ?? null,
+      _status: cardJson.status ?? "pending",
       _raw: json,
     } as never);
 
     return {
       id: String(contribId),
-      status: String(json.status ?? "pending"),
-      status_detail: String(json.status_detail ?? ""),
+      status: String(cardJson.status ?? "pending"),
+      status_detail: String(cardJson.status_detail ?? ""),
       amount_cents: charged,
       fee_cents: feeCents,
     };
