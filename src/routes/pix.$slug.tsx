@@ -300,6 +300,20 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   });
 
   const [amount, setAmount] = useState(c.suggested_amounts?.[1] ?? c.min_cents);
+  const [amountInput, setAmountInput] = useState(((c.suggested_amounts?.[1] ?? c.min_cents) / 100).toFixed(2).replace(".", ","));
+  const syncAmount = (raw: string) => {
+    // permite dígitos, vírgula e ponto; converte para centavos
+    const cleaned = raw.replace(/[^\d.,]/g, "");
+    setAmountInput(cleaned);
+    const normalized = cleaned.replace(/\./g, "").replace(",", ".");
+    const num = Number(normalized);
+    if (!isNaN(num) && num > 0) setAmount(Math.round(num * 100));
+    else if (cleaned === "") setAmount(0);
+  };
+  const pickSuggested = (v: number) => {
+    setAmount(v);
+    setAmountInput((v / 100).toFixed(2).replace(".", ","));
+  };
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -439,22 +453,32 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
     <div className="rounded-xl border p-6">
       <h3 className="font-display text-lg font-semibold">Fazer contribuição</h3>
 
-      <div className="mt-4">
-        <Label>Escolha um valor</Label>
+      <div className="mt-4 rounded-2xl border bg-gradient-to-br from-background to-muted/30 p-4">
+        <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Escolha um valor</Label>
         <div className="mt-2 flex flex-wrap gap-2">
           {(c.suggested_amounts ?? []).map((v) => (
-            <button key={v} type="button" onClick={() => setAmount(v)}
-              className={`rounded-full border px-3 py-1.5 text-sm transition ${amount === v ? "border-transparent text-white" : "hover:bg-accent"}`}
+            <button key={v} type="button" onClick={() => pickSuggested(v)}
+              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${amount === v ? "border-transparent text-white shadow-sm" : "hover:bg-accent"}`}
               style={amount === v ? { backgroundColor: c.accent_color } : {}}>
               {brl(v)}
             </button>
           ))}
         </div>
-        <div className="mt-3">
-          <Label>Ou digite um valor (R$)</Label>
-          <Input type="number" min={c.min_cents / 100} step="0.01" value={(amount / 100).toFixed(2)}
-            onChange={(e) => setAmount(Math.round(Number(e.target.value) * 100))} />
-          <p className="mt-1 text-[11px] text-muted-foreground">
+        <div className="mt-4">
+          <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ou digite um valor</Label>
+          <div className="mt-1.5 flex items-center rounded-xl border bg-background focus-within:ring-2 focus-within:ring-ring/40 transition">
+            <span className="pl-3 pr-1 text-sm font-semibold text-muted-foreground">R$</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={amountInput}
+              onChange={(e) => syncAmount(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              placeholder="0,00"
+              className="w-full bg-transparent px-2 py-2.5 text-lg font-semibold outline-none tabular-nums"
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
             Mínimo {brl(c.min_cents)}{c.pass_fee_to_supporter ? " · a taxa do gateway é somada ao valor final" : ""}
           </p>
         </div>
