@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Download, Share2, Plus } from "lucide-react";
+import { X, Download, Share2, Plus, Wand2 } from "lucide-react";
 import { isIOS, isAndroid, isStandalone } from "@/lib/push/client";
+
+// Link do iCloud do atalho "Enviar para ForLink".
+// TODO: substituir pelo link real depois de criar o atalho no app Atalhos e compartilhar via iCloud.
+// Enquanto for null, o botão abre um modal com instruções em vez de tentar instalar.
+const IOS_SHORTCUT_ICLOUD_URL: string | null = null;
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
