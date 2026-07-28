@@ -666,16 +666,18 @@ function RenameableTitle({ name, onSave }: { name: string; onSave: (n: string) =
   );
 }
 
-function NewCategoryDialog({ onCreate, disabled }: { onCreate: (n: string, icon: string) => Promise<boolean>; disabled?: boolean }) {
+function NewCategoryDialog({ onCreate, disabled, trigger }: { onCreate: (n: string, icon: string) => Promise<boolean>; disabled?: boolean; trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<string>(DEFAULT_CATEGORY_ICON);
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setName(""); setIcon(DEFAULT_CATEGORY_ICON); } }}>
       <DialogTrigger asChild>
-        <Button disabled={disabled} className="bg-brand text-brand-foreground hover:bg-brand/90">
-          <Plus className="mr-1.5 h-4 w-4" /> Nova categoria
-        </Button>
+        {trigger ?? (
+          <Button disabled={disabled} className="bg-brand text-brand-foreground hover:bg-brand/90">
+            <Plus className="mr-1.5 h-4 w-4" /> Nova categoria
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Nova categoria</DialogTitle></DialogHeader>
