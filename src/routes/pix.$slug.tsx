@@ -500,12 +500,12 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
         </div>
 
         {/* Detalhamento transparente da taxa */}
-        {amount > 0 && feeCents > 0 && (
+        {amount > 0 && (
           <div className="mt-3 rounded-xl border bg-background/60 p-3 text-xs">
             <div className="mb-1.5 flex items-center justify-between">
               <span className="font-semibold text-foreground">Resumo da contribuição</span>
               <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                Taxa da plataforma: {feePct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
+                Taxa ForLink: {feePct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%
                 {minFeeCents > 0 ? ` · mín. ${brl(minFeeCents)}` : ""}
               </span>
             </div>
@@ -514,33 +514,46 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
                 <dt className="text-muted-foreground">Sua contribuição</dt>
                 <dd className="font-medium">{brl(amount)}</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">
-                  Taxa da plataforma {passesFee ? "(paga por você)" : "(descontada do criador)"}
-                </dt>
-                <dd className={passesFee ? "font-medium" : "text-muted-foreground"}>
-                  {passesFee ? "+ " : "− "}{brl(feeCents)}
-                </dd>
-              </div>
+              {feeCents > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">
+                    Taxa ForLink {passesFee ? "(paga por você)" : "(descontada do criador)"}
+                  </dt>
+                  <dd className={passesFee ? "font-medium" : "text-muted-foreground"}>
+                    {passesFee ? "+ " : "− "}{brl(feeCents)}
+                  </dd>
+                </div>
+              )}
               <div className="mt-1.5 flex justify-between border-t pt-1.5">
                 <dt className="font-semibold">Você paga</dt>
                 <dd className="font-bold" style={{ color: c.accent_color }}>
                   {brl(finalAmount)}
                 </dd>
               </div>
-              <div className="flex justify-between text-[11px] text-muted-foreground">
-                <dt>Recebido pelo criador</dt>
-                <dd>{brl(netAmount)}</dd>
+              {mpFeeCents > 0 && (
+                <div className="flex justify-between text-[11px] text-muted-foreground">
+                  <dt>
+                    Tarifa Mercado Pago {activeMethod === "card"
+                      ? `(~${mpCardPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% cartão)`
+                      : `(~${mpPixPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% PIX)`}
+                  </dt>
+                  <dd>− {brl(mpFeeCents)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between border-t pt-1.5 text-[11px]">
+                <dt className="font-medium text-muted-foreground">Recebido pelo criador (estimado)</dt>
+                <dd className="font-semibold text-foreground">{brl(netAmount)}</dd>
               </div>
             </dl>
             <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-              {passesFee
-                ? "A taxa da plataforma é somada ao seu valor para que o criador receba integralmente o que você quis contribuir."
-                : "A taxa da plataforma é descontada do valor recebido pelo criador — nada é adicionado ao que você paga."}
-              {" "}O repasse ao criador é feito pelo Mercado Pago, sem intermediação do ForLink; ainda podem incidir tarifas do próprio Mercado Pago (PIX/cartão) sobre o valor recebido.
+              {feeCents > 0 && (passesFee
+                ? "A taxa ForLink é somada ao seu valor para que o criador receba integralmente o que você quis contribuir. "
+                : "A taxa ForLink é descontada do valor recebido pelo criador — nada é adicionado ao que você paga. ")}
+              A tarifa do Mercado Pago é cobrada diretamente do criador pelo processador de pagamento e pode variar conforme o plano/conta MP dele (valores exibidos são estimativas padrão para contas Brasil). O repasse é feito automaticamente à conta MP do criador, sem intermediação do ForLink.
             </p>
           </div>
         )}
+
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
