@@ -5,12 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Heatmap, type HeatmapPoint } from "@/lib/analytics/heatmap";
 import { SessionPlayer, formatDuration, formatRelative } from "@/lib/analytics/session-player";
+import { OverviewPanel } from "@/lib/analytics/overview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, BarChart3, Crown, Eye, Film, MousePointerClick, RefreshCw, Users } from "lucide-react";
+import { ArrowLeft, BarChart3, Crown, Eye, Film, LineChart, MousePointerClick, RefreshCw, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
