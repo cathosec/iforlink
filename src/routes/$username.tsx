@@ -16,7 +16,7 @@ import { getFaviconUrl } from "@/lib/favicon";
 import { AdSlot } from "@/components/ad-slot";
 import { LogoWordmark } from "@/components/logo";
 import { trackEvent } from "@/lib/analytics";
-import pixLogo from "@/assets/pix-logo.webp.asset.json";
+// Card de campanha usa a capa da própria campanha; sem dependência de asset externo.
 
 interface HeadProfile {
   username: string;
@@ -260,7 +260,7 @@ function PublicProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("pix_campaigns")
-        .select("slug,title,description,accent_color,goal_cents,raised_cents,supporters_count")
+        .select("slug,title,description,cover_url,accent_color,goal_cents,raised_cents,supporters_count")
         .eq("user_id", profileQ.data!.id)
         .eq("is_active", true)
         .order("created_at", { ascending: false })
@@ -446,90 +446,131 @@ function PublicProfile() {
           const goal = c.goal_cents ?? 0;
           const raised = c.raised_cents ?? 0;
           const pct = goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : null;
+          const missing = goal > 0 ? Math.max(0, goal - raised) : 0;
           const fmt = (cents: number) =>
             (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
           const accent = c.accent_color || "hsl(var(--brand))";
+          const cover = (c as { cover_url?: string | null }).cover_url ?? null;
           return (
-            <Link
-              to="/pix/$slug"
-              params={{ slug: c.slug }}
-              className="group mb-5 block overflow-hidden rounded-2xl border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-              onClick={() =>
-                trackEvent("campaign_card_click", {
-                  campaign_slug: c.slug,
-                  profile_username: p.username,
-                })
-              }
+            <div
+              className="group mb-5 overflow-hidden rounded-2xl border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
             >
-              <div
-                className="relative flex items-center gap-3 p-4"
-                style={{
-                  background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 10%, transparent), transparent 70%)`,
-                }}
+              <Link
+                to="/pix/$slug"
+                params={{ slug: c.slug }}
+                className="block"
+                onClick={() =>
+                  trackEvent("campaign_card_click", {
+                    campaign_slug: c.slug,
+                    profile_username: p.username,
+                  })
+                }
               >
                 <div
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/90 shadow-sm ring-1 ring-black/5 dark:bg-white"
-                  aria-hidden
+                  className="relative flex items-center gap-3 p-4"
+                  style={{
+                    background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 10%, transparent), transparent 70%)`,
+                  }}
                 >
-                  <img
-                    src={pixLogo.url}
-                    alt=""
-                    className="h-7 w-7 object-contain"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <Badge
-                      variant="secondary"
-                      className="h-4 gap-1 px-1.5 text-[10px] font-medium uppercase tracking-wide"
-                    >
-                      <Heart className="h-2.5 w-2.5" style={{ color: accent }} />
-                      Apoie
-                    </Badge>
-                    {c.supporters_count > 0 && (
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {c.supporters_count} {c.supporters_count === 1 ? "apoio" : "apoios"}
-                      </span>
+                  <div
+                    className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted shadow-sm ring-1 ring-black/5"
+                    style={cover ? undefined : { background: accent }}
+                    aria-hidden
+                  >
+                    {cover ? (
+                      <img
+                        src={cover}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <Heart className="h-6 w-6 text-white" fill="currentColor" />
                     )}
                   </div>
-                  <h2 className="mt-0.5 truncate text-sm font-semibold text-foreground">
-                    {c.title}
-                  </h2>
-                  {pct !== null ? (
-                    <div className="mt-2">
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{ width: `${pct}%`, background: accent }}
-                        />
-                      </div>
-                      <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground tabular-nums">
-                        <span>
-                          <b className="font-semibold text-foreground">{fmt(raised)}</b> de {fmt(goal)}
-                        </span>
-                        <span>{pct}%</span>
-                      </div>
-                    </div>
-                  ) : raised > 0 ? (
-                    <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
-                      Arrecadado:{" "}
-                      <b className="font-semibold text-foreground">{fmt(raised)}</b>
-                    </p>
-                  ) : c.description ? (
-                    <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-                      {c.description}
-                    </p>
-                  ) : null}
-                </div>
 
-                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <Badge
+                        variant="secondary"
+                        className="h-4 gap-1 px-1.5 text-[10px] font-medium uppercase tracking-wide"
+                      >
+                        <Heart className="h-2.5 w-2.5" style={{ color: accent }} />
+                        Apoie
+                      </Badge>
+                      {c.supporters_count > 0 && (
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {c.supporters_count} {c.supporters_count === 1 ? "apoio" : "apoios"}
+                        </span>
+                      )}
+                    </div>
+                    <h2 className="mt-0.5 truncate text-sm font-semibold text-foreground">
+                      {c.title}
+                    </h2>
+                    {pct !== null ? (
+                      <div className="mt-2">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{ width: `${pct}%`, background: accent }}
+                          />
+                        </div>
+                        <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground tabular-nums">
+                          <span>
+                            <b className="font-semibold text-foreground">{fmt(raised)}</b> de {fmt(goal)}
+                          </span>
+                          <span>{pct}%</span>
+                        </div>
+                      </div>
+                    ) : raised > 0 ? (
+                      <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+                        Arrecadado:{" "}
+                        <b className="font-semibold text-foreground">{fmt(raised)}</b>
+                      </p>
+                    ) : c.description ? (
+                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                        {c.description}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                </div>
+              </Link>
+
+              {/* Botão "Ver progresso" — mostra quanto falta ou destaque quando não há meta */}
+              <div className="border-t bg-muted/30 px-4 py-2.5">
+                <Link
+                  to="/pix/$slug"
+                  params={{ slug: c.slug }}
+                  className="flex items-center justify-between gap-2 text-xs font-medium"
+                  onClick={() =>
+                    trackEvent("campaign_progress_click", {
+                      campaign_slug: c.slug,
+                      profile_username: p.username,
+                    })
+                  }
+                >
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Eye className="h-3.5 w-3.5" />
+                    Ver progresso
+                  </span>
+                  <span className="tabular-nums" style={{ color: accent }}>
+                    {pct !== null
+                      ? missing > 0
+                        ? `Faltam ${fmt(missing)}`
+                        : "Meta alcançada! 🎉"
+                      : raised > 0
+                        ? `${fmt(raised)} arrecadados`
+                        : "Seja o primeiro a apoiar"}
+                  </span>
+                </Link>
               </div>
-            </Link>
+            </div>
           );
         })()}
+
 
         {/* Links */}
         <div ref={sectionsRef}>

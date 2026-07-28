@@ -17,7 +17,9 @@ import { LogoWordmark } from "@/components/logo";
 import { PixBadge, PIX_BADGE_META, type PixBadgeKey } from "@/components/pix-badges";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PixCardCheckout } from "@/components/pix-card-checkout";
-import mpLogo from "@/assets/mercado-pago.webp.asset.json";
+// Marca "Mercado Pago" renderizada como badge de texto para evitar
+// dependência de asset externo (URLs de CDN quebravam após deploy).
+
 
 interface CampaignPub {
   id: string; user_id: string; slug: string; title: string;
@@ -114,10 +116,11 @@ function PublicPixPage() {
             <Badge variant="secondary" className="hidden gap-1 text-[10px] sm:inline-flex">
               <ShieldCheck className="h-3 w-3" /> Pagamento seguro
             </Badge>
-            <div className="flex items-center gap-1.5 rounded-full border bg-card px-2 py-1">
+            <div className="flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1">
               <span className="text-[10px] text-muted-foreground">via</span>
-              <img src={mpLogo.url} alt="Mercado Pago" className="h-3.5 w-auto" />
+              <span className="text-[11px] font-semibold tracking-tight text-foreground">Mercado Pago</span>
             </div>
+
           </div>
         </div>
       </header>
@@ -404,7 +407,7 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
             <QrCode className="h-5 w-5" style={{ color: c.accent_color }} />
             <h3 className="font-semibold">Pague {brl(result.amount_cents)} via PIX</h3>
           </div>
-          <img src={mpLogo.url} alt="Mercado Pago" className="h-4 w-auto opacity-80" />
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Mercado Pago</span>
         </div>
 
         {failed ? (
