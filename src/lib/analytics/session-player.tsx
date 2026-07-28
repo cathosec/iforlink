@@ -11,8 +11,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error - rrweb-player CSS não possui tipos
 import "rrweb-player/dist/style.css";
 
 type ChunkRow = {
