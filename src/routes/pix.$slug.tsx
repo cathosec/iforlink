@@ -26,6 +26,7 @@ interface CampaignPub {
   description: string | null; cover_url: string | null; accent_color: string;
   goal_cents: number; min_cents: number; suggested_amounts: number[];
   accepts_card: boolean; pass_fee_to_supporter: boolean; show_supporters: boolean;
+  show_progress: boolean;
   allow_message: boolean; ends_at: string | null; raised_cents: number;
   supporters_count: number;
 }
