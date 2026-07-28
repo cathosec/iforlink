@@ -311,6 +311,48 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
           await applyCampaignWebhook(supabase, externalRef, mp);
           await sendSubscriptionEmails(supabase, externalRef, paymentId);
 
+          if (mp.status === "approved") {
+            try {
+              const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+              const { data: contrib } = await supabaseAdmin
+                .from("pix_contributions")
+                .select("id, amount_cents, supporter_name, is_anonymous, campaign_id")
+                .eq("id", externalRef)
+                .maybeSingle();
+              if (contrib?.campaign_id) {
+                const { data: camp } = await supabaseAdmin
+                  .from("pix_campaigns")
+                  .select("id, title, slug, user_id")
+                  .eq("id", contrib.campaign_id)
+                  .maybeSingle();
+                if (camp?.user_id) {
+                  const { data: subs } = await supabaseAdmin
+                    .from("push_subscriptions")
+                    .select("id, endpoint, p256dh, auth")
+                    .eq("user_id", camp.user_id);
+                  const list = (subs ?? []) as Array<{ id: string; endpoint: string; p256dh: string; auth: string }>;
+                  if (list.length > 0) {
+                    const { sendPushToMany } = await import("@/lib/push.server");
+                    const cents = Number(contrib.amount_cents ?? 0);
+                    const brl = (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                    const name = contrib.is_anonymous || !contrib.supporter_name ? "Alguém" : String(contrib.supporter_name);
+                    const r = await sendPushToMany(list, {
+                      title: `Nova contribuição — ${brl}`,
+                      body: `${name} contribuiu em "${camp.title}"`,
+                      url: `/pix/${camp.slug}`,
+                      tag: `contrib-${camp.id}`,
+                    });
+                    if (r.goneEndpoints.length > 0) {
+                      await supabaseAdmin.from("push_subscriptions").delete().in("endpoint", r.goneEndpoints);
+                    }
+                  }
+                }
+              }
+            } catch (pushErr) {
+              console.warn("[MP webhook] push notify failed", pushErr);
+            }
+          }
+
           await logEvent(
             mp.status === "approved" ? "payment.approved" : "payment.updated",
             { paymentId, externalRef, status: mp.status, amount: mp.transaction_amount ?? null },
