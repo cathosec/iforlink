@@ -386,8 +386,25 @@ function Dashboard() {
               <span className="block text-[11px] text-muted-foreground">Foto, bio e usuário</span>
             </span>
             <ExternalLink className="ml-auto h-4 w-4 text-muted-foreground transition group-hover:text-slate-700" />
-          </Link>
         </div>
+
+        {showLimitBanner && (
+          <div className="mt-6">
+            <UpgradeBanner
+              context={nearLinkLimit ? "links_limit" : "categories_limit"}
+              source="dashboard_near_limit"
+            />
+          </div>
+        )}
+
+        <UpgradeDialog
+          open={upgradeCtx !== null}
+          onOpenChange={(v) => { if (!v) setUpgradeCtx(null); }}
+          context={upgradeCtx ?? "generic"}
+          source="dashboard_limit_hit"
+        />
+
+
 
         {/* Visão geral */}
         <OverviewSection
