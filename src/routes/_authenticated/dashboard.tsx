@@ -102,6 +102,11 @@ function Dashboard() {
   const profileViews = profileStatsQ.data ?? 0;
   const activeSub = activeSubQ.data;
   const isFree = role === "free";
+  const [upgradeCtx, setUpgradeCtx] = useState<UpgradeContext | null>(null);
+
+  const nearLinkLimit = isFree && links.length >= Math.ceil(FREE_MAX_LINKS * 0.8);
+  const nearCatLimit = isFree && cats.length >= Math.ceil(FREE_MAX_CATS * 0.8);
+  const showLimitBanner = nearLinkLimit || nearCatLimit;
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["dash-cats", user?.id] });
