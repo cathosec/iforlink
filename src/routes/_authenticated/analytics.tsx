@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, BarChart3, Crown, Eye, Film, LineChart, MousePointerClick, RefreshCw, Users } from "lucide-react";
+import { ArrowLeft, BarChart3, Crown, Eye, Film, LineChart, MousePointerClick, RefreshCw, ShieldCheck, Users } from "lucide-react";
+import { PrivacyPanel } from "@/lib/analytics/privacy";
+
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
@@ -105,7 +107,7 @@ function AnalyticsPage() {
         {selectedPath && <SummaryCards path={selectedPath} since={since} until={until} />}
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full max-w-xl grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="overview" className="gap-1.5">
               <LineChart className="h-3.5 w-3.5" /> Visão geral
             </TabsTrigger>
@@ -115,7 +117,11 @@ function AnalyticsPage() {
             <TabsTrigger value="replay" className="gap-1.5" disabled={!selectedPath}>
               <Film className="h-3.5 w-3.5" /> Gravações
             </TabsTrigger>
+            <TabsTrigger value="privacy" className="gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5" /> Privacidade
+            </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="overview" className="mt-4">
             <div className="mb-3 flex items-center justify-end">
@@ -184,10 +190,15 @@ function AnalyticsPage() {
               <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Selecione uma página acima.</CardContent></Card>
             )}
           </TabsContent>
+
+          <TabsContent value="privacy" className="mt-4">
+            <PrivacyPanel />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
   );
+
 }
 
 
