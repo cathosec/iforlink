@@ -166,13 +166,13 @@ export const createContribution = createServerFn({ method: "POST" })
     }
     if (net < 0) throw new Error("Configuração de taxa inválida");
 
-    // Busca token do dono (bypass RLS via admin)
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: acct } = await supabaseAdmin
-      .from("mp_accounts")
-      .select("access_token,live_mode,mp_user_id")
-      .eq("user_id", camp.user_id)
-      .maybeSingle();
+    // Busca token do dono via RPC SECURITY DEFINER (não requer service role)
+    const { data: tokRows, error: tokErr } = await supabase.rpc(
+      "get_pix_campaign_owner_token" as never,
+      { _campaign_id: camp.id } as never,
+    );
+    if (tokErr) throw new Error(`Falha ao localizar conta MP do criador: ${tokErr.message}`);
+    const acct = Array.isArray(tokRows) ? (tokRows[0] as { access_token?: string } | undefined) : undefined;
     if (!acct?.access_token) throw new Error("O criador da campanha ainda não conectou o Mercado Pago.");
 
     // Cria linha pendente via RPC (SECURITY DEFINER, contorna RLS)
@@ -248,12 +248,13 @@ export const createContribution = createServerFn({ method: "POST" })
 export const getContributionStatus = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string }) => data)
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
-      .from("pix_contributions")
-      .select("id,status,approved_at,amount_cents,badge_key")
-      .eq("id", data.id)
-      .maybeSingle();
+    const supabase = publicSupabase();
+    const { data: rows, error } = await supabase.rpc(
+      "get_pix_contribution_status" as never,
+      { _id: data.id } as never,
+    );
+    if (error) throw new Error(error.message);
+    const row = Array.isArray(rows) ? rows[0] : rows;
     if (!row) throw new Error("Contribuição não encontrada");
-    return row;
+    return row as { id: string; status: string; approved_at: string | null; amount_cents: number; badge_key: string | null };
   });

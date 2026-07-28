@@ -653,6 +653,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_pix_contribution_status: {
+        Args: { _id: string }
+        Returns: {
+          amount_cents: number
+          approved_at: string
+          badge_key: string
+          id: string
+          status: string
+        }[]
+      }
       get_pix_payment_context: {
         Args: { _pix_id: string }
         Returns: {
