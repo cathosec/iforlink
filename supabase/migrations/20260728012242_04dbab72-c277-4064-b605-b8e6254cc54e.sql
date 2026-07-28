@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.get_pix_campaign_owner_token(uuid) TO anon, authenticated;
