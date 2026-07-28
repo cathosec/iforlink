@@ -362,11 +362,29 @@ export const processCardPayment = createServerFn({ method: "POST" })
 
     const cfg = await loadPixConfig();
     if (!cfg.enabled) throw new Error("Pagamentos desativados no momento.");
+
+    const { data: tokRows, error: tokErr } = await supabase.rpc(
+      "get_pix_campaign_owner_token" as never,
+      { _campaign_id: camp.id } as never,
+    );
+    if (tokErr) throw new Error(`Falha ao localizar conta MP do criador: ${tokErr.message}`);
+    const acct = Array.isArray(tokRows)
+      ? (tokRows[0] as { access_token?: string; fee_pct?: number | string; min_fee_cents?: number | string } | undefined)
+      : undefined;
+    if (!acct?.access_token) throw new Error("O criador da campanha ainda não conectou o Mercado Pago.");
+
+    const ownerFeePct = Number.isFinite(Number(acct.fee_pct))
+      ? Number(acct.fee_pct)
+      : Number(cfg.fee_percent ?? 0);
+    const ownerMinFee = Number.isFinite(Number(acct.min_fee_cents))
+      ? Math.max(0, Number(acct.min_fee_cents))
+      : Math.max(0, Number(cfg.min_fee_cents ?? 0));
+
     const { computeCampaignFees, MP_DEFAULT_FEES } = await import("@/lib/payments/fees");
     const fees = computeCampaignFees({
       baseCents: data.amount_cents,
-      feePct: Number(cfg.fee_percent ?? 0),
-      minFeeCents: Math.max(0, Number(cfg.min_fee_cents ?? 0)),
+      feePct: ownerFeePct,
+      minFeeCents: ownerMinFee,
       mpPct: MP_DEFAULT_FEES.cardPct,
       mpFixedCents: MP_DEFAULT_FEES.cardFixedCents,
       passToSupporter: !!camp.pass_fee_to_supporter,
@@ -375,16 +393,6 @@ export const processCardPayment = createServerFn({ method: "POST" })
     const charged = fees.total;
     const net = fees.netCreator;
     if (net < 0) throw new Error("Configuração de taxa inválida");
-
-
-
-    const { data: tokRows, error: tokErr } = await supabase.rpc(
-      "get_pix_campaign_owner_token" as never,
-      { _campaign_id: camp.id } as never,
-    );
-    if (tokErr) throw new Error(`Falha ao localizar conta MP do criador: ${tokErr.message}`);
-    const acct = Array.isArray(tokRows) ? (tokRows[0] as { access_token?: string } | undefined) : undefined;
-    if (!acct?.access_token) throw new Error("O criador da campanha ainda não conectou o Mercado Pago.");
 
     const { data: contribId, error: rpcErr } = await supabase.rpc("create_pending_pix_contribution", {
       _campaign_id: camp.id,
