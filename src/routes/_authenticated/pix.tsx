@@ -521,7 +521,7 @@ function UpgradeGate() {
           <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-brand/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-brand">
             <Sparkles className="h-3 w-3" /> Recurso Pro
           </div>
-          <h1 className="font-display text-2xl font-semibold">Módulo PIX (Marketplace)</h1>
+          <h1 className="font-display text-2xl font-semibold">Campanhas (Marketplace)</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             O plano Free permite 1 campanha PIX. Para desbloquear campanhas ilimitadas, cartão de crédito
             e recursos avançados, faça upgrade para <strong>Pro</strong>.
