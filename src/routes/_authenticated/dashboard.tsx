@@ -115,7 +115,7 @@ function Dashboard() {
 
   const addCategory = async (name: string, icon: string) => {
     if (isFree && cats.length >= FREE_MAX_CATS) {
-      toast.error(`Plano Free permite ${FREE_MAX_CATS} categorias.`);
+      setUpgradeCtx("categories_limit");
       return false;
     }
     const { error } = await supabase.from("user_categories").insert({
