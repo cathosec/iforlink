@@ -160,6 +160,7 @@ function PublicPixPage() {
               </p>
             )}
 
+            {c.show_progress !== false && (
             <div className="mt-7 rounded-2xl border bg-gradient-to-br from-muted/30 to-transparent p-5">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <div>
@@ -196,6 +197,7 @@ function PublicPixPage() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Tiers de selos */}
             <div className="mt-6 rounded-xl border bg-card p-4">
