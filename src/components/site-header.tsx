@@ -40,27 +40,33 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {loading ? null : session && profile ? (
+          {session ? (
             <>
-              <Link to="/$username" params={{ username: profile.username }}>
-                <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-                  Ver meu perfil
-                </Button>
-              </Link>
+              {profile && (
+                <Link to="/$username" params={{ username: profile.username }}>
+                  <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
+                    Ver meu perfil
+                  </Button>
+                </Link>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 rounded-full p-1 pr-3 transition hover:bg-accent">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile.avatar_url ?? undefined} alt={profile.display_name} />
-                      <AvatarFallback>{profile.display_name.slice(0, 1).toUpperCase()}</AvatarFallback>
+                      <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.display_name ?? "Perfil"} />
+                      <AvatarFallback>
+                        {(profile?.display_name ?? session.user.email ?? "?").slice(0, 1).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
-                    <span className="hidden text-sm font-medium sm:inline">{profile.display_name}</span>
+                    <span className="hidden text-sm font-medium sm:inline">
+                      {profile?.display_name ?? "Conta"}
+                    </span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel className="flex items-center justify-between">
-                    <span>@{profile.username}</span>
-                    <Badge variant="secondary" className="text-[10px] uppercase">{role}</Badge>
+                    <span>{profile ? `@${profile.username}` : session.user.email}</span>
+                    {role && <Badge variant="secondary" className="text-[10px] uppercase">{role}</Badge>}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
@@ -92,6 +98,8 @@ export function SiteHeader() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
+          ) : loading ? (
+            <div className="h-8 w-32" aria-hidden />
           ) : (
             <>
               <Link to="/auth">
@@ -99,7 +107,7 @@ export function SiteHeader() {
               </Link>
               <Link to="/auth">
                 <Button size="sm" className="bg-brand text-brand-foreground hover:bg-brand/90">
-                  Criar conta grátis
+                  Criar conta
                 </Button>
               </Link>
             </>
