@@ -169,6 +169,48 @@ function PrivacyPage() {
             revisitando o banner de consentimento.
           </p>
 
+          <h3>4.1. Módulo Campanhas (integração Mercado Pago)</h3>
+          <p>
+            O ForLink atua como <strong>facilitador tecnológico</strong>: não
+            recebe, mantém ou custodia os valores doados. Todo pagamento é
+            processado diretamente pelo <strong>Mercado Pago</strong> e cai
+            na conta do criador da campanha, com aplicação de uma taxa de
+            serviço (<em>application_fee</em>) transferida automaticamente
+            para a conta da ForLink, conforme configurado no painel do
+            administrador e informado ao apoiador na tela de checkout.
+          </p>
+          <ul>
+            <li>
+              Ao conectar sua conta MP, você autoriza o ForLink a criar
+              cobranças em seu nome via API do Mercado Pago (escopo{" "}
+              <code>offline_access read write</code>).
+            </li>
+            <li>
+              Os tokens OAuth são armazenados de forma cifrada no banco e
+              acessados exclusivamente por funções server-side com
+              autorização baseada em papéis (RLS).
+            </li>
+            <li>
+              Você pode revogar a conexão a qualquer momento em{" "}
+              <Link to="/pix" className="underline">Meu perfil → Campanhas</Link>{" "}
+              ou diretamente no painel do Mercado Pago.
+            </li>
+            <li>
+              O apoiador é informado, antes de pagar, sobre o valor base,
+              a taxa da plataforma e a taxa estimada do Mercado Pago
+              (transparência de custos).
+            </li>
+          </ul>
+
+          <h3>4.2. Encurtador de links (forlink.app/s/)</h3>
+          <p>
+            O encurtador registra apenas: URL original, código curto, dono do
+            link e contador agregado de cliques (com deduplicação por sessão
+            anônima). Não armazenamos histórico individual de visitantes nem
+            perfilamos os cliques por pessoa. O redirecionamento é 301 e
+            preserva a autoridade SEO do link de destino.
+          </p>
+
           <h2>5. Compartilhamento com operadores</h2>
           <p>
             Não vendemos, alugamos ou cedemos seus dados. Compartilhamos apenas
