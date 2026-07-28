@@ -298,12 +298,13 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   const ctxQ = useQuery({
     queryKey: ["pix-campaign-ctx", c.slug],
     queryFn: () => getCtx({ data: { slug: c.slug } }),
-    enabled: c.accepts_card,
+    // Sempre carrega para exibir o detalhamento de taxas mesmo em campanhas PIX-only
     staleTime: 5 * 60_000,
   });
 
   const [amount, setAmount] = useState(c.suggested_amounts?.[1] ?? c.min_cents);
   const [amountInput, setAmountInput] = useState(((c.suggested_amounts?.[1] ?? c.min_cents) / 100).toFixed(2).replace(".", ","));
+  const [activeMethod, setActiveMethod] = useState<"pix" | "card">("pix");
   const syncAmount = (raw: string) => {
     // permite dígitos, vírgula e ponto; converte para centavos
     const cleaned = raw.replace(/[^\d.,]/g, "");
@@ -328,10 +329,20 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
 
   const feePct = Number(ctxQ.data?.fee_percent ?? 0);
   const minFeeCents = Number(ctxQ.data?.min_fee_cents ?? 0);
+  const mpPixPct = Number(ctxQ.data?.mp_fee_pix_percent ?? 0);
+  const mpCardPct = Number(ctxQ.data?.mp_fee_card_percent ?? 0);
+  const mpCardFixed = Number(ctxQ.data?.mp_fee_card_fixed_cents ?? 0);
   const feeCents = amount > 0 ? Math.max(minFeeCents, Math.round((amount * feePct) / 100)) : 0;
   const passesFee = c.pass_fee_to_supporter;
   const finalAmount = passesFee ? amount + feeCents : amount;
-  const netAmount = passesFee ? amount : Math.max(0, amount - feeCents);
+  const grossToMp = finalAmount; // valor que o MP processa
+  const mpFeeCents = amount > 0
+    ? activeMethod === "card"
+      ? Math.round((grossToMp * mpCardPct) / 100) + mpCardFixed
+      : Math.round((grossToMp * mpPixPct) / 100)
+    : 0;
+  const netAmount = Math.max(0, (passesFee ? amount : amount - feeCents) - mpFeeCents);
+
 
   const submit = async () => {
     if (!email.includes("@")) return toast.error("E-mail inválido");
