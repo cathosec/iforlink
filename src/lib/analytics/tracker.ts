@@ -6,6 +6,7 @@
  */
 
 import { readClientEnv, readUtms, safeUrl } from "./env";
+import { scrubProps, scrubText, isSensitiveElement } from "./scrub";
 import {
   enqueue,
   flush,
@@ -14,6 +15,7 @@ import {
   type IngestSession,
   type IngestVisitor,
 } from "./transport";
+
 
 const VISITOR_KEY = "forlink_a_v";
 const SESSION_KEY = "forlink_a_s";
@@ -124,19 +126,20 @@ export function startTracker(userId?: string | null) {
     touchSession();
     const t = e.target as HTMLElement | null;
     const tag = t?.tagName?.toLowerCase();
-    // Não colete nada dentro de inputs de senha
-    if (t?.closest('input[type="password"]')) return;
+    if (isSensitiveElement(t)) return;
+    const rawTxt = (t?.textContent || "").trim().slice(0, 60);
     enqueue(ev("click", {
       payload: {
         x: e.clientX, y: e.clientY,
         vw: window.innerWidth, vh: window.innerHeight,
-        tag, id: t?.id || undefined,
-        cls: t?.className && typeof t.className === "string" ? t.className.slice(0, 80) : undefined,
-        txt: (t?.textContent || "").trim().slice(0, 60) || undefined,
+        tag, id: t?.id ? scrubText(t.id, 40) : undefined,
+        cls: t?.className && typeof t.className === "string" ? scrubText(t.className, 80) : undefined,
+        txt: rawTxt ? scrubText(rawTxt, 60) : undefined,
       },
     }));
   }, 100);
   window.addEventListener("click", onClick, { capture: true, passive: true });
+
 
   // ─── Scroll (marcos 25/50/75/100%) ───────────────────────────
   const seenScroll = new Set<number>();
@@ -244,13 +247,9 @@ export function setUserId(userId?: string | null) {
 
 export function trackCustom(name: string, props: Record<string, unknown> = {}) {
   if (!started) return;
-  // proteção elementar: não deixe passar campos com chaves sensíveis
-  const safeProps: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(props)) {
-    if (/password|cpf|card|cvv|token|secret/i.test(k)) continue;
-    safeProps[k] = v;
-  }
-  enqueue(ev("custom", { name, props: safeProps }));
+  const safeProps = (scrubProps(props) as Record<string, unknown>) || {};
+  enqueue(ev("custom", { name: scrubText(name, 60), props: safeProps }));
 }
+
 
 export { flush };

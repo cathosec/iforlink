@@ -1227,6 +1227,8 @@ export type Database = {
           visitors: number
         }[]
       }
+      analytics_delete_my_data: { Args: never; Returns: Json }
+      analytics_export_my_data: { Args: never; Returns: Json }
       analytics_get_recording: {
         Args: { _session_id: string }
         Returns: {
