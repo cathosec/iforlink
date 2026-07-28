@@ -32,7 +32,7 @@ function PrivacyPage() {
           Política de Privacidade
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Última atualização: 17 de julho de 2026 · Versão 2026-07
+          Última atualização: 28 de julho de 2026 · Versão 2026-07.2
         </p>
 
         <div className="prose prose-sm mt-8 max-w-none text-foreground/90 [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight [&_h3]:mt-6 [&_h3]:font-semibold [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-1">
@@ -62,23 +62,44 @@ function PrivacyPage() {
             </li>
             <li>
               <strong>Conteúdo criado por você:</strong> avatar, biografia,
-              categorias, links, textos e URLs encurtadas publicadas no seu perfil.
+              categorias, links, textos, URLs encurtadas (módulo Encurtador)
+              e páginas de campanha (módulo Campanhas) publicadas no seu perfil.
             </li>
             <li>
-              <strong>Dados de uso agregados:</strong> contagem de visualizações
-              do perfil e cliques em links, para métricas próprias e do titular.
+              <strong>Dados de uso agregados:</strong> contagem de
+              visualizações do perfil, cliques em links (com deduplicação por
+              sessão anônima) e cliques em links encurtados, para métricas
+              próprias e do titular.
             </li>
             <li>
               <strong>Dados técnicos mínimos:</strong> endereço IP (para
-              segurança e prevenção a abusos), tipo de dispositivo, navegador,
-              idioma, e cookies estritamente necessários para autenticação.
+              segurança, deduplicação de cliques e prevenção a abusos), tipo
+              de dispositivo, navegador, idioma, e cookies estritamente
+              necessários para autenticação.
             </li>
             <li>
-              <strong>Dados de pagamento (Plano Pro):</strong> o pagamento é
-              processado pelo <strong>Mercado Pago</strong>. Recebemos apenas:
-              identificador da transação, status, método (PIX), valor,
-              intervalo e data de confirmação. Nunca recebemos dados bancários
-              ou de cartão.
+              <strong>Integração Mercado Pago (módulo Campanhas):</strong>{" "}
+              quando você conecta sua conta MP via OAuth, armazenamos de forma
+              cifrada o <em>access_token</em>, <em>refresh_token</em>,{" "}
+              <em>user_id MP</em>, escopo, data de expiração e o e-mail público
+              da conta MP, exclusivamente para emitir cobranças em seu nome e
+              repassar o valor diretamente à sua conta.
+            </li>
+            <li>
+              <strong>Dados de doadores/apoiadores em campanhas:</strong> nome
+              (ou apelido) informado no mural, mensagem opcional, valor,
+              método (PIX, cartão, carteira MP), status e identificador da
+              transação MP. O e-mail e o CPF do pagador, quando exigidos pelo
+              Mercado Pago no checkout transparente, são enviados diretamente
+              ao MP e <strong>não</strong> ficam armazenados no ForLink.
+            </li>
+            <li>
+              <strong>Dados de pagamento (Plano Pro e Campanhas):</strong> o
+              pagamento é processado pelo <strong>Mercado Pago</strong>.
+              Recebemos apenas: identificador da transação, status, método,
+              valor, taxa da plataforma (application_fee), intervalo e data
+              de confirmação. Nunca recebemos número completo do cartão,
+              CVV ou credenciais bancárias.
             </li>
             <li>
               <strong>Comunicações:</strong> mensagens enviadas por{" "}
@@ -92,6 +113,7 @@ function PrivacyPage() {
             geolocalização precisa, contatos do dispositivo ou histórico de
             navegação fora da ForLink.
           </p>
+
 
           <h2>3. Finalidades e bases legais (arts. 7º e 11 LGPD)</h2>
           <ul>
@@ -145,6 +167,48 @@ function PrivacyPage() {
             Você pode alterar suas preferências a qualquer momento apagando o
             cookie <code>forlink_consent_v1</code> no seu navegador ou
             revisitando o banner de consentimento.
+          </p>
+
+          <h3>4.1. Módulo Campanhas (integração Mercado Pago)</h3>
+          <p>
+            O ForLink atua como <strong>facilitador tecnológico</strong>: não
+            recebe, mantém ou custodia os valores doados. Todo pagamento é
+            processado diretamente pelo <strong>Mercado Pago</strong> e cai
+            na conta do criador da campanha, com aplicação de uma taxa de
+            serviço (<em>application_fee</em>) transferida automaticamente
+            para a conta da ForLink, conforme configurado no painel do
+            administrador e informado ao apoiador na tela de checkout.
+          </p>
+          <ul>
+            <li>
+              Ao conectar sua conta MP, você autoriza o ForLink a criar
+              cobranças em seu nome via API do Mercado Pago (escopo{" "}
+              <code>offline_access read write</code>).
+            </li>
+            <li>
+              Os tokens OAuth são armazenados de forma cifrada no banco e
+              acessados exclusivamente por funções server-side com
+              autorização baseada em papéis (RLS).
+            </li>
+            <li>
+              Você pode revogar a conexão a qualquer momento em{" "}
+              <Link to="/pix" className="underline">Meu perfil → Campanhas</Link>{" "}
+              ou diretamente no painel do Mercado Pago.
+            </li>
+            <li>
+              O apoiador é informado, antes de pagar, sobre o valor base,
+              a taxa da plataforma e a taxa estimada do Mercado Pago
+              (transparência de custos).
+            </li>
+          </ul>
+
+          <h3>4.2. Encurtador de links (forlink.app/s/)</h3>
+          <p>
+            O encurtador registra apenas: URL original, código curto, dono do
+            link e contador agregado de cliques (com deduplicação por sessão
+            anônima). Não armazenamos histórico individual de visitantes nem
+            perfilamos os cliques por pessoa. O redirecionamento é 301 e
+            preserva a autoridade SEO do link de destino.
           </p>
 
           <h2>5. Compartilhamento com operadores</h2>
