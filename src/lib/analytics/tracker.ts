@@ -155,6 +155,31 @@ export function startTracker(userId?: string | null) {
   }, 250);
   window.addEventListener("scroll", onScroll, { passive: true });
 
+  // ─── Movimento do mouse (amostrado p/ heatmap) ───────────────
+  // Estratégia: throttle 100ms + 1-em-5 amostragem + teto 200 por pageview.
+  // Isso mantém <2 evts/s em uso ativo e evita inflar o payload.
+  let moveCount = 0;
+  let moveSampleTick = 0;
+  const onMove = throttle((e: MouseEvent) => {
+    moveSampleTick++;
+    if (moveSampleTick % 5 !== 0) return;
+    if (moveCount >= 200) return;
+    // Ignora movimentos dentro de campos sensíveis
+    const t = e.target as HTMLElement | null;
+    if (t?.closest('input[type="password"], input[type="email"], [data-forlink-sensitive]')) return;
+    moveCount++;
+    enqueue(ev("mousemove", {
+      payload: { x: e.clientX, y: e.clientY, vw: window.innerWidth, vh: window.innerHeight },
+    }));
+  }, 100);
+  window.addEventListener("mousemove", onMove, { passive: true });
+  // Reset do teto quando o usuário navega
+  const resetMoveOnNav = () => { moveCount = 0; moveSampleTick = 0; };
+  window.addEventListener("popstate", resetMoveOnNav);
+  // navegação SPA — o provider chama trackPageView; expose via closure não é trivial,
+  // então resetamos também ao voltar de tab_hidden -> visible.
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) resetMoveOnNav(); });
+
   // ─── Idle > 30s ──────────────────────────────────────────────
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
   const resetIdle = debounce(() => {
