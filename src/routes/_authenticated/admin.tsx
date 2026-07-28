@@ -145,6 +145,7 @@ function Admin() {
             <TabsContent value="ads" className="mt-0"><AdsTab logAction={logAction} /></TabsContent>
             <TabsContent value="emails" className="mt-0"><EmailsTab logAction={logAction} /></TabsContent>
             <TabsContent value="settings" className="mt-0"><SettingsTab logAction={logAction} /></TabsContent>
+            <TabsContent value="ops" className="mt-0"><OperationsTab /></TabsContent>
             <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
           </div>
         </Tabs>
