@@ -32,21 +32,23 @@ export const Route = createFileRoute("/api/public/oauth/mercadopago/callback")({
         }
 
         const redirectUri = `${site}/api/public/oauth/mercadopago/callback`;
-        const form = new URLSearchParams({
+        const payload = {
           client_id: cfg.oauth_client_id,
           client_secret: cfg.oauth_client_secret,
           code,
           grant_type: "authorization_code",
           redirect_uri: redirectUri,
-        });
+        };
         const tokenResp = await fetch("https://api.mercadopago.com/oauth/token", {
           method: "POST",
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json",
             Accept: "application/json",
+            Authorization: `Bearer ${cfg.oauth_client_secret}`,
           },
-          body: form.toString(),
+          body: JSON.stringify(payload),
         });
+
         const rawBody = await tokenResp.text();
         let tokenJson: Record<string, unknown> = {};
         try { tokenJson = JSON.parse(rawBody) as Record<string, unknown>; } catch { /* noop */ }
