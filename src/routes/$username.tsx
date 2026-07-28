@@ -260,7 +260,7 @@ function PublicProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("pix_campaigns")
-        .select("slug,title,description,cover_url,accent_color,goal_cents,raised_cents,supporters_count")
+        .select("slug,title,description,cover_url,accent_color,goal_cents,raised_cents,supporters_count,show_progress")
         .eq("user_id", profileQ.data!.id)
         .eq("is_active", true)
         .order("created_at", { ascending: false })
@@ -442,10 +442,11 @@ function PublicProfile() {
 
         {/* Campanha PIX ativa — card discreto e elegante */}
         {campaignQ.data && (() => {
-          const c = campaignQ.data;
+          const c = campaignQ.data as typeof campaignQ.data & { show_progress?: boolean | null };
+          const showProgress = c.show_progress !== false;
           const goal = c.goal_cents ?? 0;
           const raised = c.raised_cents ?? 0;
-          const pct = goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : null;
+          const pct = showProgress && goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : null;
           const missing = goal > 0 ? Math.max(0, goal - raised) : 0;
           const fmt = (cents: number) =>
             (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
