@@ -131,7 +131,7 @@ export const Route = createFileRoute("/api/public/analytics/ingest")({
 
           // Sem service role key (ex.: preview sandbox), aceita o batch como no-op
           // para não gerar 500 em loop no cliente.
-          if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.SUPABASE_URL) {
+          if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
             return new Response(JSON.stringify({ ok: true, skipped: "no_admin_key" }), {
               status: 202, headers: { "Content-Type": "application/json" },
             });
