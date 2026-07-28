@@ -254,14 +254,15 @@ export const createContribution = createServerFn({ method: "POST" })
       console.error("[PIX] MP payment failed", resp.status, json);
       throw new Error((json as { message?: string })?.message ?? "Falha ao gerar cobrança no Mercado Pago");
     }
-    const txn = json?.point_of_interaction?.transaction_data ?? {};
+    const mpJson = json as { id?: string | number; status?: string; point_of_interaction?: { transaction_data?: { qr_code?: string; qr_code_base64?: string; ticket_url?: string } } };
+    const txn = mpJson.point_of_interaction?.transaction_data ?? {};
     await supabase.rpc("attach_pix_contribution_mp", {
       _contribution_id: String(contribId),
-      _mp_payment_id: String(json.id ?? ""),
+      _mp_payment_id: String(mpJson.id ?? ""),
       _qr_code: txn.qr_code ?? null,
       _qr_code_base64: txn.qr_code_base64 ?? null,
       _ticket_url: txn.ticket_url ?? null,
-      _status: json.status ?? "pending",
+      _status: mpJson.status ?? "pending",
       _raw: json,
     } as never);
 
