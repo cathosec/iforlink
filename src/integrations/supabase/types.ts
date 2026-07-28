@@ -960,6 +960,10 @@ export type Database = {
         }[]
       }
       resolve_short_link: { Args: { _code: string }; Returns: string }
+      user_has_active_addon: {
+        Args: { _addon: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "free" | "pro" | "admin"
