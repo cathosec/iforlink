@@ -349,18 +349,21 @@ function Dashboard() {
 
 
         {cats.length === 0 ? (
-          <Card className="mt-4 border-dashed p-12 text-center">
-            <FolderPlus className="mx-auto h-8 w-8 text-muted-foreground" />
-            <h3 className="mt-4 font-semibold">Comece criando sua primeira categoria</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+          <Card className="mt-4 border-dashed bg-gradient-to-br from-muted/40 to-transparent p-12 text-center">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand/10 text-brand">
+              <FolderPlus className="h-7 w-7" />
+            </div>
+            <h3 className="mt-4 font-display text-xl font-semibold">Comece criando sua primeira categoria</h3>
+            <p className="mt-1.5 text-sm text-muted-foreground">
               Por exemplo: <em>"Meus projetos"</em>, <em>"Redes sociais"</em> ou <em>"Leituras favoritas"</em>.
             </p>
           </Card>
         ) : (
           <>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-3 text-xs text-muted-foreground">
               Dica: arraste pelo ícone <GripVertical className="inline h-3 w-3 align-[-2px]" /> para reordenar categorias e links.
             </p>
+
             <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
               <SortableContext items={cats.map((c) => c.id)} strategy={verticalListSortingStrategy}>
                 <div className="mt-4 space-y-4">
