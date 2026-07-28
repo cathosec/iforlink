@@ -224,6 +224,7 @@ function RootComponent() {
         <GoogleAnalytics />
         <AnalyticsProvider />
         <InstallPrompt />
+        <PushReminder />
         <CookieConsent />
         <Toaster position="top-center" richColors />
       </AuthProvider>
