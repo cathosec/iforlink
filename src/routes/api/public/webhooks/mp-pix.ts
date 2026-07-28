@@ -38,6 +38,27 @@ export const Route = createFileRoute("/api/public/webhooks/mp-pix")({
             return new Response("ignored", { status: 200 });
           }
 
+          // Idempotência
+          const requestId = request.headers.get("x-request-id") ?? "";
+          const eventId = `${paymentId}:${requestId || "no-req"}`;
+          try {
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            let payloadJson: Record<string, unknown> = {};
+            try { payloadJson = raw ? JSON.parse(raw) : {}; } catch { /* noop */ }
+            const { error: dupErr } = await supabaseAdmin
+              .from("webhook_events")
+              .insert({
+                provider: "mercadopago",
+                event_id: eventId,
+                event_type: String(type),
+                payload: payloadJson as never,
+                status: "received",
+              });
+            if (dupErr && /duplicate|unique|23505/i.test(dupErr.message ?? "")) {
+              return new Response("duplicate", { status: 200 });
+            }
+          } catch { /* noop */ }
+
           const supabase = getAnon();
 
           // 1) tenta resolver contribuição pelo mp_payment_id
