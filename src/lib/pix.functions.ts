@@ -217,27 +217,42 @@ export const createContribution = createServerFn({ method: "POST" })
       payment_method_id: "pix",
       external_reference: String(contribId),
       notification_url: notificationUrl,
-      application_fee: feeCents / 100,
       payer: {
         email: data.supporter_email,
         first_name: (data.supporter_name ?? "Apoiador").split(" ")[0] || "Apoiador",
         last_name: (data.supporter_name ?? "").split(" ").slice(1).join(" ") || "ForLink",
       },
     };
+    if (feeCents > 0) body.application_fee = feeCents / 100;
 
-    const resp = await fetch(MP_PAY_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${acct.access_token}`,
-        "Content-Type": "application/json",
-        "X-Idempotency-Key": String(contribId),
-      },
-      body: JSON.stringify(body),
-    });
-    const json = await resp.json().catch(() => ({}));
+    const doPost = (payload: Record<string, unknown>) =>
+      fetch(MP_PAY_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${acct.access_token}`,
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": String(contribId),
+        },
+        body: JSON.stringify(payload),
+      });
+
+    let resp = await doPost(body);
+    let json: Record<string, unknown> = await resp.json().catch(() => ({}));
+    const feeRejected = !resp.ok && "application_fee" in body && (
+      /application_fee/i.test(String(json?.message ?? "")) ||
+      (Array.isArray((json as { cause?: unknown }).cause) &&
+        ((json as { cause?: Array<{ description?: string; code?: string | number }> }).cause ?? [])
+          .some((c) => /application_fee/i.test(String(c?.description ?? "")) || String(c?.code ?? "") === "2107"))
+    );
+    if (feeRejected) {
+      console.warn("[PIX] retry without application_fee:", json?.message);
+      const { application_fee: _omit, ...rest } = body as Record<string, unknown>;
+      resp = await doPost(rest);
+      json = await resp.json().catch(() => ({}));
+    }
     if (!resp.ok) {
       console.error("[PIX] MP payment failed", resp.status, json);
-      throw new Error(json?.message ?? "Falha ao gerar cobrança no Mercado Pago");
+      throw new Error((json as { message?: string })?.message ?? "Falha ao gerar cobrança no Mercado Pago");
     }
     const txn = json?.point_of_interaction?.transaction_data ?? {};
     await supabase.rpc("attach_pix_contribution_mp", {
