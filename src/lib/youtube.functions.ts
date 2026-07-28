@@ -13,6 +13,11 @@ export const resolveYouTubeChannel = createServerFn({ method: "GET" })
     return { raw: typeof raw === "string" ? raw : "" };
   })
   .handler(async ({ data }): Promise<{ channel: YouTubeChannelInfo | null }> => {
-    const channel = await resolveYouTubeChannelImpl(data.raw);
-    return { channel };
+    try {
+      const channel = await resolveYouTubeChannelImpl(data.raw);
+      return { channel };
+    } catch (err) {
+      console.error("[youtube] resolve failed:", err);
+      return { channel: null };
+    }
   });
