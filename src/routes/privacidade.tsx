@@ -62,23 +62,44 @@ function PrivacyPage() {
             </li>
             <li>
               <strong>Conteúdo criado por você:</strong> avatar, biografia,
-              categorias, links, textos e URLs encurtadas publicadas no seu perfil.
+              categorias, links, textos, URLs encurtadas (módulo Encurtador)
+              e páginas de campanha (módulo Campanhas) publicadas no seu perfil.
             </li>
             <li>
-              <strong>Dados de uso agregados:</strong> contagem de visualizações
-              do perfil e cliques em links, para métricas próprias e do titular.
+              <strong>Dados de uso agregados:</strong> contagem de
+              visualizações do perfil, cliques em links (com deduplicação por
+              sessão anônima) e cliques em links encurtados, para métricas
+              próprias e do titular.
             </li>
             <li>
               <strong>Dados técnicos mínimos:</strong> endereço IP (para
-              segurança e prevenção a abusos), tipo de dispositivo, navegador,
-              idioma, e cookies estritamente necessários para autenticação.
+              segurança, deduplicação de cliques e prevenção a abusos), tipo
+              de dispositivo, navegador, idioma, e cookies estritamente
+              necessários para autenticação.
             </li>
             <li>
-              <strong>Dados de pagamento (Plano Pro):</strong> o pagamento é
-              processado pelo <strong>Mercado Pago</strong>. Recebemos apenas:
-              identificador da transação, status, método (PIX), valor,
-              intervalo e data de confirmação. Nunca recebemos dados bancários
-              ou de cartão.
+              <strong>Integração Mercado Pago (módulo Campanhas):</strong>{" "}
+              quando você conecta sua conta MP via OAuth, armazenamos de forma
+              cifrada o <em>access_token</em>, <em>refresh_token</em>,{" "}
+              <em>user_id MP</em>, escopo, data de expiração e o e-mail público
+              da conta MP, exclusivamente para emitir cobranças em seu nome e
+              repassar o valor diretamente à sua conta.
+            </li>
+            <li>
+              <strong>Dados de doadores/apoiadores em campanhas:</strong> nome
+              (ou apelido) informado no mural, mensagem opcional, valor,
+              método (PIX, cartão, carteira MP), status e identificador da
+              transação MP. O e-mail e o CPF do pagador, quando exigidos pelo
+              Mercado Pago no checkout transparente, são enviados diretamente
+              ao MP e <strong>não</strong> ficam armazenados no ForLink.
+            </li>
+            <li>
+              <strong>Dados de pagamento (Plano Pro e Campanhas):</strong> o
+              pagamento é processado pelo <strong>Mercado Pago</strong>.
+              Recebemos apenas: identificador da transação, status, método,
+              valor, taxa da plataforma (application_fee), intervalo e data
+              de confirmação. Nunca recebemos número completo do cartão,
+              CVV ou credenciais bancárias.
             </li>
             <li>
               <strong>Comunicações:</strong> mensagens enviadas por{" "}
@@ -92,6 +113,7 @@ function PrivacyPage() {
             geolocalização precisa, contatos do dispositivo ou histórico de
             navegação fora da ForLink.
           </p>
+
 
           <h2>3. Finalidades e bases legais (arts. 7º e 11 LGPD)</h2>
           <ul>
