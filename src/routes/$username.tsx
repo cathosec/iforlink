@@ -167,7 +167,7 @@ function PublicProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id,username,display_name,bio,avatar_url,is_verified,views_count")
+        .select("id,username,display_name,bio,avatar_url,is_verified,views_count,social_links")
         .eq("username", username)
         .maybeSingle();
       if (!data) throw notFound();
