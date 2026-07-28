@@ -139,19 +139,32 @@ export const getCampaignPaymentContext = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const row = Array.isArray(rows) ? rows[0] : rows;
     if (!row) throw new Error("Campanha não encontrada");
-    const cfg = await loadPixConfig();
-    // Estimativas públicas de tarifas do Mercado Pago cobradas do RECEBEDOR
-    // (descontadas do valor que cai na conta do criador). Valores padrão para
-    // contas Brasil sem plano especial; podem variar por conta/segmento.
+    const r = row as {
+      campaign_id: string;
+      accepts_card: boolean;
+      public_key: string | null;
+      live_mode: boolean;
+      fee_pct?: number | string;
+      min_fee_cents?: number | string;
+      creator_role?: string;
+    };
+    // Fase 3: comissão vem do plano do criador (Free/Pro) via RPC.
+    // Fallback para pix_config global se o RPC não retornar (compat).
+    let feePct = Number(r.fee_pct ?? NaN);
+    let minFeeCents = Number(r.min_fee_cents ?? NaN);
+    if (!Number.isFinite(feePct) || !Number.isFinite(minFeeCents)) {
+      const cfg = await loadPixConfig();
+      feePct = Number(cfg.fee_percent ?? 0);
+      minFeeCents = Math.max(0, Number(cfg.min_fee_cents ?? 0));
+    }
     return {
-      ...(row as {
-        campaign_id: string;
-        accepts_card: boolean;
-        public_key: string | null;
-        live_mode: boolean;
-      }),
-      fee_percent: Number(cfg.fee_percent ?? 0),
-      min_fee_cents: Math.max(0, Number(cfg.min_fee_cents ?? 0)),
+      campaign_id: r.campaign_id,
+      accepts_card: r.accepts_card,
+      public_key: r.public_key,
+      live_mode: r.live_mode,
+      fee_percent: feePct,
+      min_fee_cents: Math.max(0, minFeeCents),
+      creator_role: (r.creator_role ?? "free") as "free" | "pro" | "admin",
       mp_fee_pix_percent: 0.99,
       mp_fee_card_percent: 4.98,
       mp_fee_card_fixed_cents: 0,
