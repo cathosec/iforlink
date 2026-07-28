@@ -18,6 +18,12 @@ export interface PixConfig {
   has_oauth_client_secret?: boolean;
 }
 
+export interface MpOAuthState {
+  state: string;
+  codeVerifier: string;
+  codeChallenge: string;
+}
+
 type SupabaseReader = Pick<SupabaseClient<Database>, "from" | "rpc">;
 
 function isNewSupabaseApiKey(value: string): boolean {
@@ -95,4 +101,28 @@ export async function getRequestHostFallback(defaultHost = "forlink.app") {
   } catch {
     return defaultHost;
   }
+}
+
+function base64Url(bytes: Uint8Array): string {
+  let binary = "";
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+async function sha256Base64Url(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return base64Url(new Uint8Array(digest));
+}
+
+export async function createMpOAuthState(): Promise<MpOAuthState> {
+  const stateBytes = new Uint8Array(32);
+  const verifierBytes = new Uint8Array(64);
+  crypto.getRandomValues(stateBytes);
+  crypto.getRandomValues(verifierBytes);
+
+  const state = base64Url(stateBytes);
+  const codeVerifier = base64Url(verifierBytes);
+  const codeChallenge = await sha256Base64Url(codeVerifier);
+
+  return { state, codeVerifier, codeChallenge };
 }
