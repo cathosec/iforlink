@@ -561,6 +561,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_addons: {
+        Row: {
+          activated_at: string | null
+          addon: string
+          canceled_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          price_cents: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          addon: string
+          canceled_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          price_cents?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          addon?: string
+          canceled_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          price_cents?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_categories: {
         Row: {
           created_at: string
