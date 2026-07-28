@@ -540,34 +540,36 @@ function PublicProfile() {
                 </div>
               </Link>
 
-              {/* Botão "Ver progresso" — mostra quanto falta ou destaque quando não há meta */}
-              <div className="border-t bg-muted/30 px-4 py-2.5">
-                <Link
-                  to="/pix/$slug"
-                  params={{ slug: c.slug }}
-                  className="flex items-center justify-between gap-2 text-xs font-medium"
-                  onClick={() =>
-                    trackEvent("campaign_progress_click", {
-                      campaign_slug: c.slug,
-                      profile_username: p.username,
-                    })
-                  }
-                >
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Eye className="h-3.5 w-3.5" />
-                    Ver progresso
-                  </span>
-                  <span className="tabular-nums" style={{ color: accent }}>
-                    {pct !== null
-                      ? missing > 0
-                        ? `Faltam ${fmt(missing)}`
-                        : "Meta alcançada! 🎉"
-                      : raised > 0
-                        ? `${fmt(raised)} arrecadados`
-                        : "Seja o primeiro a apoiar"}
-                  </span>
-                </Link>
-              </div>
+              {/* Botão "Ver progresso" — só quando o dono habilita */}
+              {showProgress && (
+                <div className="border-t bg-muted/30 px-4 py-2.5">
+                  <Link
+                    to="/pix/$slug"
+                    params={{ slug: c.slug }}
+                    className="flex items-center justify-between gap-2 text-xs font-medium"
+                    onClick={() =>
+                      trackEvent("campaign_progress_click", {
+                        campaign_slug: c.slug,
+                        profile_username: p.username,
+                      })
+                    }
+                  >
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Eye className="h-3.5 w-3.5" />
+                      Ver progresso
+                    </span>
+                    <span className="tabular-nums" style={{ color: accent }}>
+                      {pct !== null
+                        ? missing > 0
+                          ? `Faltam ${fmt(missing)}`
+                          : "Meta alcançada! 🎉"
+                        : raised > 0
+                          ? `${fmt(raised)} arrecadados`
+                          : "Seja o primeiro a apoiar"}
+                    </span>
+                  </Link>
+                </div>
+              )}
             </div>
           );
         })()}
