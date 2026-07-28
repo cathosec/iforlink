@@ -2059,7 +2059,10 @@ function PixTab({ logAction }: { logAction: (a: string, t?: string, id?: string,
         </div>
       </Card>
 
+      <CampaignFeeMatrix />
+
       <Card className="p-6">
+
         <h3 className="font-display text-lg font-semibold">Selos SVG oficiais</h3>
         <p className="text-sm text-muted-foreground">
           Selos exibidos automaticamente para cada apoiador com base no valor da contribuição.
