@@ -124,10 +124,22 @@ const FAQ_ITEMS: { q: string; a: string }[] = [
     a: "No painel, acesse 'Assinatura' e clique em cancelar. Você continua com os benefícios Pro até o fim do período já pago e depois volta automaticamente para o plano Free — sem perder seus links.",
   },
   {
+    q: "Como funcionam as Campanhas PIX no ForLink?",
+    a: "Você conecta sua própria conta Mercado Pago via OAuth (com 1 clique) e cria uma página de arrecadação em forlink.app/pix/seu-slug. Os pagamentos (PIX ou cartão) caem DIRETO na sua conta MP — o ForLink não intermedeia dinheiro. Cada colaborador aprovado aparece no mural com nome, valor e selo (Bronze, Prata, Ouro, Diamante ou Lenda) conforme o valor contribuído.",
+  },
+  {
+    q: "Quais taxas incidem em uma campanha PIX?",
+    a: "Duas taxas independentes: (1) taxa ForLink configurada pelo admin (atualmente 2% com mínimo de R$ 0,50 por transação) — você escolhe se ela é descontada do valor recebido ou repassada ao colaborador; (2) tarifa do Mercado Pago cobrada do recebedor, que gira em torno de 0,99% para PIX e ~4,98% para cartão de crédito à vista (varia conforme seu plano MP). Ambas as taxas aparecem detalhadas na tela de pagamento para o colaborador.",
+  },
+  {
+    q: "Quem pode criar uma Campanha PIX?",
+    a: "Qualquer usuário. No plano Free você pode manter 1 campanha ativa; no Pro é ilimitado. Basta ter uma conta Mercado Pago (pessoa física ou jurídica) para conectar.",
+  },
+  {
     q: "Preciso instalar algum aplicativo?",
     a: "Não. A ForLink funciona 100% no navegador, em qualquer dispositivo. Você pode adicionar o site à tela inicial do celular para ter uma experiência parecida com a de um app.",
   },
-];
+
 
 function Home() {
   const [uname, setUname] = useState("");
