@@ -2038,7 +2038,7 @@ function PixTab({ logAction }: { logAction: (a: string, t?: string, id?: string,
         <div className="mt-5 rounded-md border bg-muted/40 p-3 text-[11px] leading-relaxed text-muted-foreground">
           <strong className="text-foreground">URL de callback OAuth (configure no MP):</strong><br />
           <code>https://forlink.app/api/public/oauth/mercadopago/callback</code>
-          <br /><strong className="text-foreground">Webhook PIX:</strong> <code>https://forlink.app/api/public/webhooks/mp-pix</code>
+          <br /><strong className="text-foreground">Webhook Mercado Pago (assinaturas e campanhas):</strong> <code>https://forlink.app/api/public/webhooks/mercadopago</code>
         </div>
 
         <div className="mt-5 flex flex-wrap justify-end gap-2">
