@@ -334,14 +334,31 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
   const mpCardFixed = Number(ctxQ.data?.mp_fee_card_fixed_cents ?? 0);
   const feeCents = amount > 0 ? Math.max(minFeeCents, Math.round((amount * feePct) / 100)) : 0;
   const passesFee = c.pass_fee_to_supporter;
-  const finalAmount = passesFee ? amount + feeCents : amount;
-  const grossToMp = finalAmount; // valor que o MP processa
-  const mpFeeCents = amount > 0
-    ? activeMethod === "card"
-      ? Math.round((grossToMp * mpCardPct) / 100) + mpCardFixed
-      : Math.round((grossToMp * mpPixPct) / 100)
-    : 0;
-  const netAmount = Math.max(0, (passesFee ? amount : amount - feeCents) - mpFeeCents);
+  const mpPct = activeMethod === "card" ? mpCardPct : mpPixPct;
+  const mpFixed = activeMethod === "card" ? mpCardFixed : 0;
+  // Quando o criador repassa as taxas, ambas (ForLink + MP) são SOMADAS ao valor
+  // pago pelo colaborador, de modo que o criador receba integralmente `amount`.
+  // Como a tarifa MP incide sobre o valor cobrado (grossToMp), resolvemos:
+  //   grossToMp = (amount + feeForLink + mpFixed) / (1 - mpPct/100)
+  let finalAmount: number;
+  let mpFeeCents: number;
+  if (amount <= 0) {
+    finalAmount = 0;
+    mpFeeCents = 0;
+  } else if (passesFee) {
+    const denom = Math.max(0.01, 1 - mpPct / 100);
+    const gross = Math.ceil((amount + feeCents + mpFixed) / denom);
+    finalAmount = gross;
+    mpFeeCents = Math.round((gross * mpPct) / 100) + mpFixed;
+  } else {
+    finalAmount = amount;
+    mpFeeCents = Math.round((amount * mpPct) / 100) + mpFixed;
+  }
+  const netAmount = passesFee
+    ? Math.max(0, finalAmount - feeCents - mpFeeCents)
+    : Math.max(0, amount - feeCents - mpFeeCents);
+  const mpFeeAddedToSupporter = passesFee ? Math.max(0, finalAmount - amount - feeCents) : 0;
+
 
 
   const submit = async () => {
@@ -524,33 +541,38 @@ function ContributionForm({ campaign: c }: { campaign: CampaignPub }) {
                   </dd>
                 </div>
               )}
+              {mpFeeCents > 0 && (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">
+                    Tarifa Mercado Pago{" "}
+                    {activeMethod === "card"
+                      ? `(~${mpCardPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% cartão)`
+                      : `(~${mpPixPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% PIX)`}{" "}
+                    {passesFee ? "(paga por você)" : "(descontada do criador)"}
+                  </dt>
+                  <dd className={passesFee ? "font-medium" : "text-muted-foreground"}>
+                    {passesFee ? "+ " : "− "}{brl(passesFee ? mpFeeAddedToSupporter : mpFeeCents)}
+                  </dd>
+                </div>
+              )}
               <div className="mt-1.5 flex justify-between border-t pt-1.5">
                 <dt className="font-semibold">Você paga</dt>
                 <dd className="font-bold" style={{ color: c.accent_color }}>
                   {brl(finalAmount)}
                 </dd>
               </div>
-              {mpFeeCents > 0 && (
-                <div className="flex justify-between text-[11px] text-muted-foreground">
-                  <dt>
-                    Tarifa Mercado Pago {activeMethod === "card"
-                      ? `(~${mpCardPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% cartão)`
-                      : `(~${mpPixPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% PIX)`}
-                  </dt>
-                  <dd>− {brl(mpFeeCents)}</dd>
-                </div>
-              )}
               <div className="flex justify-between border-t pt-1.5 text-[11px]">
                 <dt className="font-medium text-muted-foreground">Recebido pelo criador (estimado)</dt>
                 <dd className="font-semibold text-foreground">{brl(netAmount)}</dd>
               </div>
             </dl>
             <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-              {feeCents > 0 && (passesFee
-                ? "A taxa ForLink é somada ao seu valor para que o criador receba integralmente o que você quis contribuir. "
-                : "A taxa ForLink é descontada do valor recebido pelo criador — nada é adicionado ao que você paga. ")}
-              A tarifa do Mercado Pago é cobrada diretamente do criador pelo processador de pagamento e pode variar conforme o plano/conta MP dele (valores exibidos são estimativas padrão para contas Brasil). O repasse é feito automaticamente à conta MP do criador, sem intermediação do ForLink.
+              {passesFee
+                ? "Como o criador optou por repassar as taxas, tanto a taxa ForLink quanto a tarifa do Mercado Pago são somadas ao seu valor — assim o criador recebe integralmente o que você quis contribuir. "
+                : "As taxas ForLink e Mercado Pago são descontadas do valor recebido pelo criador — nada é adicionado ao que você paga. "}
+              A tarifa do Mercado Pago é cobrada pelo processador de pagamento e pode variar conforme o plano/conta MP do criador (valores exibidos são estimativas padrão para contas Brasil). O repasse é feito automaticamente à conta MP do criador, sem intermediação do ForLink.
             </p>
+
           </div>
         )}
 
