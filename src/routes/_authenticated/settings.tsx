@@ -70,7 +70,8 @@ function Settings() {
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [socials, setSocials] = useState<SocialLinkEntry[]>([]);
+  const [savingSocials, setSavingSocials] = useState(false);
   const runDelete = useServerFn(deleteMyAccount);
 
   useEffect(() => {
