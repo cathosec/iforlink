@@ -30,6 +30,7 @@ export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [platform, setPlatform] = useState<"android" | "ios" | "other">("other");
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
