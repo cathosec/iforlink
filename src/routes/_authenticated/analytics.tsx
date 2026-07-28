@@ -103,46 +103,63 @@ function AnalyticsPage() {
         <div className="mt-6 space-y-6">
           <SummaryCards path={selectedPath} since={since} until={until} />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-              <div>
-                <CardTitle className="text-base">Mapa de calor — {selectedPath}</CardTitle>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Cliques (com peso maior) e movimentos do mouse agregados. Coordenadas normalizadas por viewport.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={rangeKey} onValueChange={setRangeKey}>
-                  <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>{RANGES.map((r) => (
-                    <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>
-                  ))}</SelectContent>
-                </Select>
-                <Select value={layer} onValueChange={(v) => setLayer(v as typeof layer)}>
-                  <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Cliques + Mouse</SelectItem>
-                    <SelectItem value="clicks">Só cliques</SelectItem>
-                    <SelectItem value="moves">Só movimento</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <HeatmapView
-                path={selectedPath}
-                since={since}
-                until={until}
-                showClicks={layer !== "moves"}
-                showMoves={layer !== "clicks"}
-              />
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="heatmap" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="heatmap" className="gap-1.5">
+                <BarChart3 className="h-3.5 w-3.5" /> Mapa de calor
+              </TabsTrigger>
+              <TabsTrigger value="replay" className="gap-1.5">
+                <Film className="h-3.5 w-3.5" /> Gravações
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="heatmap" className="mt-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+                  <div>
+                    <CardTitle className="text-base">Mapa de calor — {selectedPath}</CardTitle>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Cliques (com peso maior) e movimentos do mouse agregados. Coordenadas normalizadas por viewport.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={rangeKey} onValueChange={setRangeKey}>
+                      <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>{RANGES.map((r) => (
+                        <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>
+                      ))}</SelectContent>
+                    </Select>
+                    <Select value={layer} onValueChange={(v) => setLayer(v as typeof layer)}>
+                      <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Cliques + Mouse</SelectItem>
+                        <SelectItem value="clicks">Só cliques</SelectItem>
+                        <SelectItem value="moves">Só movimento</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <HeatmapView
+                    path={selectedPath}
+                    since={since}
+                    until={until}
+                    showClicks={layer !== "moves"}
+                    showMoves={layer !== "clicks"}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="replay" className="mt-4">
+              <ReplayPanel path={selectedPath} since={since} rangeLabel={range.label} />
+            </TabsContent>
+          </Tabs>
         </div>
       ) : (
         <Card className="mt-6">
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Selecione uma página acima para visualizar o mapa de calor.
+            Selecione uma página acima para visualizar o mapa de calor e as gravações.
           </CardContent>
         </Card>
       )}
