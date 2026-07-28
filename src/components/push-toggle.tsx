@@ -47,7 +47,7 @@ export function PushToggle() {
       const j = subscriptionToJSON(sub);
       await save({ data: { ...j, userAgent: navigator.userAgent } });
       setSubscribed(true);
-      await test({ data: {} }).catch(() => null);
+      await (test as unknown as () => Promise<unknown>)().catch(() => null);
       toast.success("Notificações ativadas");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao ativar");
