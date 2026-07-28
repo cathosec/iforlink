@@ -24,6 +24,20 @@ export function SiteHeader() {
           <LogoWordmark className="h-6" />
         </Link>
 
+        <nav className="hidden items-center gap-1 md:flex">
+          <Link
+            to="/precos"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          >
+            Preços
+          </Link>
+          <Link
+            to="/guias"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          >
+            Guias
+          </Link>
+        </nav>
 
         <div className="flex items-center gap-2">
           {loading ? null : session && profile ? (
