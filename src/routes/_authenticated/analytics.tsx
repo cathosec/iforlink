@@ -179,12 +179,8 @@ function AnalyticsPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="replay" className="mt-4">
-            {selectedPath ? (
-              <ReplayPanel path={selectedPath} since={since} rangeLabel={range.label} />
-            ) : (
-              <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Selecione uma página acima.</CardContent></Card>
-            )}
+          <TabsContent value="privacy" className="mt-4">
+            <PrivacyPanel />
           </TabsContent>
 
           <TabsContent value="privacy" className="mt-4">
