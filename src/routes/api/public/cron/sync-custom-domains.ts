@@ -53,9 +53,9 @@ async function runSync(): Promise<Response> {
       await supabaseAdmin.rpc("update_custom_domain_status", {
         _id: row.id,
         _status: "failed",
-        _ssl_status: null,
-        _ownership_verification: null as never,
-        _cf_id: row.cf_custom_hostname_id ?? null,
+        _ssl_status: undefined,
+        _ownership_verification: undefined,
+        _cf_id: row.cf_custom_hostname_id ?? undefined,
         _last_error: msg,
       });
       results.push({ id: row.id, hostname: row.hostname, status: "failed", error: msg });

@@ -87,25 +87,26 @@ export async function cfDeleteCustomHostname(id: string): Promise<void> {
   await cfFetch<{ id: string }>(`/zones/${zone}/custom_hostnames/${id}`, { method: "DELETE" });
 }
 
+export interface OwnershipData {
+  txt?: { type?: string; name?: string; value?: string };
+  http?: { http_url?: string; http_body?: string };
+  ssl_validation?: Array<{ txt_name?: string; txt_value?: string; http_url?: string; http_body?: string }>;
+}
+
 /**
  * Traduz o payload do CF para o par de status usados na tabela `custom_domains`.
- * Regras:
- *  - status "active" só quando CF reporta hostname active E SSL active
- *  - qualquer erro de validação → failed
- *  - hostname existe mas SSL ainda pendente → pending_ssl
- *  - default → pending_dns
  */
 export function mapCfStatus(cf: CfCustomHostname): {
   status: "pending_dns" | "pending_ssl" | "active" | "failed";
-  ssl_status: string | null;
-  last_error: string | null;
-  ownership: Record<string, unknown>;
+  ssl_status: string | undefined;
+  last_error: string | undefined;
+  ownership: OwnershipData;
 } {
   const hostStatus = cf.status ?? "pending";
-  const sslStatus = cf.ssl?.status ?? null;
+  const sslStatus = cf.ssl?.status;
   const sslErrs = cf.ssl?.validation_errors?.map((e) => e.message).join("; ");
   const hostErrs = cf.verification_errors?.join("; ");
-  const lastError = sslErrs || hostErrs || null;
+  const lastError = sslErrs || hostErrs || undefined;
 
   let status: "pending_dns" | "pending_ssl" | "active" | "failed";
   if (hostStatus === "active" && sslStatus === "active") status = "active";
@@ -114,7 +115,7 @@ export function mapCfStatus(cf: CfCustomHostname): {
   else if (hostStatus === "moved" || sslStatus === "expired" || hostStatus === "deleted") status = "failed";
   else status = "pending_dns";
 
-  const ownership: Record<string, unknown> = {};
+  const ownership: OwnershipData = {};
   if (cf.ownership_verification?.name) ownership.txt = cf.ownership_verification;
   if (cf.ownership_verification_http?.http_url) ownership.http = cf.ownership_verification_http;
   if (cf.ssl?.validation_records?.length) ownership.ssl_validation = cf.ssl.validation_records;
