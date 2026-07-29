@@ -146,3 +146,42 @@ export const adminListCustomDomains = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return { domains: data ?? [] };
   });
+
+/**
+ * Admin: força uma reconsulta no Cloudflare para qualquer domínio.
+ */
+export const adminRefreshCustomDomain = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ context, data }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("custom_domains")
+      .select("id,hostname,cf_custom_hostname_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error || !row) throw new Error("Domínio não encontrado.");
+
+    const { cfGetCustomHostname, cfCreateCustomHostname, mapCfStatus } = await import(
+      "./custom-domains.server"
+    );
+    const cf = row.cf_custom_hostname_id
+      ? await cfGetCustomHostname(row.cf_custom_hostname_id)
+      : await cfCreateCustomHostname(row.hostname);
+    const mapped = mapCfStatus(cf);
+    await supabaseAdmin.rpc("update_custom_domain_status", {
+      _id: row.id,
+      _status: mapped.status,
+      _ssl_status: mapped.ssl_status,
+      _ownership_verification: mapped.ownership as never,
+      _cf_id: cf.id,
+      _last_error: mapped.last_error,
+    });
+    return mapped;
+  });

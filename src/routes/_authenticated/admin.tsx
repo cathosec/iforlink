@@ -22,7 +22,7 @@ import {
   Users, Link2, BadgeCheck, ExternalLink, DollarSign, CreditCard,
   Settings2, ShieldAlert, ShieldCheck, TrendingUp, Trash2, Search, Activity,
   FolderTree, AlertTriangle, EyeOff, Plus, X, Megaphone, Scissors, Copy, MousePointerClick, Mail,
-  QrCode, PlugZap, Sparkles, CheckCircle2, HeartPulse,
+  QrCode, PlugZap, Sparkles, CheckCircle2, HeartPulse, Globe, RefreshCw, Loader2, AlertCircle,
 } from "lucide-react";
 
 import {
@@ -115,6 +115,7 @@ function Admin() {
               ["emails", Mail, "E-mails"],
               ["settings", Settings2, "Plataforma"],
               ["ops", HeartPulse, "Operações"],
+              ["domains", Globe, "Domínios"],
               ["audit", Activity, "Auditoria"],
             ].map(([v, Icon, label]) => {
               const I = Icon as React.ComponentType<{ className?: string }>;
@@ -146,6 +147,7 @@ function Admin() {
             <TabsContent value="emails" className="mt-0"><EmailsTab logAction={logAction} /></TabsContent>
             <TabsContent value="settings" className="mt-0"><SettingsTab logAction={logAction} /></TabsContent>
             <TabsContent value="ops" className="mt-0"><OperationsTab /></TabsContent>
+            <TabsContent value="domains" className="mt-0"><DomainsTab /></TabsContent>
             <TabsContent value="audit" className="mt-0"><AuditTab /></TabsContent>
           </div>
         </Tabs>
@@ -2704,6 +2706,182 @@ function AddonsAdminTab({ logAction }: { logAction: (a: string, tt?: string, tid
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+/* -------------------- Aba Domínios (super admin) -------------------- */
+
+interface AdminDomainRow {
+  id: string;
+  user_id: string;
+  username: string | null;
+  display_name: string | null;
+  hostname: string;
+  mode: string;
+  path_prefix: string | null;
+  status: "pending_dns" | "pending_ssl" | "active" | "failed" | "removed";
+  ssl_status: string | null;
+  last_error: string | null;
+  last_synced_at: string | null;
+  created_at: string;
+}
+
+const DOMAIN_STATUS_META: Record<AdminDomainRow["status"], { label: string; className: string; Icon: React.ComponentType<{ className?: string }> }> = {
+  pending_dns: { label: "Aguardando DNS", className: "bg-amber-500/15 text-amber-600", Icon: Loader2 },
+  pending_ssl: { label: "Emitindo SSL", className: "bg-blue-500/15 text-blue-600", Icon: Loader2 },
+  active: { label: "Ativo", className: "bg-emerald-500/15 text-emerald-600", Icon: CheckCircle2 },
+  failed: { label: "Falha", className: "bg-red-500/15 text-red-600", Icon: AlertCircle },
+  removed: { label: "Removido", className: "bg-muted text-muted-foreground", Icon: AlertCircle },
+};
+
+function DomainsTab() {
+  const qc = useQueryClient();
+  const [listFn, setListFn] = useState<null | (() => Promise<{ domains: AdminDomainRow[] }>)>(null);
+  const [refreshFn, setRefreshFn] = useState<null | ((args: { data: { id: string } }) => Promise<unknown>)>(null);
+
+  useEffect(() => {
+    let alive = true;
+    import("@/lib/custom-domains.functions").then((m) => {
+      if (!alive) return;
+      setListFn(() => m.adminListCustomDomains);
+      setRefreshFn(() => m.adminRefreshCustomDomain);
+    });
+    return () => { alive = false; };
+  }, []);
+
+  const q = useQuery({
+    queryKey: ["admin-custom-domains"],
+    queryFn: () => (listFn ? listFn() : Promise.resolve({ domains: [] })),
+    enabled: !!listFn,
+    refetchInterval: 60_000,
+  });
+
+  const rows = (q.data?.domains ?? []) as AdminDomainRow[];
+  const stats = useMemo(() => {
+    const counts = { total: rows.length, active: 0, pending: 0, failed: 0 };
+    for (const r of rows) {
+      if (r.status === "active") counts.active++;
+      else if (r.status === "failed") counts.failed++;
+      else if (r.status.startsWith("pending")) counts.pending++;
+    }
+    return counts;
+  }, [rows]);
+
+  const runSync = async () => {
+    try {
+      const res = await fetch("/api/public/cron/sync-custom-domains", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      toast.success(`Sincronização executada — ${data.processed} domínio(s).`);
+      qc.invalidateQueries({ queryKey: ["admin-custom-domains"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao sincronizar.");
+    }
+  };
+
+  const refreshOne = async (id: string) => {
+    if (!refreshFn) return;
+    try {
+      await refreshFn({ data: { id } });
+      toast.success("Status atualizado.");
+      qc.invalidateQueries({ queryKey: ["admin-custom-domains"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao atualizar.");
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-display text-xl font-semibold">Domínios personalizados</h2>
+            <p className="text-sm text-muted-foreground">
+              Monitoramento de todos os hostnames conectados via Cloudflare for SaaS.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ["admin-custom-domains"] })}>
+              <RefreshCw className="mr-1 h-4 w-4" /> Recarregar
+            </Button>
+            <Button size="sm" onClick={runSync}>
+              <PlugZap className="mr-1 h-4 w-4" /> Executar sync agora
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatMini label="Total" value={stats.total} />
+          <StatMini label="Ativos" value={stats.active} tone="ok" />
+          <StatMini label="Pendentes" value={stats.pending} tone="warn" />
+          <StatMini label="Com falha" value={stats.failed} tone={stats.failed > 0 ? "error" : "ok"} />
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden">
+        {q.isLoading ? (
+          <p className="p-6 text-sm text-muted-foreground">Carregando…</p>
+        ) : rows.length === 0 ? (
+          <p className="p-6 text-sm text-muted-foreground">Nenhum domínio conectado ainda.</p>
+        ) : (
+          <div className="divide-y">
+            {rows.map((d) => {
+              const meta = DOMAIN_STATUS_META[d.status];
+              const Icon = meta.Icon;
+              return (
+                <div key={d.id} className="flex flex-wrap items-center gap-3 p-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-sm font-semibold">{d.hostname}</span>
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${meta.className}`}>
+                        <Icon className={`h-3 w-3 ${d.status.startsWith("pending") ? "animate-spin" : ""}`} />
+                        {meta.label}
+                      </span>
+                      {d.ssl_status && (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">SSL: {d.ssl_status}</span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      dono: <b>{d.display_name ?? d.username ?? d.user_id}</b>
+                      {d.username && <> · <Link to="/$username" params={{ username: d.username }} className="text-brand hover:underline">/{d.username}</Link></>}
+                      {d.last_synced_at && <> · sync {new Date(d.last_synced_at).toLocaleString("pt-BR")}</>}
+                    </p>
+                    {d.last_error && (
+                      <p className="mt-1 truncate text-xs text-destructive" title={d.last_error}>⚠ {d.last_error}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    {d.status === "active" && (
+                      <a
+                        href={`https://${d.hostname}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-8 items-center gap-1 rounded-md border px-2 text-xs hover:bg-accent"
+                      >
+                        Abrir <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => refreshOne(d.id)}>
+                      <RefreshCw className="mr-1 h-3.5 w-3.5" /> Reconsultar
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function StatMini({ label, value, tone }: { label: string; value: number; tone?: "ok" | "warn" | "error" }) {
+  const color = tone === "error" ? "text-red-600" : tone === "warn" ? "text-amber-600" : tone === "ok" ? "text-emerald-600" : "text-foreground";
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold ${color}`}>{value}</p>
     </div>
   );
 }
