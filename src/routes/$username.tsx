@@ -163,6 +163,7 @@ interface ProfileRow {
   id: string; username: string; display_name: string; bio: string | null;
   avatar_url: string | null; is_verified: boolean; views_count: number;
   social_links: unknown;
+  theme: string | null;
 }
 interface LinkItem {
   id: string; title: string; description: string | null; url: string;
