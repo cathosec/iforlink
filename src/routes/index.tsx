@@ -384,15 +384,15 @@ function Home() {
               </div>
               <h3 className="text-xl font-semibold tracking-tight">Domínio personalizado</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                Conecte um domínio próprio ao seu perfil ForLink. Em vez de <span className="font-medium text-foreground">forlink.app/seu-usuario</span>, seus visitantes acessam <span className="font-medium text-foreground">seusite.com</span> ou <span className="font-medium text-foreground">seusite.com/links</span> — com SSL automático via Cloudflare.
+                Conecte um domínio próprio ao seu perfil ForLink. Em vez de <span className="font-medium text-foreground">forlink.app/seu-usuario</span>, seus visitantes acessam <span className="font-medium text-foreground">seusite.com</span> ou <span className="font-medium text-foreground">links.seusite.com</span> — com SSL automático via Cloudflare.
               </p>
               <ul className="mt-5 space-y-2 text-sm">
                 {[
                   "Domínio raiz (seusite.com) ou subdomínio (links.seusite.com)",
-                  "Modo caminho: seusite.com/links convive com o seu site atual",
                   "Certificado SSL emitido e renovado automaticamente",
                   "Setup guiado passo a passo com botão \"Testar conexão\"",
                   "SEO preservado — Google indexa no seu domínio",
+                  "Um domínio ativo por conta Pro",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-muted-foreground">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {f}
