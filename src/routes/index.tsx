@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { createServerFn, getRequest } from "@tanstack/react-start";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequestHost } from "@tanstack/react-start/server";
 import { useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { Input } from "@/components/ui/input";
@@ -14,8 +15,7 @@ import { AdSlot } from "@/components/ad-slot";
  * Retorna o username do dono do domínio, ou null se não for um custom domain.
  */
 const resolveCustomHost = createServerFn({ method: "GET" }).handler(async () => {
-  const req = getRequest();
-  const host = (req?.headers.get("host") ?? "").toLowerCase().replace(/:\d+$/, "");
+  const host = (getRequestHost({ xForwardedHost: true }) ?? "").toLowerCase().replace(/:\d+$/, "");
   if (!host || host === "forlink.app" || host === "www.forlink.app" || host.endsWith(".lovable.app") || host.startsWith("localhost")) {
     return { username: null as string | null };
   }
