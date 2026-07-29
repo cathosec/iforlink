@@ -784,6 +784,8 @@ function PublicProfile() {
         </div>
       </main>
       {hideAds && <style>{`[data-ad-slot="mobile_sticky"]{display:none !important;}`}</style>}
-    </div>
+      </div>
+    </>
   );
 }
+
