@@ -1,125 +1,138 @@
+# Domínios personalizados para Pro (Cloudflare for SaaS)
 
-# ForLink Analytics — plano de construção
+Objetivo: permitir que usuários **Pro/Admin** conectem `dominiodele.com` (ou subdomínio como `links.dominiodele.com`) e sirvam sua página de perfil ForLink ali — com SSL automático via **Cloudflare Custom Hostnames** (SSL for SaaS), que você já habilitou.
 
-Módulo próprio de analytics, heatmaps e session replay, 100% integrado ao Supabase, sem serviços externos. Entregue em **6 fases** para permitir revisão a cada passo — o escopo total é grande demais para uma única entrega estável.
+Suporta dois modos:
 
-Objetivo: dashboards e coleta parecidos com Microsoft Clarity/GA4/Plausible, respeitando LGPD e o consentimento de cookies que já existe no site.
+- **Raiz/subdomínio inteiro** → serve o perfil em `/` (ex.: `fulano.com` = `forlink.app/fulano`)
+- **Subpath opcional** → o próprio Worker roteia `/links` para o perfil, deixando outras rotas livres se o usuário quiser (fase 2)
 
 ---
 
-## Arquitetura (visão geral)
+## Fase 1 — Modelo de dados e painel
+
+**Tabela nova `custom_domains`:**
+
+- `user_id` (FK auth.users, dono Pro)
+- `hostname` (ex.: `fulano.com` — único, lowercase)
+- `mode` ('root' | 'subpath') — fase 1 só 'root'
+- `path_prefix` (ex.: `/links`, nullable, só para 'subpath')
+- `cf_custom_hostname_id` (id retornado pelo Cloudflare API)
+- `status` ('pending_dns' | 'pending_ssl' | 'active' | 'failed' | 'removed')
+- `ownership_verification` (jsonb — TXT/HTTP token do CF)
+- `ssl_status`, `last_error`, timestamps
+
+RLS: dono lê/escreve o próprio; admin lê tudo. Trigger que bloqueia criação se `get_user_role` ≠ pro/admin.
+
+**Nova aba "Domínio próprio" em `/settings**` (bloqueada com `UpgradeGate` para Free):
+
+- Input do hostname → cria linha e chama edge action que registra no CF for SaaS
+- Mostra instruções DNS: `CNAME @ (ou subdomínio) → forlink.app` + registro TXT de verificação de propriedade
+- Botão "Verificar agora" → refaz consulta de status no CF
+- Cards de status com badges (DNS pendente / SSL emitindo / Ativo / Falhou) + botão remover
+
+---
+
+## Fase 2 — Integração Cloudflare API
+
+Server functions autenticadas (`src/lib/custom-domains.functions.ts` + `.server.ts`) usando `CF_API_TOKEN` (novo secret com escopo *SSL Custom Hostnames Edit* na zona do `forlink.app`) e `CF_ZONE_ID`:
+
+- `createCustomHostname(hostname)` → `POST /zones/:zone/custom_hostnames` com `ssl.method=http` (ou `txt` se raiz apex) e `ssl.type=dv`
+- `getCustomHostname(id)` → polling de `status` e `ssl.status` para atualizar a linha
+- `deleteCustomHostname(id)` → ao remover
+
+Todas verificam `context.userId` + `has_role('pro')` e que o `hostname` pertence àquele user antes de qualquer chamada.
+
+Cron leve (reaproveitando `/api/public/cron/*` com `CRON_SECRET`) que roda a cada 15 min varrendo domínios em `pending_*` e sincroniza status.
+
+---
+
+## Fase 3 — Roteamento das requisições
+
+O request de `fulano.com` chega no Worker do ForLink pelo fallback origin do CF for SaaS. Precisamos resolver **Host → username** antes do TanStack Start decidir a rota.
+
+Duas peças:
+
+1. **Middleware no `src/start.ts` / entrada SSR** — lê `request.headers.host`:
+  - Se host = `forlink.app`, `*.lovable.app`, ou preview → comportamento normal
+  - Se host = domínio custom ativo → busca via RPC pública `resolve_custom_domain(hostname)` que retorna `{ username, path_prefix }`
+  - Reescreve internamente para `/${username}` (ou `/${username}` quando o path bate com `path_prefix`) mantendo a URL visível intacta
+2. **RPC nova `resolve_custom_domain(_hostname text)**` — `SECURITY DEFINER`, retorna username só se `status='active'`. Cacheável em memória do Worker por ~60s.
+
+Ajustes no `$username.tsx`:
+
+- `og:url` e canonical passam a usar o host do request quando for domínio custom (evita duplicidade SEO)
+- `SiteHeader` continua exibido; adicionar flag `hideForBranding` opcional para futuro (não implementar agora)
+
+---
+
+## Fase 4 — SEO, sitemap e segurança
+
+- `robots.txt` e `sitemap.xml` do ForLink continuam servindo só `forlink.app` — cada domínio custom serve sitemap próprio automaticamente do mesmo endpoint filtrado por host
+- `Link` canônico aponta para o host custom quando ativo, então Google indexa lá e não como duplicata
+- Rate-limit por hostname em `check_rate_limit` para evitar abuso na resolução
+- Validação de hostname: regex estrito, bloquear `forlink.app`/subs, `lovable.app`, IPs, punycode inválido
+- Log em `event_log` de criar/remover/ativar
+
+---
+
+## Detalhes técnicos
+
+**Novos arquivos:**
+
+- Migration: `custom_domains` + RPCs `resolve_custom_domain`, `admin_list_custom_domains`
+- `src/lib/custom-domains.functions.ts` (CRUD do lado do usuário)
+- `src/lib/custom-domains.server.ts` (fetch API Cloudflare, nunca no bundle client)
+- `src/routes/api/public/cron/sync-custom-domains.ts` (polling de status)
+- Nova seção em `src/routes/_authenticated/settings.tsx`
+- Painel admin: linha nova em `/admin` listando domínios de todos os usuários
+- Para que imagens, CSS, scripts e links da página carreguem corretamente sem quebrar os caminhos relativos:
+  1. Ajuste de Asset Base Path: Todos os arquivos estáticos da página do perfil (estilos, ícones, JS) devem ser carregados usando caminhos absolutos apontando para o seu domínio principal (ex: ⁠[[https://forlink.app/assets/](https://forlink.app/assets/)...⁠](https://forlink.app/assets/](https://forlink.app/assets/)...⁠) em vez de ⁠/assets/...⁠).
+  2. Suporte a Headers de Proxy: No seu Worker/Middleware, você pode verificar se a requisição traz o header ⁠X-Forwarded-Host⁠ ou ⁠Host⁠ original para renderizar os dados do usuário ⁠.
+
+**Alterações:**
+
+- `src/start.ts` / handler SSR: middleware de reescrita por Host
+- `src/routes/$username.tsx`: canonical/`og:url` dinâmicos
+- `src/routes/sitemap[.]xml.ts`: filtra por host quando custom
+
+**Secrets novos (Cloudflare dashboard → API tokens):**
+
+- `CF_API_TOKEN` (escopo: SSL Custom Hostnames Edit + Zone.Zone Read na zona forlink.app)
+- `CF_ZONE_ID` (id da zona forlink.app)
+
+**Fallback origin no Cloudflare (você faz uma vez, no dashboard):**
+
+- SSL/TLS → Custom Hostnames → **Fallback Origin** = `forlink.app` (ou o hostname do Worker/CF Pages onde o app está publicado). Sem isso o tráfego do domínio custom não chega no Worker.
+
+**Instruções DNS que o painel mostra ao usuário Pro:**
 
 ```text
-Browser (todas as páginas)
-  └─ src/lib/analytics/            (SDK <20KB)
-       ├─ tracker (page views, tempo, idle, tab, custom)
-       ├─ interactions (click, move, scroll)   ← throttle/debounce
-       ├─ replay (rrweb + mascaramento)
-       ├─ transport (batch 5s / 30 evts, sendBeacon + gzip)
-       └─ consent-gate (respeita consent.ts existente)
+Para apex (fulano.com):
+  Tipo   Nome    Valor
+  CNAME  @       forlink.app     (ou use "CNAME flattening" do seu DNS)
 
-Server (TanStack)
-  └─ /api/public/analytics/ingest    (edge, POST em lote, valida payload)
-  └─ /api/public/analytics/replay    (chunks rrweb)
-  └─ src/lib/analytics/*.functions.ts (queries do dashboard)
+Para subdomínio (links.fulano.com):
+  CNAME  links   forlink.app
 
-Supabase
-  ├─ Tabelas normalizadas (ver §Dados)
-  ├─ RLS: admin do ForLink vê tudo; dono do perfil vê apenas eventos das próprias páginas públicas
-  └─ Rollups agregados por materialized views + pg_cron
-
-Dashboard
-  └─ /_authenticated/analytics/*  (subrota com sidebar própria)
+Verificação de propriedade (temporária):
+  TXT    _cf-custom-hostname.<host>   <token retornado pelo CF>
 ```
 
-Desacoplado: nada existente é alterado. O único gancho fora do módulo é uma linha em `__root.tsx` que monta `<AnalyticsProvider />`, respeitando `hasAnalyticsConsent()`.
-
 ---
 
-## Fases
+## Fora do escopo desta fase
 
-### Fase 1 — Fundação (banco + ingest + SDK mínimo)
-Entrega já visível como "page views por página" no admin.
+- Emails no domínio do cliente (MX/SPF/DKIM próprios)
+- Múltiplos domínios por usuário (fase 1 = 1 domínio por conta Pro)
+- Editor de páginas fora de `/` no domínio custom (subpath rico) — só stub no schema
+- Cobrança extra por domínio — hoje entra no plano Pro existente
 
-- Migração com tabelas: `analytics_visitors`, `analytics_sessions`, `analytics_pageviews`, `analytics_events`, `analytics_custom_events`, `analytics_devices`, `analytics_pages`. RLS restritiva (admin e dono da página); grants explícitos; índices em `(session_id, ts)`, `(page_id, ts)`, `(visitor_id)`.
-- Rota `/api/public/analytics/ingest` (rate-limit reaproveitando `check_rate_limit`; valida com Zod; deriva IP/UA server-side).
-- SDK `src/lib/analytics/*` com: visitor id (localStorage) + session id (sessionStorage), pageview automático em cada navegação do router, tempo na página (visibility + beforeunload via `sendBeacon`), UA/idioma/tela/viewport, `track(name, props)`.
-- Batch queue: 5s ou 30 eventos, gzip via CompressionStream, fallback `sendBeacon`.
-- Consent-gate: nada roda sem `hasAnalyticsConsent()`; se rejeitado, apenas 1 pageview anônimo diário (sem cookies).
-- Card "Analytics" no admin com totais brutos.
+## Ordem sugerida de execução
 
-### Fase 2 — Interações + heatmaps
-- Coleta de cliques (throttle 100ms), movimento do mouse (amostragem 50ms + agrupamento em grid 20px), profundidade de scroll (marcos 25/50/75/100%), idle (>30s sem input), troca de aba.
-- Tabelas `analytics_heatmap_clicks`, `analytics_scroll_depth`, `analytics_mouse_moves` — todas agregadas por célula (`x_bucket, y_bucket, viewport_w`) para consultas O(1).
-- Página `Analytics → Heatmaps`: seletor de página + período + dispositivo. Canvas desenha os pontos sobre um screenshot da página (screenshot gerado por rota `/api/public/analytics/snapshot/$page` usando `html2canvas` client-side, salva em Supabase Storage bucket privado `analytics-snapshots`).
-- Legenda com escala 🔴🟠🟡🔵 baseada em quartis da distribuição de intensidade.
+1. Migration + painel Pro (fase 1)
+2. Integração Cloudflare + cron (fase 2)
+3. Middleware de host no Worker + resolver RPC (fase 3)
+4. SEO, admin, logs e rate-limit (fase 4)
 
-### Fase 3 — Session Replay (rrweb)
-- Integrar `rrweb` como chunk lazy (só carrega após 2s idle da primeira interação, para não pesar no LCP).
-- Mascaramento: `maskAllInputs`, `maskTextClass`, regex automática para CPF (`\d{3}\.\d{3}\.\d{3}-\d{2}`), cartão (Luhn de 13–19 dígitos), CVV, tokens (Bearer/JWT). Inputs `type=password|hidden` sempre mascarados. Toggle admin para mascarar e-mails.
-- Chunks de replay em `analytics_replays` (jsonb + `chunk_seq`) via rota dedicada `/api/public/analytics/replay`.
-- Player em `Analytics → Session Replay`: rrweb-player com Play/Pause, 1x/2x/4x, timeline com marcadores de clique/navegação/erro, lista lateral de eventos clicáveis que fazem seek.
-- Retenção: 30 dias (Free) / 90 dias (Pro) via job `pg_cron` diário.
-
-### Fase 4 — Dashboards
-Sidebar do módulo (`/_authenticated/analytics/*`):
-
-- **Visão Geral**: visitantes únicos, sessões, tempo médio, bounce rate, top páginas, mini heatmap agregado.
-- **Usuários Online (tempo real)**: Supabase Realtime na tabela `analytics_sessions` filtrando `last_seen > now() - 30s`.
-- **Eventos**: lista custom events + gráfico por tempo.
-- **Páginas / Dispositivos / Navegadores / Origem do tráfego**: agregações materializadas.
-- **Funis**: builder visual (arrastar passos: pageview:/x, event:signup, event:pix_paid); calcula % em cada etapa via CTE.
-- **Conversões**: marca eventos como "goal" e mostra taxa por origem/página.
-
-Estilo: cards + Recharts (já disponível), tema escuro respeitando design existente, responsivo.
-
-### Fase 5 — Performance & robustez
-- Web Worker para: gzip do payload, buffer de mousemove, cálculo de buckets de heatmap.
-- `requestIdleCallback` para flushes não críticos.
-- Materialized views `analytics_daily_page_stats`, `analytics_daily_device_stats` atualizadas por `pg_cron` a cada 10 min.
-- Dedup de eventos por `client_event_id` (UUID gerado no cliente) → idempotência total.
-- Bundle budget checado no CI: falha se `dist/analytics.*.js` > 20 KB gzip.
-
-### Fase 6 — Segurança, LGPD e retenção
-- Nada de PII: IP truncado (/24 IPv4, /48 IPv6), UA parseado e descartado.
-- Auto-mask no ingest: regex de CPF/cartão/CVV/token/e-mail em campos livres.
-- `/privacidade` e `/termos` atualizados descrevendo o módulo e a base legal (legítimo interesse + consentimento para replay).
-- Botão "Excluir meus dados" no perfil → RPC apaga por `visitor_id`.
-- Auditoria: cada acesso admin ao replay grava linha em `event_log` (`type='analytics.replay.viewed'`).
-
----
-
-## Modelo de dados (resumido, para revisão técnica)
-
-- `analytics_visitors(id, first_seen, last_seen, ua_hash)`
-- `analytics_sessions(id, visitor_id, started_at, ended_at, last_seen, device, os, browser, lang, screen_w, screen_h, referrer, utm_*, owner_user_id)`
-- `analytics_pageviews(id, session_id, page_id, url, path, title, ts, duration_ms, exit)`
-- `analytics_events(id, session_id, type, ts, payload jsonb, client_event_id unique)` — tipos: click, scroll, idle, tab_hidden/visible, error
-- `analytics_custom_events(id, session_id, name, ts, props jsonb)`
-- `analytics_heatmap_clicks(page_id, device, x_bucket, y_bucket, viewport_w, count)` — PK composta
-- `analytics_scroll_depth(page_id, device, depth_bucket, count)`
-- `analytics_mouse_moves(page_id, device, x_bucket, y_bucket, viewport_w, count)`
-- `analytics_replays(id, session_id, chunk_seq, events jsonb, created_at)`
-- `analytics_pages(id, path unique, title, owner_user_id)` — resolve dono via lookup por username no path
-- `analytics_devices(id, session_id, ua_family, os_family, device_type, is_mobile)`
-- `analytics_funnels(id, owner_user_id, name, steps jsonb)` — Fase 4
-
-RLS: admin (`has_role admin`) vê tudo; usuário autenticado vê apenas rows onde `owner_user_id = auth.uid()` (páginas do próprio perfil público). Ingest bypassa RLS via `SECURITY DEFINER RPC` que resolve o dono a partir do path.
-
----
-
-## Decisões que preciso confirmar antes de começar
-
-1. **Escopo por dono**: cada usuário Pro vê os analytics **apenas do próprio perfil público** (`/username`, `/pix/slug`, etc.) — ou o módulo é **admin-only** por enquanto? (Recomendo começar admin-only na Fase 1 e liberar por dono na Fase 4, mais barato.)
-2. **Session replay para Free ou só Pro?** Replay é caro em storage; recomendo restringir a Pro.
-3. **Screenshot da página**: usar `html2canvas` no navegador de quem visita (aumenta payload em ~30KB, chunked) ou renderizar sob demanda no admin usando o próprio DOM da página live? (Recomendo a 2ª — mais leve, mas o heatmap é sobre o layout atual, não histórico.)
-4. Posso pular a **compressão via Web Worker na Fase 1** (usar apenas gzip nativo do browser) e só introduzir o worker na Fase 5?
-
----
-
-## O que **não** faz parte deste plano
-- Alterar código existente que não seja `__root.tsx` (uma linha para montar o Provider).
-- Substituir o `analytics.ts` atual (será usado como shim que delega para o novo SDK).
-- Geolocalização por cidade — requer base GeoIP; fica marcado como "quando disponível" via header `cf-ipcity` do Cloudflare, sem lookup próprio.
-
-Quando você aprovar, começo pela **Fase 1** (migração + ingest + SDK mínimo + card no admin) — é o pedaço que já entrega valor sozinho e valida a arquitetura.
+Aprova para eu começar pela Fase 1?
