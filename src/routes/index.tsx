@@ -1,4 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequestHost } from "@tanstack/react-start/server";
 import { useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { Input } from "@/components/ui/input";
@@ -8,9 +10,47 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check, HelpCircle, ShieldCheck, Mail, Heart, QrCode, Wallet, Target, Sparkles } from "lucide-react";
 import { AdSlot } from "@/components/ad-slot";
 
+/**
+ * Resolve o Host da requisição atual contra a tabela `custom_domains`.
+ * Retorna o username do dono do domínio, ou null se não for um custom domain.
+ */
+const resolveCustomHost = createServerFn({ method: "GET" }).handler(async () => {
+  const host = (getRequestHost({ xForwardedHost: true }) ?? "").toLowerCase().replace(/:\d+$/, "");
+  if (!host || host === "forlink.app" || host === "www.forlink.app" || host.endsWith(".lovable.app") || host.startsWith("localhost")) {
+    return { username: null as string | null };
+  }
+  const { createClient } = await import("@supabase/supabase-js");
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
+  if (!url || !key) return { username: null };
+  const sb = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => {
+        const h = new Headers(init?.headers);
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      },
+    },
+  });
+  const { data } = await sb.rpc("resolve_custom_domain", { _hostname: host });
+  const row = Array.isArray(data) ? data[0] : data;
+  return { username: (row?.username as string | undefined) ?? null };
+});
 
 export const Route = createFileRoute("/")({
   component: Home,
+  beforeLoad: async () => {
+    // Se o host for um domínio personalizado ativo, redireciona para o perfil dono
+    try {
+      const { username } = await resolveCustomHost();
+      if (username) throw redirect({ to: "/$username", params: { username }, replace: true });
+    } catch (err) {
+      if (err && typeof err === "object" && "isRedirect" in (err as object)) throw err;
+      // silencioso: se falhar, segue para a home normal
+    }
+  },
   head: () => {
     const title = "ForLink — Bio link e agregador de links profissional";
     const description =
