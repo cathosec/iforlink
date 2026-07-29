@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Copy, RefreshCw, Trash2, Lock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Globe, Copy, RefreshCw, Trash2, Lock, CheckCircle2, AlertCircle, Loader2, ExternalLink, Info } from "lucide-react";
 import { toast } from "sonner";
 import {
   listMyCustomDomains,
