@@ -108,6 +108,23 @@ export function CustomDomainPanel({ isPro }: { isPro: boolean }) {
         </div>
       ) : (
         <>
+          <details className="mb-4 rounded-lg border bg-muted/30 p-3 text-sm">
+            <summary className="cursor-pointer font-medium">
+              <Info className="mr-1 inline h-4 w-4 text-brand" /> Como conectar meu domínio (passo a passo)
+            </summary>
+            <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
+              <li>Digite abaixo o domínio (ex.: <b>meusite.com</b> ou <b>links.meusite.com</b>) e clique em <b>Adicionar</b>.</li>
+              <li>Copie os registros DNS exibidos (um <b>CNAME</b> apontando para <code>forlink.app</code> e um <b>TXT</b> de verificação de propriedade).</li>
+              <li>Acesse o painel do seu registrador (Registro.br, GoDaddy, Cloudflare, Hostinger, etc.) e crie os dois registros na zona DNS.</li>
+              <li>Se usar Cloudflare como DNS, deixe o registro <b>cinza (DNS only)</b>, não laranja/proxied.</li>
+              <li>Volte aqui e clique em <b>Testar conexão</b>. Verificação leva de 1 min a algumas horas. SSL é emitido automaticamente.</li>
+              <li>Quando o status virar <b>Ativo</b>, acesse seu domínio — ele carrega seu perfil ForLink com HTTPS.</li>
+            </ol>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Apex (raiz sem <code>www</code>) precisa que seu DNS suporte CNAME flattening/ALIAS/ANAME. Se não suportar, use um subdomínio.
+            </p>
+          </details>
+
           {canAdd && (
             <form
               onSubmit={(e) => {
@@ -148,14 +165,26 @@ export function CustomDomainPanel({ isPro }: { isPro: boolean }) {
                       <Icon className={`h-3 w-3 ${d.status.startsWith("pending") ? "animate-spin" : ""}`} />
                       {meta.label}
                     </Badge>
+                    {d.status === "active" && (
+                      <a
+                        href={`https://${d.hostname}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-brand hover:underline"
+                      >
+                        Abrir <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
                     <div className="ml-auto flex gap-1">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={() => refreshMut.mutate(d.id)}
                         disabled={refreshMut.isPending}
+                        className="gap-1"
                       >
                         <RefreshCw className={`h-3.5 w-3.5 ${refreshMut.isPending ? "animate-spin" : ""}`} />
+                        Testar conexão
                       </Button>
                       <Button
                         variant="ghost"
@@ -173,10 +202,20 @@ export function CustomDomainPanel({ isPro }: { isPro: boolean }) {
                   {d.status === "active" ? (
                     <p className="text-sm text-muted-foreground">
                       Seu perfil está disponível em <b className="text-foreground">https://{d.hostname}</b>.
+                      {d.last_synced_at && (
+                        <span className="ml-1 text-xs">
+                          (última verificação {new Date(d.last_synced_at).toLocaleString("pt-BR")})
+                        </span>
+                      )}
                     </p>
                   ) : d.status === "failed" ? (
-                    <div className="rounded-md bg-destructive/10 p-3 text-xs text-destructive">
-                      {d.last_error ?? "Falha desconhecida."}
+                    <div className="space-y-2">
+                      <div className="rounded-md bg-destructive/10 p-3 text-xs text-destructive">
+                        {d.last_error ?? "Falha desconhecida."}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Verifique se os registros DNS estão publicados corretamente e clique em <b>Testar conexão</b> novamente.
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-3 text-xs">
@@ -189,7 +228,6 @@ export function CustomDomainPanel({ isPro }: { isPro: boolean }) {
                         />
                         <p className="mt-1 text-muted-foreground">
                           Para domínios raiz (ex.: fulano.com), use "CNAME flattening" ou "ALIAS" se seu DNS suportar.
-                          Caso contrário, use um registro A apontando para os IPs do Cloudflare.
                         </p>
                       </div>
                       {txt?.name && txt.value && (
@@ -199,7 +237,7 @@ export function CustomDomainPanel({ isPro }: { isPro: boolean }) {
                         </div>
                       )}
                       <p className="text-muted-foreground">
-                        Depois de propagar, clique em <b>atualizar</b>. Pode levar até 24h.
+                        Depois de publicar os registros, clique em <b>Testar conexão</b>. Pode levar até 24h de propagação global.
                       </p>
                     </div>
                   )}
