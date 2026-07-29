@@ -62,7 +62,7 @@ async function fileToSquareBlob(file: File, size = 512): Promise<Blob> {
 }
 
 function Settings() {
-  const { user, profile, refresh, signOut } = useAuth();
+  const { user, profile, role, refresh, signOut } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -75,6 +75,9 @@ function Settings() {
   const [exporting, setExporting] = useState(false);
   const [socials, setSocials] = useState<SocialLinkEntry[]>([]);
   const [savingSocials, setSavingSocials] = useState(false);
+  const [theme, setTheme] = useState<ProfileThemeId>("default");
+  const [savingTheme, setSavingTheme] = useState(false);
+  const isPro = role === "pro" || role === "admin";
   const fileRef = useRef<HTMLInputElement>(null);
   const runDelete = useServerFn(deleteMyAccount);
 
@@ -85,8 +88,32 @@ function Settings() {
       setBio(profile.bio ?? "");
       setAvatarUrl(profile.avatar_url ?? "");
       setSocials(normalizeSocialLinks(profile.social_links));
+      setTheme(((profile as { theme?: string | null }).theme ?? "default") as ProfileThemeId);
     }
   }, [profile]);
+
+  const saveTheme = async (next: ProfileThemeId) => {
+    if (!user) return;
+    const target = PROFILE_THEME_LIST.find((t) => t.id === next);
+    if (target?.proOnly && !isPro) {
+      toast.error("Tema disponível apenas para o plano Pro.");
+      return;
+    }
+    setTheme(next);
+    setSavingTheme(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ theme: next } as never)
+      .eq("id", user.id);
+    setSavingTheme(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Tema do perfil atualizado");
+    await refresh();
+  };
+
 
   const addSocial = (key: string) => {
     if (socials.some((s) => s.key === key)) return;
