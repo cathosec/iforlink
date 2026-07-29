@@ -18,6 +18,7 @@ import { LogoWordmark } from "@/components/logo";
 import { trackEvent } from "@/lib/analytics";
 import { SOCIAL_MAP, SocialIcon, normalizeSocialLinks, type SocialLinkEntry } from "@/lib/social-links";
 import { YouTubeChannelCard } from "@/components/YouTubeChannelCard";
+import { resolveProfileTheme } from "@/lib/profile-themes";
 // Card de campanha usa a capa da própria campanha; sem dependência de asset externo.
 
 interface HeadProfile {
