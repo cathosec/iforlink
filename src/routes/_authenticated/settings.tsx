@@ -32,6 +32,8 @@ import {
   normalizeSocialLinks,
   type SocialLinkEntry,
 } from "@/lib/social-links";
+import { PROFILE_THEME_LIST, resolveProfileTheme, type ProfileThemeId } from "@/lib/profile-themes";
+import { Check, Lock as LockIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: Settings,
