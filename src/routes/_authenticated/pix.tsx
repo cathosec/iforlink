@@ -98,7 +98,6 @@ function PixPage() {
   }, [search.mp, search.reason, (search as { detail?: string }).detail, qc, user?.id]);
 
 
-  if (!loading && !isPro) return <UpgradeGate />;
 
   const campaigns = campaignsQ.data ?? [];
   const connected = !!statusQ.data?.connected;
