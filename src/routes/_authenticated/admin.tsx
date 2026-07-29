@@ -2785,9 +2785,9 @@ function DomainsTab() {
   };
 
   const refreshOne = async (id: string) => {
-    if (!refreshFn) return;
+    if (!fns) return;
     try {
-      await refreshFn({ data: { id } });
+      await fns.refresh({ data: { id } });
       toast.success("Status atualizado.");
       qc.invalidateQueries({ queryKey: ["admin-custom-domains"] });
     } catch (e) {
