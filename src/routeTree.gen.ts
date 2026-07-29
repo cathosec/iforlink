@@ -38,6 +38,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as ApiPublicWebhooksMpPixRouteImport } from './routes/api/public/webhooks/mp-pix'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
 import { Route as ApiPublicPixCoverFileRouteImport } from './routes/api/public/pix-cover/$file'
+import { Route as ApiPublicCronSyncCustomDomainsRouteImport } from './routes/api/public/cron/sync-custom-domains'
 import { Route as ApiPublicCronSubscriptionsCheckRouteImport } from './routes/api/public/cron/subscriptions-check'
 import { Route as ApiPublicCronReconcilePaymentsRouteImport } from './routes/api/public/cron/reconcile-payments'
 import { Route as ApiPublicAvatarFileRouteImport } from './routes/api/public/avatar/$file'
@@ -190,6 +191,12 @@ const ApiPublicPixCoverFileRoute = ApiPublicPixCoverFileRouteImport.update({
   path: '/api/public/pix-cover/$file',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronSyncCustomDomainsRoute =
+  ApiPublicCronSyncCustomDomainsRouteImport.update({
+    id: '/api/public/cron/sync-custom-domains',
+    path: '/api/public/cron/sync-custom-domains',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronSubscriptionsCheckRoute =
   ApiPublicCronSubscriptionsCheckRouteImport.update({
     id: '/api/public/cron/subscriptions-check',
@@ -249,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
+  '/api/public/cron/sync-custom-domains': typeof ApiPublicCronSyncCustomDomainsRoute
   '/api/public/pix-cover/$file': typeof ApiPublicPixCoverFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/mp-pix': typeof ApiPublicWebhooksMpPixRoute
@@ -284,6 +292,7 @@ export interface FileRoutesByTo {
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
+  '/api/public/cron/sync-custom-domains': typeof ApiPublicCronSyncCustomDomainsRoute
   '/api/public/pix-cover/$file': typeof ApiPublicPixCoverFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/mp-pix': typeof ApiPublicWebhooksMpPixRoute
@@ -321,6 +330,7 @@ export interface FileRoutesById {
   '/api/public/avatar/$file': typeof ApiPublicAvatarFileRoute
   '/api/public/cron/reconcile-payments': typeof ApiPublicCronReconcilePaymentsRoute
   '/api/public/cron/subscriptions-check': typeof ApiPublicCronSubscriptionsCheckRoute
+  '/api/public/cron/sync-custom-domains': typeof ApiPublicCronSyncCustomDomainsRoute
   '/api/public/pix-cover/$file': typeof ApiPublicPixCoverFileRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/mp-pix': typeof ApiPublicWebhooksMpPixRoute
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/api/public/avatar/$file'
     | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
+    | '/api/public/cron/sync-custom-domains'
     | '/api/public/pix-cover/$file'
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/mp-pix'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/api/public/avatar/$file'
     | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
+    | '/api/public/cron/sync-custom-domains'
     | '/api/public/pix-cover/$file'
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/mp-pix'
@@ -429,6 +441,7 @@ export interface FileRouteTypes {
     | '/api/public/avatar/$file'
     | '/api/public/cron/reconcile-payments'
     | '/api/public/cron/subscriptions-check'
+    | '/api/public/cron/sync-custom-domains'
     | '/api/public/pix-cover/$file'
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/mp-pix'
@@ -456,6 +469,7 @@ export interface RootRouteChildren {
   ApiPublicAvatarFileRoute: typeof ApiPublicAvatarFileRoute
   ApiPublicCronReconcilePaymentsRoute: typeof ApiPublicCronReconcilePaymentsRoute
   ApiPublicCronSubscriptionsCheckRoute: typeof ApiPublicCronSubscriptionsCheckRoute
+  ApiPublicCronSyncCustomDomainsRoute: typeof ApiPublicCronSyncCustomDomainsRoute
   ApiPublicPixCoverFileRoute: typeof ApiPublicPixCoverFileRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
   ApiPublicWebhooksMpPixRoute: typeof ApiPublicWebhooksMpPixRoute
@@ -668,6 +682,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPixCoverFileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/sync-custom-domains': {
+      id: '/api/public/cron/sync-custom-domains'
+      path: '/api/public/cron/sync-custom-domains'
+      fullPath: '/api/public/cron/sync-custom-domains'
+      preLoaderRoute: typeof ApiPublicCronSyncCustomDomainsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/subscriptions-check': {
       id: '/api/public/cron/subscriptions-check'
       path: '/api/public/cron/subscriptions-check'
@@ -755,6 +776,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAvatarFileRoute: ApiPublicAvatarFileRoute,
   ApiPublicCronReconcilePaymentsRoute: ApiPublicCronReconcilePaymentsRoute,
   ApiPublicCronSubscriptionsCheckRoute: ApiPublicCronSubscriptionsCheckRoute,
+  ApiPublicCronSyncCustomDomainsRoute: ApiPublicCronSyncCustomDomainsRoute,
   ApiPublicPixCoverFileRoute: ApiPublicPixCoverFileRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
   ApiPublicWebhooksMpPixRoute: ApiPublicWebhooksMpPixRoute,
