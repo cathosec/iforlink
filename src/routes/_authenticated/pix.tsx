@@ -64,7 +64,7 @@ function PixPage() {
   const { user, role, loading } = useAuth();
   const search = useSearch({ from: "/_authenticated/pix" });
   const qc = useQueryClient();
-  const isPro = role === "pro" || role === "admin";
+  void UpgradeGate;
 
   const startOAuth = useServerFn(startMpOAuth);
   const disconnect = useServerFn(disconnectMp);
