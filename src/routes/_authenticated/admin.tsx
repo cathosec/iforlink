@@ -2737,27 +2737,31 @@ const DOMAIN_STATUS_META: Record<AdminDomainRow["status"], { label: string; clas
 
 function DomainsTab() {
   const qc = useQueryClient();
-  const [listFn, setListFn] = useState<null | (() => Promise<{ domains: AdminDomainRow[] }>)>(null);
-  const [refreshFn, setRefreshFn] = useState<null | ((args: { data: { id: string } }) => Promise<unknown>)>(null);
+  const [fns, setFns] = useState<{
+    list: () => Promise<{ domains: unknown[] }>;
+    refresh: (args: { data: { id: string } }) => Promise<unknown>;
+  } | null>(null);
 
   useEffect(() => {
     let alive = true;
     import("@/lib/custom-domains.functions").then((m) => {
       if (!alive) return;
-      setListFn(() => m.adminListCustomDomains);
-      setRefreshFn(() => m.adminRefreshCustomDomain);
+      setFns({
+        list: () => m.adminListCustomDomains() as Promise<{ domains: unknown[] }>,
+        refresh: (a) => m.adminRefreshCustomDomain(a),
+      });
     });
     return () => { alive = false; };
   }, []);
 
   const q = useQuery({
     queryKey: ["admin-custom-domains"],
-    queryFn: () => (listFn ? listFn() : Promise.resolve({ domains: [] })),
-    enabled: !!listFn,
+    queryFn: () => (fns ? fns.list() : Promise.resolve({ domains: [] })),
+    enabled: !!fns,
     refetchInterval: 60_000,
   });
 
-  const rows = (q.data?.domains ?? []) as AdminDomainRow[];
+  const rows = ((q.data?.domains ?? []) as unknown as AdminDomainRow[]);
   const stats = useMemo(() => {
     const counts = { total: rows.length, active: 0, pending: 0, failed: 0 };
     for (const r of rows) {
@@ -2781,9 +2785,9 @@ function DomainsTab() {
   };
 
   const refreshOne = async (id: string) => {
-    if (!refreshFn) return;
+    if (!fns) return;
     try {
-      await refreshFn({ data: { id } });
+      await fns.refresh({ data: { id } });
       toast.success("Status atualizado.");
       qc.invalidateQueries({ queryKey: ["admin-custom-domains"] });
     } catch (e) {
