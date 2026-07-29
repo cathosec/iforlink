@@ -27,14 +27,18 @@ export const createMyCustomDomain = createServerFn({ method: "POST" })
     const hostname = (data.hostname ?? "").trim().toLowerCase();
     if (!hostname) throw new Error("Informe um domínio válido.");
 
+    if (data.mode === "subpath" || data.path_prefix) {
+      throw new Error("O ForLink só oferece domínio próprio no formato raiz (fulano.com) ou subdomínio (links.fulano.com). Caminhos (/links) não são suportados.");
+    }
+
     // Cria linha (trigger valida role Pro/admin, limite e formato)
     const { data: row, error: insErr } = await context.supabase
       .from("custom_domains")
       .insert({
         user_id: context.userId,
         hostname,
-        mode: data.mode ?? "root",
-        path_prefix: data.path_prefix ?? null,
+        mode: "root",
+        path_prefix: null,
       } as never)
       .select("id,hostname,mode,path_prefix,status")
       .single();
