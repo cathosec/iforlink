@@ -402,9 +402,23 @@ function PublicProfile() {
     : cats;
   const defaultOpen = filteredCats.map((c) => c.id);
 
+  const theme = resolveProfileTheme(
+    roleQ.data?.isPro ? (p.theme ?? "default") : "default",
+  );
+  const themeStyle: React.CSSProperties = {
+    ...(theme.vars as React.CSSProperties),
+    ...(theme.background ? { background: theme.background } : {}),
+    ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}),
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className={`forlink-theme min-h-screen bg-background ${theme.className ?? ""}`}
+      style={themeStyle}
+    >
+      {theme.extraCss ? <style dangerouslySetInnerHTML={{ __html: theme.extraCss }} /> : null}
       <SiteHeader />
+
 
       {/* Cabeçalho compacto */}
       <div className="border-b bg-gradient-to-b from-accent/20 to-background">
