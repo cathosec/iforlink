@@ -349,7 +349,7 @@ function Home() {
                 <span className="text-xs text-muted-foreground">via PIX</span>
               </div>
               <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                {["Sem anúncios em todo o site", "Links e categorias ilimitados", "Campanhas ilimitadas no Mercado Pago", "Encurtador forlink.app/s/", "Verificação com selo", "Estatísticas detalhadas de cliques", "Suporte prioritário"].map((f) => (
+                {["Sem anúncios em todo o site", "Links e categorias ilimitados", "Campanhas ilimitadas no Mercado Pago", "Domínio personalizado (seusite.com)", "Temas exclusivos de perfil", "Encurtador forlink.app/s/", "Verificação com selo", "Estatísticas detalhadas de cliques", "Suporte prioritário"].map((f) => (
                   <li key={f} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {f}</li>
                 ))}
               </ul>
