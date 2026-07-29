@@ -115,6 +115,7 @@ function Admin() {
               ["emails", Mail, "E-mails"],
               ["settings", Settings2, "Plataforma"],
               ["ops", HeartPulse, "Operações"],
+              ["domains", Globe, "Domínios"],
               ["audit", Activity, "Auditoria"],
             ].map(([v, Icon, label]) => {
               const I = Icon as React.ComponentType<{ className?: string }>;
