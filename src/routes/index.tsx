@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check, HelpCircle, ShieldCheck, Mail, Heart, QrCode, Wallet, Target, Sparkles } from "lucide-react";
+import { ArrowRight, Bookmark, FolderTree, Smartphone, Share2, Lock, Zap, Check, HelpCircle, ShieldCheck, Mail, Heart, QrCode, Wallet, Target, Sparkles, Globe, Palette } from "lucide-react";
 import { AdSlot } from "@/components/ad-slot";
 
 /**
@@ -349,7 +349,7 @@ function Home() {
                 <span className="text-xs text-muted-foreground">via PIX</span>
               </div>
               <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-                {["Sem anúncios em todo o site", "Links e categorias ilimitados", "Campanhas ilimitadas no Mercado Pago", "Encurtador forlink.app/s/", "Verificação com selo", "Estatísticas detalhadas de cliques", "Suporte prioritário"].map((f) => (
+                {["Sem anúncios em todo o site", "Links e categorias ilimitados", "Campanhas ilimitadas no Mercado Pago", "Domínio personalizado (seusite.com)", "Temas exclusivos de perfil", "Encurtador forlink.app/s/", "Verificação com selo", "Estatísticas detalhadas de cliques", "Suporte prioritário"].map((f) => (
                   <li key={f} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {f}</li>
                 ))}
               </ul>
@@ -360,6 +360,92 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* Pro exclusives: Custom domain + Themes */}
+      <section id="dominio-temas" className="border-b bg-secondary/20">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <div className="mb-10 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+              <Sparkles className="h-3.5 w-3.5 text-brand" /> Exclusivo Pro
+            </div>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+              Sua marca, seu domínio, seu visual.
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">
+              Assinantes Pro personalizam a experiência de ponta a ponta: use o seu próprio domínio e escolha um tema visual à altura da sua identidade.
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Custom Domain */}
+            <div className="rounded-xl border bg-card p-6 shadow-sm">
+              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-brand-soft text-brand">
+                <Globe className="h-5 w-5" />
+              </div>
+              <h3 className="text-xl font-semibold tracking-tight">Domínio personalizado</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Conecte um domínio próprio ao seu perfil ForLink. Em vez de <span className="font-medium text-foreground">forlink.app/seu-usuario</span>, seus visitantes acessam <span className="font-medium text-foreground">seusite.com</span> ou <span className="font-medium text-foreground">seusite.com/links</span> — com SSL automático via Cloudflare.
+              </p>
+              <ul className="mt-5 space-y-2 text-sm">
+                {[
+                  "Domínio raiz (seusite.com) ou subdomínio (links.seusite.com)",
+                  "Modo caminho: seusite.com/links convive com o seu site atual",
+                  "Certificado SSL emitido e renovado automaticamente",
+                  "Setup guiado passo a passo com botão \"Testar conexão\"",
+                  "SEO preservado — Google indexa no seu domínio",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-muted-foreground">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 rounded-md border bg-secondary/40 p-3 text-xs text-muted-foreground">
+                Basta apontar um <strong className="text-foreground">CNAME</strong> e um <strong className="text-foreground">TXT</strong> no seu registrador. Nós validamos, emitimos o SSL e ativamos em minutos.
+              </div>
+            </div>
+
+            {/* Themes */}
+            <div className="rounded-xl border bg-card p-6 shadow-sm">
+              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-brand-soft text-brand">
+                <Palette className="h-5 w-5" />
+              </div>
+              <h3 className="text-xl font-semibold tracking-tight">Temas exclusivos de perfil</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Escolha entre múltiplos temas premium prontos, com paletas, tipografia e efeitos cuidadosamente combinados — sem precisar mexer em CSS.
+              </p>
+              <ul className="mt-5 space-y-2 text-sm">
+                {[
+                  ["Clean Light", "Minimalista e claro, foco no conteúdo"],
+                  ["Dark Minimalist", "Escuro elegante para marcas modernas"],
+                  ["Glassmorphism", "Vidro fosco com camadas translúcidas"],
+                  ["Cyberpunk", "Neon vibrante para criadores ousados"],
+                  ["Pastel Soft", "Tons suaves e acolhedores"],
+                ].map(([name, desc]) => (
+                  <li key={name} className="flex items-start gap-2 text-muted-foreground">
+                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                    <span><span className="font-medium text-foreground">{name}</span> — {desc}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 rounded-md border bg-secondary/40 p-3 text-xs text-muted-foreground">
+                Ainda dá para ajustar <strong className="text-foreground">cor de botões e fontes</strong> por cima do tema escolhido, garantindo consistência com a sua marca.
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link to="/precos">
+              <Button size="lg" className="bg-brand text-brand-foreground hover:bg-brand/90">
+                Assinar Pro <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/auth" search={{ mode: "signup" }}>
+              <Button size="lg" variant="outline">Criar conta grátis</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
 
       {/* PIX Campaigns module */}
 
