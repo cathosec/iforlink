@@ -18,6 +18,7 @@ import { LogoWordmark } from "@/components/logo";
 import { trackEvent } from "@/lib/analytics";
 import { SOCIAL_MAP, SocialIcon, normalizeSocialLinks, type SocialLinkEntry } from "@/lib/social-links";
 import { YouTubeChannelCard } from "@/components/YouTubeChannelCard";
+import { resolveProfileTheme } from "@/lib/profile-themes";
 // Card de campanha usa a capa da própria campanha; sem dependência de asset externo.
 
 interface HeadProfile {
@@ -162,6 +163,7 @@ interface ProfileRow {
   id: string; username: string; display_name: string; bio: string | null;
   avatar_url: string | null; is_verified: boolean; views_count: number;
   social_links: unknown;
+  theme: string | null;
 }
 interface LinkItem {
   id: string; title: string; description: string | null; url: string;
@@ -179,7 +181,7 @@ function PublicProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("id,username,display_name,bio,avatar_url,is_verified,views_count,social_links")
+        .select("id,username,display_name,bio,avatar_url,is_verified,views_count,social_links,theme")
         .eq("username", username)
         .maybeSingle();
       if (!data) throw notFound();
@@ -400,9 +402,23 @@ function PublicProfile() {
     : cats;
   const defaultOpen = filteredCats.map((c) => c.id);
 
+  const theme = resolveProfileTheme(
+    roleQ.data?.isPro ? (p.theme ?? "default") : "default",
+  );
+  const themeStyle: React.CSSProperties = {
+    ...(theme.vars as React.CSSProperties),
+    ...(theme.background ? { background: theme.background } : {}),
+    ...(theme.fontFamily ? { fontFamily: theme.fontFamily } : {}),
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className={`forlink-theme min-h-screen bg-background ${theme.className ?? ""}`}
+      style={themeStyle}
+    >
+      {theme.extraCss ? <style dangerouslySetInnerHTML={{ __html: theme.extraCss }} /> : null}
       <SiteHeader />
+
 
       {/* Cabeçalho compacto */}
       <div className="border-b bg-gradient-to-b from-accent/20 to-background">

@@ -32,6 +32,8 @@ import {
   normalizeSocialLinks,
   type SocialLinkEntry,
 } from "@/lib/social-links";
+import { PROFILE_THEME_LIST, resolveProfileTheme, type ProfileThemeId } from "@/lib/profile-themes";
+import { Check, Lock as LockIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: Settings,
@@ -60,7 +62,7 @@ async function fileToSquareBlob(file: File, size = 512): Promise<Blob> {
 }
 
 function Settings() {
-  const { user, profile, refresh, signOut } = useAuth();
+  const { user, profile, role, refresh, signOut } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -73,6 +75,9 @@ function Settings() {
   const [exporting, setExporting] = useState(false);
   const [socials, setSocials] = useState<SocialLinkEntry[]>([]);
   const [savingSocials, setSavingSocials] = useState(false);
+  const [theme, setTheme] = useState<ProfileThemeId>("default");
+  const [savingTheme, setSavingTheme] = useState(false);
+  const isPro = role === "pro" || role === "admin";
   const fileRef = useRef<HTMLInputElement>(null);
   const runDelete = useServerFn(deleteMyAccount);
 
@@ -83,8 +88,32 @@ function Settings() {
       setBio(profile.bio ?? "");
       setAvatarUrl(profile.avatar_url ?? "");
       setSocials(normalizeSocialLinks(profile.social_links));
+      setTheme(((profile as { theme?: string | null }).theme ?? "default") as ProfileThemeId);
     }
   }, [profile]);
+
+  const saveTheme = async (next: ProfileThemeId) => {
+    if (!user) return;
+    const target = PROFILE_THEME_LIST.find((t) => t.id === next);
+    if (target?.proOnly && !isPro) {
+      toast.error("Tema disponível apenas para o plano Pro.");
+      return;
+    }
+    setTheme(next);
+    setSavingTheme(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ theme: next } as never)
+      .eq("id", user.id);
+    setSavingTheme(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Tema do perfil atualizado");
+    await refresh();
+  };
+
 
   const addSocial = (key: string) => {
     if (socials.some((s) => s.key === key)) return;
@@ -380,7 +409,85 @@ function Settings() {
           </div>
         </Card>
 
+        <Card className="mt-8 p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Tema do perfil</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Escolha o visual da sua página pública <span className="font-mono text-foreground">forlink.app/{username || "seu-usuario"}</span>.
+                {!isPro && " Temas visuais são um recurso do plano Pro."}
+              </p>
+            </div>
+            {!isPro && (
+              <Link
+                to="/precos"
+                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs font-medium text-brand-foreground shadow-sm transition hover:opacity-90"
+              >
+                Ver Pro
+              </Link>
+            )}
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {PROFILE_THEME_LIST.map((t) => {
+              const locked = t.proOnly && !isPro;
+              const active = theme === t.id;
+              const [bg, card, text, accent] = t.swatch;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => !locked && saveTheme(t.id)}
+                  disabled={locked || savingTheme}
+                  className={`group relative flex flex-col overflow-hidden rounded-xl border text-left transition-all ${
+                    active
+                      ? "border-brand ring-2 ring-brand/40"
+                      : "border-border hover:border-foreground/40 hover:-translate-y-0.5"
+                  } ${locked ? "cursor-not-allowed opacity-70" : ""}`}
+                  aria-pressed={active}
+                >
+                  <div
+                    className="relative h-20 w-full"
+                    style={{ background: bg }}
+                    aria-hidden
+                  >
+                    <div
+                      className="absolute inset-x-3 top-3 h-4 rounded"
+                      style={{ background: card }}
+                    />
+                    <div
+                      className="absolute inset-x-3 top-9 h-2 rounded"
+                      style={{ background: text, opacity: 0.85 }}
+                    />
+                    <div
+                      className="absolute right-3 bottom-3 h-4 w-8 rounded"
+                      style={{ background: accent }}
+                    />
+                    {active && (
+                      <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-brand text-brand-foreground shadow">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    )}
+                    {locked && (
+                      <span className="absolute left-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-background/80 text-muted-foreground">
+                        <LockIcon className="h-3 w-3" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="border-t bg-card p-2.5">
+                    <div className="text-xs font-semibold text-foreground">{t.label}</div>
+                    <div className="mt-0.5 line-clamp-2 text-[10px] leading-tight text-muted-foreground">
+                      {t.description}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
         <PushToggle />
+
 
         <Card className="mt-8 p-6">
           <h2 className="text-lg font-semibold tracking-tight">Privacidade e dados (LGPD)</h2>

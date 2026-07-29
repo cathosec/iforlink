@@ -734,6 +734,7 @@ export type Database = {
           id: string
           is_verified: boolean
           social_links: Json
+          theme: string
           updated_at: string
           username: string
           views_count: number
@@ -746,6 +747,7 @@ export type Database = {
           id: string
           is_verified?: boolean
           social_links?: Json
+          theme?: string
           updated_at?: string
           username: string
           views_count?: number
@@ -758,6 +760,7 @@ export type Database = {
           id?: string
           is_verified?: boolean
           social_links?: Json
+          theme?: string
           updated_at?: string
           username?: string
           views_count?: number
