@@ -322,6 +322,54 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_domains: {
+        Row: {
+          cf_custom_hostname_id: string | null
+          created_at: string
+          hostname: string
+          id: string
+          last_error: string | null
+          last_synced_at: string | null
+          mode: string
+          ownership_verification: Json
+          path_prefix: string | null
+          ssl_status: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cf_custom_hostname_id?: string | null
+          created_at?: string
+          hostname: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          mode?: string
+          ownership_verification?: Json
+          path_prefix?: string | null
+          ssl_status?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cf_custom_hostname_id?: string | null
+          created_at?: string
+          hostname?: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          mode?: string
+          ownership_verification?: Json
+          path_prefix?: string | null
+          ssl_status?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       event_log: {
         Row: {
           actor_id: string | null
@@ -1193,6 +1241,23 @@ export type Database = {
     }
     Functions: {
       _analytics_require_pro: { Args: never; Returns: undefined }
+      admin_list_custom_domains: {
+        Args: { _limit?: number }
+        Returns: {
+          created_at: string
+          display_name: string
+          hostname: string
+          id: string
+          last_error: string
+          last_synced_at: string
+          mode: string
+          path_prefix: string
+          ssl_status: string
+          status: string
+          user_id: string
+          username: string
+        }[]
+      }
       admin_ops_summary: { Args: { _hours?: number }; Returns: Json }
       analytics_admin_summary: { Args: { _hours?: number }; Returns: Json }
       analytics_breakdown: {
@@ -1421,6 +1486,15 @@ export type Database = {
         Returns: undefined
       }
       increment_short_click: { Args: { _code: string }; Returns: undefined }
+      list_custom_domains_to_sync: {
+        Args: { _limit?: number }
+        Returns: {
+          cf_custom_hostname_id: string
+          hostname: string
+          id: string
+          status: string
+        }[]
+      }
       list_mp_account_tokens: {
         Args: never
         Returns: {
@@ -1454,6 +1528,14 @@ export type Database = {
         }
         Returns: string
       }
+      resolve_custom_domain: {
+        Args: { _hostname: string }
+        Returns: {
+          mode: string
+          path_prefix: string
+          username: string
+        }[]
+      }
       resolve_pix_contribution_by_mp: {
         Args: { _mp_payment_id: string }
         Returns: {
@@ -1464,6 +1546,17 @@ export type Database = {
         }[]
       }
       resolve_short_link: { Args: { _code: string }; Returns: string }
+      update_custom_domain_status: {
+        Args: {
+          _cf_id?: string
+          _id: string
+          _last_error?: string
+          _ownership_verification?: Json
+          _ssl_status?: string
+          _status: string
+        }
+        Returns: undefined
+      }
       user_has_active_addon: {
         Args: { _addon: string; _user_id: string }
         Returns: boolean
