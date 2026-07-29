@@ -412,16 +412,18 @@ function PublicProfile() {
   };
 
   return (
-    <div
-      className={`forlink-theme min-h-screen bg-background ${theme.className ?? ""}`}
-      style={themeStyle}
-    >
-      {theme.extraCss ? <style dangerouslySetInnerHTML={{ __html: theme.extraCss }} /> : null}
+    <>
       <SiteHeader />
+      <div
+        className={`forlink-theme min-h-screen bg-background ${theme.className ?? ""}`}
+        style={themeStyle}
+      >
+        {theme.extraCss ? <style dangerouslySetInnerHTML={{ __html: theme.extraCss }} /> : null}
 
 
       {/* Cabeçalho compacto */}
-      <div className="border-b bg-gradient-to-b from-accent/20 to-background">
+      <div className="border-b border-border/60 bg-card/40">
+
         <div className="mx-auto max-w-2xl px-4 py-4">
           <header className="flex items-center gap-3">
             <Avatar className="h-14 w-14 shrink-0 border-2 border-background shadow-sm ring-1 ring-border/60">
@@ -782,6 +784,8 @@ function PublicProfile() {
         </div>
       </main>
       {hideAds && <style>{`[data-ad-slot="mobile_sticky"]{display:none !important;}`}</style>}
-    </div>
+      </div>
+    </>
   );
 }
+
